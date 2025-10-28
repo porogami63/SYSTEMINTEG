@@ -31,11 +31,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $full_name = sanitizeInput($_POST['full_name']);
     $role = sanitizeInput($_POST['role']);
     $phone = sanitizeInput($_POST['phone']);
+    $home_address = isset($_POST['home_address']) ? sanitizeInput($_POST['home_address']) : '';
+    
+    // Handle profile photo upload
+    $profile_photo_path = '';
+    if (!empty($_FILES['profile_photo']['name'])) {
+        $ext = pathinfo($_FILES['profile_photo']['name'], PATHINFO_EXTENSION);
+        $filename = 'profile_tmp_' . time() . '.' . strtolower($ext);
+        $dest = UPLOAD_DIR . $filename;
+        if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $dest)) {
+            $profile_photo_path = 'uploads/' . $filename;
+        }
+    }
     
     // Clinic admin specific fields
     $medical_license = isset($_POST['medical_license']) ? sanitizeInput($_POST['medical_license']) : '';
     $specialization = isset($_POST['specialization']) ? sanitizeInput($_POST['specialization']) : '';
     $clinic_name = isset($_POST['clinic_name']) ? sanitizeInput($_POST['clinic_name']) : '';
+    $clinic_address = isset($_POST['clinic_address']) ? sanitizeInput($_POST['clinic_address']) : '';
     
     // Patient specific fields
     $date_of_birth = isset($_POST['date_of_birth']) ? sanitizeInput($_POST['date_of_birth']) : '';
@@ -62,8 +75,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "Username or email already exists";
         } else {
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $conn->prepare("INSERT INTO users (username, email, password, full_name, role, phone) VALUES (?, ?, ?, ?, ?, ?)");
-            $stmt->bind_param("ssssss", $username, $email, $hashed_password, $full_name, $role, $phone);
+            if (!empty($profile_photo_path) || !empty($home_address)) {
+                $stmt = $conn->prepare("INSERT INTO users (username, email, password, full_name, role, phone, profile_photo, home_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("ssssssss", $username, $email, $hashed_password, $full_name, $role, $phone, $profile_photo_path, $home_address);
+            } else {
+                $stmt = $conn->prepare("INSERT INTO users (username, email, password, full_name, role, phone) VALUES (?, ?, ?, ?, ?, ?)");
+                $stmt->bind_param("ssssss", $username, $email, $hashed_password, $full_name, $role, $phone);
+            }
             
             if ($stmt->execute()) {
                 $user_id = $conn->insert_id;
@@ -78,8 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } elseif ($role === 'clinic_admin') {
                     // Create clinic profile with medical license and specialization
                     $final_clinic_name = !empty($clinic_name) ? $clinic_name : $full_name . "'s Clinic";
-                    $stmt2 = $conn->prepare("INSERT INTO clinics (user_id, clinic_name, medical_license, specialization, contact_phone) VALUES (?, ?, ?, ?, ?)");
-                    $stmt2->bind_param("issss", $user_id, $final_clinic_name, $medical_license, $specialization, $phone);
+                    $stmt2 = $conn->prepare("INSERT INTO clinics (user_id, clinic_name, medical_license, specialization, address, contact_phone) VALUES (?, ?, ?, ?, ?, ?)");
+                    $stmt2->bind_param("isssss", $user_id, $final_clinic_name, $medical_license, $specialization, $clinic_address, $phone);
                     $stmt2->execute();
                     $stmt2->close();
                 }
@@ -140,7 +158,7 @@ body {
         <div class="alert alert-success"><?php echo $success; ?></div>
         <?php endif; ?>
         
-        <form method="POST" id="registerForm">
+        <form method="POST" id="registerForm" enctype="multipart/form-data">
             <div class="mb-3">
                 <label class="form-label">Full Name <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="full_name" required>
@@ -160,6 +178,14 @@ body {
             <div class="mb-3">
                 <label class="form-label">Phone</label>
                 <input type="text" class="form-control" name="phone" placeholder="+1 (555) 123-4567">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Home Address</label>
+                <textarea class="form-control" name="home_address" rows="2" placeholder="Your home address"></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Profile Photo</label>
+                <input type="file" class="form-control" name="profile_photo" accept="image/*">
             </div>
             
             <div class="mb-3">
@@ -190,6 +216,10 @@ body {
                 <div class="mb-3">
                     <label class="form-label">Clinic Name</label>
                     <input type="text" class="form-control" name="clinic_name" placeholder="Leave blank to auto-generate">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Clinic Address</label>
+                    <textarea class="form-control" name="clinic_address" rows="2" placeholder="Clinic full address"></textarea>
                 </div>
             </div>
             

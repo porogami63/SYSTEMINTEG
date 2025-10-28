@@ -3,7 +3,18 @@ $current_page = basename($_SERVER['PHP_SELF']);
 ?>
 <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
     <div class="position-sticky pt-3">
-        <h5 class="px-3 text-white"><strong>MediArchive</strong></h5>
+        <div class="d-flex align-items-center gap-2 px-3 mb-2">
+            <span class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:30px;height:30px;color:#2e7d32;"><i class="bi bi-heart-pulse-fill"></i></span>
+            <h5 class="text-white mb-0"><strong>MediArchive</strong></h5>
+        </div>
+        <?php if (isset($_SESSION['full_name'])): ?>
+        <div class="d-flex align-items-center gap-2 px-3 py-2 text-white">
+            <?php if (!empty($_SESSION['profile_photo'])): ?>
+                <img src="../<?php echo htmlspecialchars($_SESSION['profile_photo']); ?>" alt="Profile" class="rounded-circle" style="width:28px;height:28px;object-fit:cover;">
+            <?php endif; ?>
+            <div class="small">Hello, <?php echo htmlspecialchars($_SESSION['full_name']); ?></div>
+        </div>
+        <?php endif; ?>
         <hr class="text-white">
         <ul class="nav flex-column">
             <li class="nav-item">

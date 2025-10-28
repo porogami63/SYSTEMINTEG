@@ -8,8 +8,8 @@ function generateQRCode($cert_id, $cert_db_id) {
     $base_url = SITE_URL;
     $url = $base_url . "api/validate.php?cert_id=" . urlencode($cert_id);
     
-    // Use Google Charts API for QR code generation
-    $qr_url = "https://chart.googleapis.com/chart?chs=300x300&cht=qr&chl=" . urlencode($url);
+    // Use QRServer API (reliable alternative to deprecated Google Charts QR)
+    $qr_url = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" . urlencode($url);
     
     // Download and save QR code
     $qr_file = 'MED-' . $cert_db_id . '.png';
@@ -20,6 +20,7 @@ function generateQRCode($cert_id, $cert_db_id) {
     $fp = fopen($qr_path, 'wb');
     curl_setopt($ch, CURLOPT_FILE, $fp);
     curl_setopt($ch, CURLOPT_HEADER, 0);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
     curl_exec($ch);
     curl_close($ch);
     fclose($fp);

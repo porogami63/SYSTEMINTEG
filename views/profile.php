@@ -77,6 +77,11 @@ $conn->close();
                                 <h5 class="mb-0">User Information</h5>
                             </div>
                             <div class="card-body">
+                                <?php if (!empty($user['profile_photo'])): ?>
+                                    <div class="mb-3 text-center">
+                                        <img src="../<?php echo htmlspecialchars($user['profile_photo']); ?>" alt="Profile Photo" class="rounded-circle" style="width: 100px; height: 100px; object-fit: cover;">
+                                    </div>
+                                <?php endif; ?>
                                 <p><strong>Username:</strong> <?php echo htmlspecialchars($user['username']); ?></p>
                                 <p><strong>Email:</strong> <?php echo htmlspecialchars($user['email']); ?></p>
                                 <p><strong>Full Name:</strong> <?php echo htmlspecialchars($user['full_name']); ?></p>
@@ -96,6 +101,7 @@ $conn->close();
                                 <?php if ($profile): ?>
                                     <?php if ($_SESSION['role'] === 'clinic_admin'): ?>
                                         <p><strong>Clinic Name:</strong> <?php echo htmlspecialchars($profile['clinic_name']); ?></p>
+                                        <p><strong>Medical License:</strong> <?php echo htmlspecialchars($profile['medical_license'] ?? 'N/A'); ?></p>
                                         <p><strong>License Number:</strong> <?php echo htmlspecialchars($profile['license_number'] ?? 'N/A'); ?></p>
                                         <p><strong>Address:</strong> <?php echo htmlspecialchars($profile['address'] ?? 'N/A'); ?></p>
                                         <p><strong>Contact Phone:</strong> <?php echo htmlspecialchars($profile['contact_phone'] ?? 'N/A'); ?></p>

@@ -55,9 +55,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = sanitizeInput($_POST['email']);
     $phone = sanitizeInput($_POST['phone']);
     
+    // Handle profile photo upload
+    $profile_photo_path = null;
+    if (!empty($_FILES['profile_photo']['name'])) {
+        $ext = pathinfo($_FILES['profile_photo']['name'], PATHINFO_EXTENSION);
+        $filename = 'profile_' . $user_id . '_' . time() . '.' . strtolower($ext);
+        $dest = UPLOAD_DIR . $filename;
+        if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $dest)) {
+            $profile_photo_path = 'uploads/' . $filename;
+        }
+    }
+    
     // Update user info
-    $stmt = $conn->prepare("UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?");
-    $stmt->bind_param("sssi", $full_name, $email, $phone, $user_id);
+    if ($profile_photo_path) {
+        $stmt = $conn->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, profile_photo = ? WHERE id = ?");
+        $stmt->bind_param("ssssi", $full_name, $email, $phone, $profile_photo_path, $user_id);
+    } else {
+        $stmt = $conn->prepare("UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?");
+        $stmt->bind_param("sssi", $full_name, $email, $phone, $user_id);
+    }
     
     if ($stmt->execute()) {
         // Update role-specific info
@@ -72,8 +88,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $available_from = sanitizeInput($_POST['available_from']);
             $available_to = sanitizeInput($_POST['available_to']);
             
-            $stmt2 = $conn->prepare("UPDATE clinics SET clinic_name = ?, license_number = ?, medical_license = ?, specialization = ?, address = ?, contact_phone = ?, is_available = ?, available_from = ?, available_to = ? WHERE user_id = ?");
-            $stmt2->bind_param("ssssssissi", $clinic_name, $license_number, $medical_license, $specialization, $address, $contact_phone, $is_available, $available_from, $available_to, $user_id);
+            // Handle signature and seal uploads
+            $signature_path = null;
+            if (!empty($_FILES['signature_image']['name'])) {
+                $ext = pathinfo($_FILES['signature_image']['name'], PATHINFO_EXTENSION);
+                $filename = 'signature_' . $user_id . '_' . time() . '.' . strtolower($ext);
+                $dest = UPLOAD_DIR . $filename;
+                if (move_uploaded_file($_FILES['signature_image']['tmp_name'], $dest)) {
+                    $signature_path = 'uploads/' . $filename;
+                }
+            }
+            $seal_path = null;
+            if (!empty($_FILES['seal_image']['name'])) {
+                $ext = pathinfo($_FILES['seal_image']['name'], PATHINFO_EXTENSION);
+                $filename = 'seal_' . $user_id . '_' . time() . '.' . strtolower($ext);
+                $dest = UPLOAD_DIR . $filename;
+                if (move_uploaded_file($_FILES['seal_image']['tmp_name'], $dest)) {
+                    $seal_path = 'uploads/' . $filename;
+                }
+            }
+            
+            if ($signature_path || $seal_path) {
+                $stmt2 = $conn->prepare("UPDATE clinics SET clinic_name = ?, license_number = ?, medical_license = ?, specialization = ?, address = ?, contact_phone = ?, is_available = ?, available_from = ?, available_to = ?, signature_path = IFNULL(?, signature_path), seal_path = IFNULL(?, seal_path) WHERE user_id = ?");
+                $stmt2->bind_param("ssssssissssi", $clinic_name, $license_number, $medical_license, $specialization, $address, $contact_phone, $is_available, $available_from, $available_to, $signature_path, $seal_path, $user_id);
+            } else {
+                $stmt2 = $conn->prepare("UPDATE clinics SET clinic_name = ?, license_number = ?, medical_license = ?, specialization = ?, address = ?, contact_phone = ?, is_available = ?, available_from = ?, available_to = ? WHERE user_id = ?");
+                $stmt2->bind_param("ssssssissi", $clinic_name, $license_number, $medical_license, $specialization, $address, $contact_phone, $is_available, $available_from, $available_to, $user_id);
+            }
             $stmt2->execute();
             $stmt2->close();
         } else {
@@ -166,7 +207,7 @@ $conn->close();
                 
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <form method="POST">
+                        <form method="POST" enctype="multipart/form-data">
                             <h5 class="card-title mb-4">Basic Information</h5>
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -181,6 +222,10 @@ $conn->close();
                             <div class="mb-3">
                                 <label class="form-label">Phone</label>
                                 <input type="text" class="form-control" name="phone" value="<?php echo htmlspecialchars($user['phone'] ?? ''); ?>">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Profile Photo</label>
+                                <input type="file" class="form-control" name="profile_photo" accept="image/*">
                             </div>
                             
                             <?php if ($role === 'clinic_admin' && $profile): ?>
@@ -227,6 +272,16 @@ $conn->close();
                             <div class="mb-3">
                                 <label class="form-label">Address</label>
                                 <textarea class="form-control" name="address" rows="2"><?php echo htmlspecialchars($profile['address'] ?? ''); ?></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Doctor Signature Image</label>
+                                    <input type="file" class="form-control" name="signature_image" accept="image/*">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label">Clinic Seal Image</label>
+                                    <input type="file" class="form-control" name="seal_image" accept="image/*">
+                                </div>
                             </div>
                             <div class="mb-3">
                                 <div class="form-check form-switch">

@@ -10,7 +10,7 @@ $cert_id = intval($_GET['id']);
 $conn = getDBConnection();
 
 // Get certificate details
-$stmt = $conn->prepare("SELECT c.*, cl.clinic_name, cl.address as clinic_address, 
+$stmt = $conn->prepare("SELECT c.*, cl.clinic_name, cl.address as clinic_address, cl.signature_path, cl.seal_path,
                        u.full_name as patient_name, u.email as patient_email, u.phone as patient_phone,
                        p.patient_code, p.date_of_birth, p.gender
                        FROM certificates c
@@ -114,8 +114,20 @@ $conn->close();
         </div>
         <?php endif; ?>
 
-        <!-- QR Code -->
+        <!-- Signature/Seal and QR Code -->
         <div class="qr-code">
+            <?php if (!empty($certificate['signature_path'])): ?>
+            <div class="mb-3">
+                <img src="../<?php echo htmlspecialchars($certificate['signature_path']); ?>" alt="Doctor Signature" style="height:80px;">
+                <div class="text-muted small">Doctor's Signature</div>
+            </div>
+            <?php endif; ?>
+            <?php if (!empty($certificate['seal_path'])): ?>
+            <div class="mb-3">
+                <img src="../<?php echo htmlspecialchars($certificate['seal_path']); ?>" alt="Clinic Seal" style="height:80px;">
+                <div class="text-muted small">Clinic Seal</div>
+            </div>
+            <?php endif; ?>
             <p class="text-muted small">Scan QR code to verify certificate</p>
             <img src="<?php echo $qr_image; ?>" alt="QR Code" class="img-fluid" style="width: 200px;">
         </div>

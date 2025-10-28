@@ -77,5 +77,13 @@ function sanitizeInput($data) {
 function generateCertID() {
     return 'MED-' . date('Ymd') . '-' . strtoupper(uniqid());
 }
+
+// Notification helper
+function notifyUser(mysqli $conn, int $userId, string $title, string $message, string $link = null) {
+    $stmt = $conn->prepare("INSERT INTO notifications (user_id, title, message, link) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("isss", $userId, $title, $message, $link);
+    $stmt->execute();
+    $stmt->close();
+}
 ?>
 

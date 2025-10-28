@@ -139,8 +139,9 @@ body {
 <!-- Navigation Bar -->
 <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container">
-        <a class="navbar-brand" href="index.php">
-            <i class="bi bi-heart-pulse-fill"></i> MediArchive
+        <a class="navbar-brand d-flex align-items-center gap-2" href="index.php">
+            <span class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:34px;height:34px;color:#2e7d32;"><i class="bi bi-heart-pulse-fill"></i></span>
+            <span>MediArchive</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
