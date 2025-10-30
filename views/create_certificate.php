@@ -8,21 +8,18 @@ if (!isLoggedIn() || !isClinicAdmin()) {
 $error = '';
 $success = '';
 
-$conn = getDBConnection();
 $user_id = $_SESSION['user_id'];
+try {
+    $db = Database::getInstance();
+    // Get clinic info
+    $clinic = $db->fetch("SELECT c.* FROM clinics c WHERE c.user_id = ?", [$user_id]);
 
-// Get clinic info
-$stmt = $conn->prepare("SELECT c.* FROM clinics c WHERE c.user_id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$clinic = $stmt->get_result()->fetch_assoc();
-$stmt->close();
-
-// Get all patients
-$stmt = $conn->prepare("SELECT p.id, p.patient_code, u.full_name, u.email FROM patients p JOIN users u ON p.user_id = u.id");
-$stmt->execute();
-$patients = $stmt->get_result();
-$stmt->close();
+    // Get all patients
+    $patients = $db->fetchAll("SELECT p.id, p.patient_code, u.full_name, u.email FROM patients p JOIN users u ON p.user_id = u.id");
+} catch (Exception $e) {
+    $clinic = null;
+    $patients = [];
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$clinic) {
@@ -39,51 +36,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // Verify patient exists in patients table
     $patient_exists = false;
-    $chk = $conn->prepare("SELECT id FROM patients WHERE id = ?");
-    $chk->bind_param("i", $patient_id);
-    $chk->execute();
-    $res = $chk->get_result();
-    if ($res && $res->num_rows > 0) {
+    $res = $db->fetch("SELECT id FROM patients WHERE id = ?", [$patient_id]);
+    if ($res) {
         $patient_exists = true;
     }
-    $chk->close();
 
     if (!$patient_exists) {
         $error = 'Selected patient does not exist. Please refresh and select a valid patient.';
     }
 
     if (empty($error)) {
-        $cert_id = generateCertID();
-        $clinic_id = $clinic ? $clinic['id'] : null;
-        
-        // attach saved signature if present
-        $doctor_signature_path = !empty($clinic['signature_path']) ? $clinic['signature_path'] : null;
+    $cert_id = generateCertID();
+    $clinic_id = $clinic ? $clinic['id'] : null;
 
-        $stmt = $conn->prepare("INSERT INTO certificates (cert_id, clinic_id, patient_id, issued_by, doctor_license, issue_date, expiry_date, purpose, diagnosis, recommendations, doctor_signature_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $stmt->bind_param("siissssssss", $cert_id, $clinic_id, $patient_id, $issued_by, $doctor_license, $issue_date, $expiry_date, $purpose, $diagnosis, $recommendations, $doctor_signature_path);
+    // attach saved signature if present
+    $doctor_signature_path = !empty($clinic['signature_path']) ? $clinic['signature_path'] : null;
+
+    $db->execute("INSERT INTO certificates (cert_id, clinic_id, patient_id, issued_by, doctor_license, issue_date, expiry_date, purpose, diagnosis, recommendations, doctor_signature_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [$cert_id, $clinic_id, $patient_id, $issued_by, $doctor_license, $issue_date, $expiry_date, $purpose, $diagnosis, $recommendations, $doctor_signature_path]);
     }
     
-    if (empty($error) && $stmt->execute()) {
-        $cert_id_db = $conn->insert_id;
+    if (empty($error)) {
+        $cert_id_db = $db->lastInsertId();
         // Generate QR code
         require_once '../includes/qr_generator.php';
         $qr_path = generateQRCode($cert_id, $cert_id_db);
         
         // Update certificate with QR path
-        $stmt2 = $conn->prepare("UPDATE certificates SET file_path = ? WHERE id = ?");
-        $stmt2->bind_param("si", $qr_path, $cert_id_db);
-        $stmt2->execute();
-        $stmt2->close();
+        $db->execute("UPDATE certificates SET file_path = ? WHERE id = ?", [$qr_path, $cert_id_db]);
         
         $success = "Certificate created successfully! Cert ID: " . $cert_id;
         // notify patient
-        $getUser = $conn->prepare("SELECT u.id as user_id FROM patients p JOIN users u ON p.user_id = u.id WHERE p.id = ?");
-        $getUser->bind_param("i", $patient_id);
-        $getUser->execute();
-        $ud = $getUser->get_result()->fetch_assoc();
-        $getUser->close();
+        $ud = $db->fetch("SELECT u.id as user_id FROM patients p JOIN users u ON p.user_id = u.id WHERE p.id = ?", [$patient_id]);
         if ($ud) {
-            notifyUser($conn, intval($ud['user_id']), 'New Medical Certificate', 'A new medical certificate has been issued to you.', 'my_certificates.php');
+            // notifyUser expects a mysqli connection; use existing helper for backward compatibility
+            $mysqli = getDBConnection();
+            notifyUser($mysqli, intval($ud['user_id']), 'New Medical Certificate', 'A new medical certificate has been issued to you.', 'my_certificates.php');
+            $mysqli->close();
         }
     } elseif (empty($error)) {
         $error = "Failed to create certificate";
@@ -147,11 +135,11 @@ $conn->close();
                                     <label class="form-label">Patient <span class="text-danger">*</span></label>
                                     <select class="form-select" name="patient_id" required>
                                         <option value="">Select Patient</option>
-                                        <?php while ($patient = $patients->fetch_assoc()): ?>
+                                        <?php foreach ($patients as $patient): ?>
                                         <option value="<?php echo $patient['id']; ?>">
                                             <?php echo htmlspecialchars($patient['patient_code'] . ' - ' . $patient['full_name']); ?>
                                         </option>
-                                        <?php endwhile; ?>
+                                        <?php endforeach; ?>
                                     </select>
                                 </div>
                                 <div class="col-md-6 mb-3">

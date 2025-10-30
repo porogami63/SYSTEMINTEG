@@ -23,31 +23,23 @@ $specializations = [
     'Surgery'
 ];
 
-$conn = getDBConnection();
 $user_id = $_SESSION['user_id'];
 $role = $_SESSION['role'];
 
-// Get user data
-$stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$user = $stmt->get_result()->fetch_assoc();
-$stmt->close();
+try {
+    $db = Database::getInstance();
+    // Get user data
+    $user = $db->fetch("SELECT * FROM users WHERE id = ?", [$user_id]);
 
-// Get profile data
-$profile = null;
-if ($role === 'clinic_admin') {
-    $stmt = $conn->prepare("SELECT * FROM clinics WHERE user_id = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $profile = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-} else {
-    $stmt = $conn->prepare("SELECT * FROM patients WHERE user_id = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $profile = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
+    // Get profile data
+    if ($role === 'clinic_admin') {
+        $profile = $db->fetch("SELECT * FROM clinics WHERE user_id = ?", [$user_id]);
+    } else {
+        $profile = $db->fetch("SELECT * FROM patients WHERE user_id = ?", [$user_id]);
+    }
+} catch (Exception $e) {
+    $user = null;
+    $profile = null;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -58,24 +50,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Handle profile photo upload
     $profile_photo_path = null;
     if (!empty($_FILES['profile_photo']['name'])) {
-        $ext = pathinfo($_FILES['profile_photo']['name'], PATHINFO_EXTENSION);
-        $filename = 'profile_' . $user_id . '_' . time() . '.' . strtolower($ext);
-        $dest = UPLOAD_DIR . $filename;
-        if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $dest)) {
-            $profile_photo_path = 'uploads/' . $filename;
+        try {
+            $saved = FileProcessor::saveUpload($_FILES['profile_photo'], UPLOAD_DIR, ['jpg','jpeg','png','gif'], 2 * 1024 * 1024);
+            $profile_photo_path = 'uploads/' . basename($saved);
+        } catch (Exception $e) {
+            $error = 'Profile photo upload failed: ' . $e->getMessage();
         }
     }
     
     // Update user info
-    if ($profile_photo_path) {
-        $stmt = $conn->prepare("UPDATE users SET full_name = ?, email = ?, phone = ?, profile_photo = ? WHERE id = ?");
-        $stmt->bind_param("ssssi", $full_name, $email, $phone, $profile_photo_path, $user_id);
-    } else {
-        $stmt = $conn->prepare("UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?");
-        $stmt->bind_param("sssi", $full_name, $email, $phone, $user_id);
-    }
-    
-    if ($stmt->execute()) {
+    try {
+        if ($profile_photo_path) {
+            $db->execute("UPDATE users SET full_name = ?, email = ?, phone = ?, profile_photo = ? WHERE id = ?", [$full_name, $email, $phone, $profile_photo_path, $user_id]);
+        } else {
+            $db->execute("UPDATE users SET full_name = ?, email = ?, phone = ? WHERE id = ?", [$full_name, $email, $phone, $user_id]);
+        }
+
         // Update role-specific info
         if ($role === 'clinic_admin') {
             $medical_license = sanitizeInput($_POST['medical_license']);
@@ -87,53 +77,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $is_available = isset($_POST['is_available']) ? 1 : 0;
             $available_from = sanitizeInput($_POST['available_from']);
             $available_to = sanitizeInput($_POST['available_to']);
-            
+
             // Handle signature and seal uploads
             $signature_path = null;
             if (!empty($_FILES['signature_image']['name'])) {
-                $ext = pathinfo($_FILES['signature_image']['name'], PATHINFO_EXTENSION);
-                $filename = 'signature_' . $user_id . '_' . time() . '.' . strtolower($ext);
-                $dest = UPLOAD_DIR . $filename;
-                if (move_uploaded_file($_FILES['signature_image']['tmp_name'], $dest)) {
-                    $signature_path = 'uploads/' . $filename;
+                try {
+                    $saved = FileProcessor::saveUpload($_FILES['signature_image'], UPLOAD_DIR, ['jpg','jpeg','png','gif'], 2 * 1024 * 1024);
+                    $signature_path = 'uploads/' . basename($saved);
+                } catch (Exception $e) {
+                    // ignore upload error but record
                 }
             }
             $seal_path = null;
             if (!empty($_FILES['seal_image']['name'])) {
-                $ext = pathinfo($_FILES['seal_image']['name'], PATHINFO_EXTENSION);
-                $filename = 'seal_' . $user_id . '_' . time() . '.' . strtolower($ext);
-                $dest = UPLOAD_DIR . $filename;
-                if (move_uploaded_file($_FILES['seal_image']['tmp_name'], $dest)) {
-                    $seal_path = 'uploads/' . $filename;
+                try {
+                    $saved = FileProcessor::saveUpload($_FILES['seal_image'], UPLOAD_DIR, ['jpg','jpeg','png','gif'], 2 * 1024 * 1024);
+                    $seal_path = 'uploads/' . basename($saved);
+                } catch (Exception $e) {
                 }
             }
-            
+
             if ($signature_path || $seal_path) {
-                $stmt2 = $conn->prepare("UPDATE clinics SET clinic_name = ?, license_number = ?, medical_license = ?, specialization = ?, address = ?, contact_phone = ?, is_available = ?, available_from = ?, available_to = ?, signature_path = IFNULL(?, signature_path), seal_path = IFNULL(?, seal_path) WHERE user_id = ?");
-                $stmt2->bind_param("ssssssissssi", $clinic_name, $license_number, $medical_license, $specialization, $address, $contact_phone, $is_available, $available_from, $available_to, $signature_path, $seal_path, $user_id);
+                $db->execute("UPDATE clinics SET clinic_name = ?, license_number = ?, medical_license = ?, specialization = ?, address = ?, contact_phone = ?, is_available = ?, available_from = ?, available_to = ?, signature_path = IFNULL(?, signature_path), seal_path = IFNULL(?, seal_path) WHERE user_id = ?", [$clinic_name, $license_number, $medical_license, $specialization, $address, $contact_phone, $is_available, $available_from, $available_to, $signature_path, $seal_path, $user_id]);
             } else {
-                $stmt2 = $conn->prepare("UPDATE clinics SET clinic_name = ?, license_number = ?, medical_license = ?, specialization = ?, address = ?, contact_phone = ?, is_available = ?, available_from = ?, available_to = ? WHERE user_id = ?");
-                $stmt2->bind_param("ssssssissi", $clinic_name, $license_number, $medical_license, $specialization, $address, $contact_phone, $is_available, $available_from, $available_to, $user_id);
+                $db->execute("UPDATE clinics SET clinic_name = ?, license_number = ?, medical_license = ?, specialization = ?, address = ?, contact_phone = ?, is_available = ?, available_from = ?, available_to = ? WHERE user_id = ?", [$clinic_name, $license_number, $medical_license, $specialization, $address, $contact_phone, $is_available, $available_from, $available_to, $user_id]);
             }
-            $stmt2->execute();
-            $stmt2->close();
         } else {
             $date_of_birth = sanitizeInput($_POST['date_of_birth']);
             $gender = sanitizeInput($_POST['gender']);
             $address = sanitizeInput($_POST['address']);
-            
-            $stmt2 = $conn->prepare("UPDATE patients SET date_of_birth = ?, gender = ?, address = ? WHERE user_id = ?");
-            $stmt2->bind_param("sssi", $date_of_birth, $gender, $address, $user_id);
-            $stmt2->execute();
-            $stmt2->close();
+
+            $db->execute("UPDATE patients SET date_of_birth = ?, gender = ?, address = ? WHERE user_id = ?", [$date_of_birth, $gender, $address, $user_id]);
         }
-        
+
         $success = "Profile updated successfully!";
-    } else {
-        $error = "Failed to update profile";
+    } catch (Exception $e) {
+        $error = 'Failed to update profile: ' . $e->getMessage();
     }
-    
-    $stmt->close();
 }
 
 // Refresh data

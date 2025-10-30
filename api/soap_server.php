@@ -67,46 +67,16 @@ if (isset($_GET['wsdl'])) {
     exit;
 }
 
-// Function to validate certificate
+// Function to validate certificate (delegates to SoapFacade)
 function validateCertificate($cert_id) {
-    $conn = getDBConnection();
-    
-    $stmt = $conn->prepare("SELECT c.*, cl.clinic_name, cl.address as clinic_address,
-                           u.full_name as patient_name, u.email as patient_email 
-                           FROM certificates c
-                           JOIN clinics cl ON c.clinic_id = cl.id
-                           JOIN patients p ON c.patient_id = p.id
-                           JOIN users u ON p.user_id = u.id
-                           WHERE c.cert_id = ? AND c.status = 'active'");
-    $stmt->bind_param("s", $cert_id);
-    $stmt->execute();
-    $result = $stmt->get_result();
-    
-    if ($result->num_rows > 0) {
-        $cert = $result->fetch_assoc();
-        
-        // Log verification
-        $stmt2 = $conn->prepare("INSERT INTO verifications (cert_id, ip_address, user_agent) VALUES (?, ?, ?)");
-        $stmt2->bind_param("iss", $cert['id'], $_SERVER['REMOTE_ADDR'], $_SERVER['HTTP_USER_AGENT']);
-        $stmt2->execute();
-        $stmt2->close();
-        
-        $stmt->close();
-        $conn->close();
-        
-        return [
-            'valid' => true,
-            'certificate' => json_encode($cert),
-            'message' => 'Certificate is valid and active'
-        ];
-    } else {
-        $stmt->close();
-        $conn->close();
-        
+    // SoapFacade provides an OOP wrapper around the validation logic.
+    try {
+        return SoapFacade::validateCertificate($cert_id);
+    } catch (Exception $e) {
         return [
             'valid' => false,
             'certificate' => '{}',
-            'message' => 'Certificate not found or has been revoked'
+            'message' => 'Server error: ' . $e->getMessage()
         ];
     }
 }

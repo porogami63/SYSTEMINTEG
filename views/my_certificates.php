@@ -5,31 +5,25 @@ if (!isLoggedIn()) {
     redirect('login.php');
 }
 
-$conn = getDBConnection();
-$user_id = $_SESSION['user_id'];
+try {
+    $db = Database::getInstance();
+    $user_id = $_SESSION['user_id'];
 
-// Get patient info
-if (isPatient()) {
-    $stmt = $conn->prepare("SELECT p.id FROM patients p WHERE p.user_id = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $patient = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-    
-    $patient_id = $patient['id'];
-} else {
-    $patient_id = intval($_GET['patient_id'] ?? 0);
-}
+    // Get patient info
+    if (isPatient()) {
+        $patient = $db->fetch("SELECT p.id FROM patients p WHERE p.user_id = ?", [$user_id]);
+        $patient_id = $patient['id'] ?? 0;
+    } else {
+        $patient_id = intval($_GET['patient_id'] ?? 0);
+    }
 
-// Get certificates
-$stmt = $conn->prepare("SELECT c.*, cl.clinic_name FROM certificates c 
+    // Get certificates
+    $certificates = $db->fetchAll("SELECT c.*, cl.clinic_name FROM certificates c 
                        JOIN clinics cl ON c.clinic_id = cl.id 
-                       WHERE c.patient_id = ? ORDER BY c.created_at DESC");
-$stmt->bind_param("i", $patient_id);
-$stmt->execute();
-$certificates = $stmt->get_result();
-$stmt->close();
-$conn->close();
+                       WHERE c.patient_id = ? ORDER BY c.created_at DESC", [$patient_id]);
+} catch (Exception $e) {
+    $certificates = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -71,7 +65,7 @@ $conn->close();
                 
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <?php if ($certificates->num_rows > 0): ?>
+                        <?php if (!empty($certificates)): ?>
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
@@ -85,7 +79,7 @@ $conn->close();
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php while ($cert = $certificates->fetch_assoc()): ?>
+                                    <?php foreach ($certificates as $cert): ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($cert['cert_id']); ?></td>
                                         <td><?php echo htmlspecialchars($cert['clinic_name']); ?></td>
@@ -105,7 +99,7 @@ $conn->close();
                                             </a>
                                         </td>
                                     </tr>
-                                    <?php endwhile; ?>
+                                    <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>

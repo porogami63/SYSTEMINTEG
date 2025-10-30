@@ -85,5 +85,10 @@ function notifyUser(mysqli $conn, int $userId, string $title, string $message, s
     $stmt->execute();
     $stmt->close();
 }
+
+// Load OOP utilities (non-breaking; classes will use DB_* constants)
+if (file_exists(__DIR__ . '/includes/bootstrap.php')) {
+    require_once __DIR__ . '/includes/bootstrap.php';
+}
 ?>
 

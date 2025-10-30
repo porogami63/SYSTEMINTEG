@@ -7,28 +7,26 @@ if (!isLoggedIn()) {
 }
 
 $cert_id = intval($_GET['id']);
-$conn = getDBConnection();
-
-// Get certificate details
-$stmt = $conn->prepare("SELECT c.*, cl.clinic_name, cl.address as clinic_address, cl.signature_path, cl.seal_path,
+try {
+    $db = Database::getInstance();
+    // Get certificate details
+    $certificate = $db->fetch("SELECT c.*, cl.clinic_name, cl.address as clinic_address, cl.signature_path, cl.seal_path,
                        u.full_name as patient_name, u.email as patient_email, u.phone as patient_phone,
                        p.patient_code, p.date_of_birth, p.gender
                        FROM certificates c
                        JOIN clinics cl ON c.clinic_id = cl.id
                        JOIN patients p ON c.patient_id = p.id
                        JOIN users u ON p.user_id = u.id
-                       WHERE c.id = ?");
-$stmt->bind_param("i", $cert_id);
-$stmt->execute();
-$certificate = $stmt->get_result()->fetch_assoc();
-$stmt->close();
+                       WHERE c.id = ?", [$cert_id]);
 
-if (!$certificate) {
-    die("Certificate not found");
+    if (!$certificate) {
+        die("Certificate not found");
+    }
+
+    $qr_image = getQRCodeImage($certificate['cert_id'], $certificate['id']);
+} catch (Exception $e) {
+    die('Server error: ' . $e->getMessage());
 }
-
-$qr_image = getQRCodeImage($certificate['cert_id'], $certificate['id']);
-$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">

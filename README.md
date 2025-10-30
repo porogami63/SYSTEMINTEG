@@ -189,3 +189,39 @@ This project is developed for educational purposes as part of system integration
 
 For issues or questions, refer to the course instructor or documentation.
 
+## Migration to OOP utilities (notes)
+
+This branch includes a small set of Object-Oriented helper classes to make the codebase easier to maintain and test:
+
+- `includes/Database.php` — PDO wrapper (singleton) for queries and transactions.
+- `includes/FileProcessor.php` — upload and file helpers.
+- `includes/JsonHelper.php` — JSON encode/decode helpers with error handling.
+- `includes/XmlHandler.php` — DOM-based XML builder/parsers.
+- `includes/HttpClient.php` — cURL wrapper for HTTP requests and downloads.
+- `includes/SoapFacade.php` — OOP wrapper for the certificate validation logic used by the SOAP server.
+
+These are loaded via `includes/bootstrap.php`, which is required from `config.php` for backwards compatibility.
+
+Migration approach used:
+- Keep existing procedural helpers (so old pages continue to work).
+- Add OOP utilities and migrate a few pages as a demo (login, register, profile, edit_profile, and `api/json.php`).
+- Migrate SOAP handler to delegate to `SoapFacade` for testability.
+
+If you want to continue migrating, search the repo for `getDBConnection()` and `->prepare(` to find procedural DB usages to update incrementally.
+
+## Running the provided tests
+
+A small CLI test runner is included at `tests/run_tests.php`. It runs a few sanity checks (DB, JSON, file write, HTTP, SOAP best-effort).
+
+Run it from the project root using PHP (PowerShell example):
+
+```powershell
+# from project root
+php .\tests\run_tests.php
+```
+
+Notes:
+- Tests are best-effort and expect your local Apache/PHP to be running and configured (PDO, cURL, and optionally SOAP enabled).
+- The SOAP test requires the PHP `soap` extension and a running web server serving this project so the WSDL can be fetched.
+
+

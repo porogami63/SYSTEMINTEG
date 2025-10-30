@@ -6,57 +6,37 @@ if (!isLoggedIn()) {
 }
 
 // Get user info
-$conn = getDBConnection();
 $user_id = $_SESSION['user_id'];
 $role = $_SESSION['role'];
 
-// Get clinic or patient info
-if ($role === 'clinic_admin') {
-    $stmt = $conn->prepare("SELECT c.* FROM clinics c WHERE c.user_id = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $profile = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-    
-    // Get certificate count
-    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM certificates WHERE clinic_id = ?");
-    $stmt->bind_param("i", $profile['id']);
-    $stmt->execute();
-    $cert_count = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-    
-    // Get recent certificates
-    $stmt = $conn->prepare("SELECT * FROM certificates WHERE clinic_id = ? ORDER BY created_at DESC LIMIT 5");
-    $stmt->bind_param("i", $profile['id']);
-    $stmt->execute();
-    $recent_certs = $stmt->get_result();
-    $stmt->close();
-} else {
-    // Patient dashboard
-    $stmt = $conn->prepare("SELECT p.* FROM patients p WHERE p.user_id = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $profile = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-    
-    // Get certificate count
-    $stmt = $conn->prepare("SELECT COUNT(*) as total FROM certificates WHERE patient_id = ?");
-    $stmt->bind_param("i", $profile['id']);
-    $stmt->execute();
-    $cert_count = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-    
-    // Get recent certificates
-    $stmt = $conn->prepare("SELECT c.*, cl.clinic_name FROM certificates c 
-                           JOIN clinics cl ON c.clinic_id = cl.id 
-                           WHERE c.patient_id = ? ORDER BY c.created_at DESC LIMIT 5");
-    $stmt->bind_param("i", $profile['id']);
-    $stmt->execute();
-    $recent_certs = $stmt->get_result();
-    $stmt->close();
-}
+try {
+    $db = Database::getInstance();
+    // Get clinic or patient info
+    if ($role === 'clinic_admin') {
+        $profile = $db->fetch("SELECT c.* FROM clinics c WHERE c.user_id = ?", [$user_id]);
 
-$conn->close();
+        // Get certificate count
+        $cert_count = $db->fetch("SELECT COUNT(*) as total FROM certificates WHERE clinic_id = ?", [$profile['id'] ?? 0]);
+
+        // Get recent certificates
+        $recent_certs = $db->fetchAll("SELECT * FROM certificates WHERE clinic_id = ? ORDER BY created_at DESC LIMIT 5", [$profile['id'] ?? 0]);
+    } else {
+        // Patient dashboard
+        $profile = $db->fetch("SELECT p.* FROM patients p WHERE p.user_id = ?", [$user_id]);
+
+        // Get certificate count
+        $cert_count = $db->fetch("SELECT COUNT(*) as total FROM certificates WHERE patient_id = ?", [$profile['id'] ?? 0]);
+
+        // Get recent certificates
+        $recent_certs = $db->fetchAll("SELECT c.*, cl.clinic_name FROM certificates c 
+                           JOIN clinics cl ON c.clinic_id = cl.id 
+                           WHERE c.patient_id = ? ORDER BY c.created_at DESC LIMIT 5", [$profile['id'] ?? 0]);
+    }
+} catch (Exception $e) {
+    $profile = null;
+    $cert_count = ['total' => 0];
+    $recent_certs = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -172,7 +152,7 @@ $conn->close();
                         <h5>Recent Certificates</h5>
                     </div>
                     <div class="card-body">
-                        <?php if ($recent_certs->num_rows > 0): ?>
+                        <?php if (!empty($recent_certs)): ?>
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
@@ -188,7 +168,7 @@ $conn->close();
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php while ($cert = $recent_certs->fetch_assoc()): ?>
+                                    <?php foreach ($recent_certs as $cert): ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($cert['cert_id']); ?></td>
                                         <?php if ($role === 'patient'): ?>
@@ -205,7 +185,7 @@ $conn->close();
                                             <a href="view_certificate.php?id=<?php echo $cert['id']; ?>" class="btn btn-sm btn-primary">View</a>
                                         </td>
                                     </tr>
-                                    <?php endwhile; ?>
+                                    <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>

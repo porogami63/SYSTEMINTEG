@@ -16,25 +16,21 @@ if (empty($cert_id)) {
     exit;
 }
 
-$conn = getDBConnection();
-
-$stmt = $conn->prepare("SELECT c.*, cl.clinic_name, cl.address as clinic_address,
+try {
+    $db = Database::getInstance();
+    $cert = $db->fetch("SELECT c.*, cl.clinic_name, cl.address as clinic_address,
                        u.full_name as patient_name, u.email as patient_email, u.phone as patient_phone,
                        p.patient_code, p.date_of_birth, p.gender
                        FROM certificates c
                        JOIN clinics cl ON c.clinic_id = cl.id
                        JOIN patients p ON c.patient_id = p.id
                        JOIN users u ON p.user_id = u.id
-                       WHERE c.cert_id = ?");
-$stmt->bind_param("s", $cert_id);
-$stmt->execute();
-$result = $stmt->get_result();
+                       WHERE c.cert_id = ?", [$cert_id]);
 
-echo '<?xml version="1.0" encoding="UTF-8"?>';
-echo '<certificate>';
+    echo '<?xml version="1.0" encoding="UTF-8"?>';
+    echo '<certificate>';
 
-if ($result->num_rows > 0) {
-    $cert = $result->fetch_assoc();
+    if ($cert) {
     
     echo '<cert_id>' . htmlspecialchars($cert['cert_id']) . '</cert_id>';
     echo '<patient>';
@@ -60,13 +56,14 @@ if ($result->num_rows > 0) {
     echo '<recommendations>' . htmlspecialchars($cert['recommendations']) . '</recommendations>';
     echo '<status>' . htmlspecialchars($cert['status']) . '</status>';
     echo '<created_at>' . $cert['created_at'] . '</created_at>';
-} else {
-    echo '<error>Certificate not found</error>';
+    } else {
+        echo '<error>Certificate not found</error>';
+    }
+
+    echo '</certificate>';
+} catch (Exception $e) {
+    echo '<?xml version="1.0" encoding="UTF-8"?>';
+    echo '<error>Server error: ' . htmlspecialchars($e->getMessage()) . '</error>';
 }
-
-echo '</certificate>';
-
-$stmt->close();
-$conn->close();
 ?>
 
