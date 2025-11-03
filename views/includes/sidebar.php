@@ -56,6 +56,16 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 </a>
             </li>
             <?php endif; ?>
+            
+            <?php if (isWebAdmin()): ?>
+            <hr class="text-white">
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'audit_logs.php' ? 'active' : ''; ?>" href="audit_logs.php">
+                    <i class="bi bi-shield-check"></i> Audit Logs
+                </a>
+            </li>
+            <?php endif; ?>
+            
             <li class="nav-item">
                 <a class="nav-link <?php echo in_array($current_page, ['profile.php', 'edit_profile.php']) ? 'active' : ''; ?>" href="profile.php">
                     <i class="bi bi-person"></i> Profile

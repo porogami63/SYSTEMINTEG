@@ -47,7 +47,7 @@ class AuditLogger {
     /**
      * Get audit logs with optional filters
      * 
-     * @param array $filters Filter options (user_id, action, entity_type, date_from, date_to)
+     * @param array $filters Filter options (user_id, action, entity_type, date_from, date_to, clinic_id)
      * @param int $limit Number of records to return
      * @param int $offset Offset for pagination
      * @return array Audit log entries
@@ -57,6 +57,7 @@ class AuditLogger {
         
         $where = ['1=1'];
         $params = [];
+        $joins = [];
         
         if (!empty($filters['user_id'])) {
             $where[] = 'al.user_id = ?';
@@ -83,12 +84,20 @@ class AuditLogger {
             $params[] = $filters['date_to'] . ' 23:59:59';
         }
         
+        // Filter by clinic_id for certificate entities
+        if (!empty($filters['clinic_id']) && !empty($filters['entity_type']) && $filters['entity_type'] === 'certificate') {
+            $joins[] = 'LEFT JOIN certificates c ON al.entity_id = c.id';
+            $where[] = 'c.clinic_id = ?';
+            $params[] = $filters['clinic_id'];
+        }
+        
         $params[] = $limit;
         $params[] = $offset;
         
-        $sql = "SELECT al.*, u.full_name as user_name, u.username 
+        $sql = "SELECT DISTINCT al.*, u.full_name as user_name, u.username 
                 FROM audit_logs al
                 LEFT JOIN users u ON al.user_id = u.id
+                " . implode(' ', $joins) . "
                 WHERE " . implode(' AND ', $where) . "
                 ORDER BY al.created_at DESC
                 LIMIT ? OFFSET ?";

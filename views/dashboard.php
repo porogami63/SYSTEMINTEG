@@ -42,6 +42,9 @@ try {
              ORDER BY month ASC",
             [$clinic_id]
         );
+        
+        // Get recent activity feed
+        $recent_activity = AuditLogger::getLogs(['entity_type' => 'certificate', 'clinic_id' => $clinic_id], 5, 0);
     } else {
         // Patient dashboard
         $profile = $db->fetch("SELECT p.* FROM patients p WHERE p.user_id = ?", [$user_id]);
@@ -73,6 +76,7 @@ try {
         $monthly_stats = [];
         $pending_requests_count = ['total' => 0];
         $expiry_stats = ['expiring_this_week' => count($expiring_soon), 'expiring_this_month' => 0, 'already_expired' => intval($expired_count['total'] ?? 0)];
+        $recent_activity = [];
     }
 } catch (Exception $e) {
     $profile = null;
@@ -84,6 +88,7 @@ try {
     $expiring_soon = [];
     $expiry_stats = ['expiring_this_week' => 0, 'expiring_this_month' => 0, 'already_expired' => 0];
     $monthly_stats = [];
+    $recent_activity = [];
 }
 ?>
 <!DOCTYPE html>
@@ -223,6 +228,64 @@ try {
                     <?php endif; ?>
                 </div>
 
+                <!-- Quick Actions -->
+                <?php if ($role === 'clinic_admin'): ?>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5><i class="bi bi-lightning-charge"></i> Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 mb-2">
+                                <a href="create_certificate.php" class="btn btn-primary w-100">
+                                    <i class="bi bi-plus-circle"></i> New Certificate
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a href="certificates.php?status=pending" class="btn btn-info w-100">
+                                    <i class="bi bi-inbox"></i> View Requests
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a href="analytics.php" class="btn btn-success w-100">
+                                    <i class="bi bi-graph-up"></i> Analytics
+                                </a>
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <a href="patients.php" class="btn btn-warning w-100">
+                                    <i class="bi bi-people"></i> Manage Patients
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php else: ?>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5><i class="bi bi-lightning-charge"></i> Quick Actions</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <a href="request_certificate.php" class="btn btn-primary w-100">
+                                    <i class="bi bi-plus-circle"></i> Request Certificate
+                                </a>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <a href="my_certificates.php" class="btn btn-success w-100">
+                                    <i class="bi bi-files"></i> My Certificates
+                                </a>
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <a href="find_doctors.php" class="btn btn-info w-100">
+                                    <i class="bi bi-search"></i> Find Doctors
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+
                 <!-- Expiry Warnings -->
                 <?php if (!empty($expiring_soon)): ?>
                 <div class="alert alert-warning alert-dismissible fade show mb-4">
@@ -292,6 +355,38 @@ try {
                         <?php endif; ?>
                     </div>
                 </div>
+                
+                <!-- Activity Feed (For Clinic Admins) -->
+                <?php if ($role === 'clinic_admin' && !empty($recent_activity)): ?>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5><i class="bi bi-activity"></i> Recent Activity</h5>
+                    </div>
+                    <div class="card-body">
+                        <?php foreach ($recent_activity as $activity): ?>
+                        <div class="d-flex align-items-start mb-3 pb-3 border-bottom">
+                            <div class="me-3">
+                                <span class="badge bg-<?php echo $activity['action'] === 'CREATE_CERTIFICATE' ? 'success' : 'info'; ?> rounded-circle" style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+                                    <i class="bi bi-<?php echo $activity['action'] === 'CREATE_CERTIFICATE' ? 'plus-circle' : 'eye'; ?>"></i>
+                                </span>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="fw-bold"><?php echo htmlspecialchars($activity['user_name'] ?? 'System'); ?></div>
+                                <div class="text-muted small">
+                                    <?php echo htmlspecialchars($activity['action']); ?> - <?php echo htmlspecialchars($activity['entity_type']); ?>
+                                    <?php if ($activity['entity_id']): ?>
+                                        #<?php echo $activity['entity_id']; ?>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="text-muted small mt-1">
+                                    <i class="bi bi-clock"></i> <?php echo date('M d, Y H:i', strtotime($activity['created_at'])); ?>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
         </main>
     </div>

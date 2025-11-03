@@ -57,8 +57,8 @@ try {
     // Expiry statistics
     $expiry_stats = ExpiryManager::getExpiryStats($clinic_id);
     
-    // Recent activity (last 10 actions)
-    $recent_activity = AuditLogger::getLogs(['entity_type' => 'certificate'], 10, 0);
+    // Recent activity (last 10 actions) - filtered by clinic
+    $recent_activity = AuditLogger::getLogs(['entity_type' => 'certificate', 'clinic_id' => $clinic_id], 10, 0);
     
 } catch (Exception $e) {
     $total_certs = ['count' => 0];
