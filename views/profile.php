@@ -5,32 +5,23 @@ if (!isLoggedIn()) {
     redirect('login.php');
 }
 
-$conn = getDBConnection();
 $user_id = $_SESSION['user_id'];
+try {
+    $db = Database::getInstance();
+    // Get user details
+    $user = $db->fetch("SELECT * FROM users WHERE id = ?", [$user_id]);
 
-// Get user details
-$stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$user = $stmt->get_result()->fetch_assoc();
-$stmt->close();
-
-// Get profile details based on role
-if ($_SESSION['role'] === 'clinic_admin') {
-    $stmt = $conn->prepare("SELECT * FROM clinics WHERE user_id = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $profile = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-} else {
-    $stmt = $conn->prepare("SELECT * FROM patients WHERE user_id = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $profile = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
+    // Get profile details based on role
+    if ($_SESSION['role'] === 'clinic_admin') {
+        $profile = $db->fetch("SELECT * FROM clinics WHERE user_id = ?", [$user_id]);
+    } else {
+        $profile = $db->fetch("SELECT * FROM patients WHERE user_id = ?", [$user_id]);
+    }
+} catch (Exception $e) {
+    // fallback to empty
+    $user = null;
+    $profile = null;
 }
-
-$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">

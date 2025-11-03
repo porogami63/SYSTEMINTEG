@@ -12,24 +12,42 @@ if (!isLoggedIn()) {
 
 $cert_id = intval($_GET['id'] ?? 0);
 
-$conn = getDBConnection();
-
-$stmt = $conn->prepare("SELECT c.*, cl.clinic_name, cl.address as clinic_address,
+try {
+    $db = Database::getInstance();
+    $cert = $db->fetch("SELECT c.*, cl.clinic_name, cl.address as clinic_address,
                        u.full_name as patient_name, u.email as patient_email,
                        p.patient_code, p.date_of_birth, p.gender
                        FROM certificates c
                        JOIN clinics cl ON c.clinic_id = cl.id
                        JOIN patients p ON c.patient_id = p.id
                        JOIN users u ON p.user_id = u.id
-                       WHERE c.id = ?");
-$stmt->bind_param("i", $cert_id);
-$stmt->execute();
-$cert = $stmt->get_result()->fetch_assoc();
-$stmt->close();
-$conn->close();
-
-if (!$cert) {
-    die("Certificate not found");
+                       WHERE c.id = ?", [$cert_id]);
+    if (!$cert) {
+        die("Certificate not found");
+    }
+    
+    // Audit log
+    AuditLogger::log('DOWNLOAD_CERTIFICATE', 'certificate', $cert_id, ['cert_id' => $cert['cert_id']]);
+    
+    // Try to generate PDF using PdfGenerator
+    try {
+        require_once '../includes/PdfGenerator.php';
+        $temp_file = TEMP_DIR . 'cert_' . $cert_id . '_' . time() . '.pdf';
+        $pdf_path = PdfGenerator::generateCertificate($cert, $temp_file);
+        
+        if ($pdf_path && file_exists($pdf_path)) {
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: attachment; filename="certificate_' . $cert['cert_id'] . '.pdf"');
+            readfile($pdf_path);
+            @unlink($pdf_path); // Clean up temp file
+            exit;
+        }
+    } catch (Exception $e) {
+        // Fall through to HTML version if PDF generation fails
+        error_log('PDF generation failed: ' . $e->getMessage());
+    }
+} catch (Exception $e) {
+    die('Server error: ' . $e->getMessage());
 }
 
 // Generate simple HTML certificate for print

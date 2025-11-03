@@ -5,20 +5,16 @@ if (!isLoggedIn()) {
     redirect('login.php');
 }
 
-$conn = getDBConnection();
 $q = isset($_GET['q']) ? sanitizeInput($_GET['q']) : '';
 
 if ($q) {
     $like = '%' . $q . '%';
-    $stmt = $conn->prepare("SELECT c.*, u.full_name FROM clinics c JOIN users u ON c.user_id = u.id WHERE (c.clinic_name LIKE ? OR c.specialization LIKE ? OR u.full_name LIKE ?) ORDER BY c.is_available DESC, c.clinic_name");
-    $stmt->bind_param("sss", $like, $like, $like);
+    $sql = "SELECT c.*, u.full_name FROM clinics c JOIN users u ON c.user_id = u.id WHERE (c.clinic_name LIKE ? OR c.specialization LIKE ? OR u.full_name LIKE ?) ORDER BY c.is_available DESC, c.clinic_name";
+    $doctors = DB()->fetchAll($sql, [$like, $like, $like]);
 } else {
-    $stmt = $conn->prepare("SELECT c.*, u.full_name FROM clinics c JOIN users u ON c.user_id = u.id ORDER BY c.is_available DESC, c.clinic_name");
+    $sql = "SELECT c.*, u.full_name FROM clinics c JOIN users u ON c.user_id = u.id ORDER BY c.is_available DESC, c.clinic_name";
+    $doctors = DB()->fetchAll($sql);
 }
-$stmt->execute();
-$doctors = $stmt->get_result();
-$stmt->close();
-$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -53,7 +49,7 @@ $conn->close();
 
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <?php if ($doctors->num_rows > 0): ?>
+                        <?php if (!empty($doctors)): ?>
                         <div class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
@@ -67,7 +63,7 @@ $conn->close();
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php while ($doc = $doctors->fetch_assoc()): ?>
+                                    <?php foreach ($doctors as $doc): ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($doc['full_name']); ?></td>
                                         <td><?php echo htmlspecialchars($doc['clinic_name']); ?></td>
@@ -80,7 +76,7 @@ $conn->close();
                                             </span>
                                         </td>
                                     </tr>
-                                    <?php endwhile; ?>
+                                    <?php endforeach; ?>
                                 </tbody>
                             </table>
                         </div>

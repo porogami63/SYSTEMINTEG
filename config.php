@@ -15,6 +15,7 @@ define('SITE_NAME', 'MediArchive');
 define('SITE_URL', 'http://localhost/SYSTEMINTEG/');
 define('UPLOAD_DIR', __DIR__ . '/uploads/');
 define('QR_DIR', __DIR__ . '/qrcodes/');
+define('TEMP_DIR', __DIR__ . '/temp/');
 
 // Ensure upload directories exist
 if (!file_exists(UPLOAD_DIR)) {
@@ -22,6 +23,9 @@ if (!file_exists(UPLOAD_DIR)) {
 }
 if (!file_exists(QR_DIR)) {
     mkdir(QR_DIR, 0777, true);
+}
+if (!file_exists(TEMP_DIR)) {
+    mkdir(TEMP_DIR, 0777, true);
 }
 
 // Session Configuration
@@ -64,6 +68,17 @@ function isPatient() {
 
 // Redirect function
 function redirect($url) {
+    // If URL is relative and doesn't start with /, prepend views/ directory
+    if (!preg_match('#^(https?://|/)#', $url)) {
+        // Check if we're in views directory by checking if the current script is in views/
+        $script_dir = dirname($_SERVER['SCRIPT_NAME']);
+        if (strpos($script_dir, '/views') !== false || strpos($script_dir, '\\views') !== false) {
+            // Already in views directory, use as-is
+        } else {
+            // Not in views directory, prepend views/
+            $url = 'views/' . $url;
+        }
+    }
     header("Location: " . $url);
     exit();
 }
@@ -84,6 +99,11 @@ function notifyUser(mysqli $conn, int $userId, string $title, string $message, s
     $stmt->bind_param("isss", $userId, $title, $message, $link);
     $stmt->execute();
     $stmt->close();
+}
+
+// Load OOP utilities (non-breaking; classes will use DB_* constants)
+if (file_exists(__DIR__ . '/includes/bootstrap.php')) {
+    require_once __DIR__ . '/includes/bootstrap.php';
 }
 ?>
 

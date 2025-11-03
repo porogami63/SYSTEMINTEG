@@ -33,14 +33,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $phone = sanitizeInput($_POST['phone']);
     $home_address = isset($_POST['home_address']) ? sanitizeInput($_POST['home_address']) : '';
     
-    // Handle profile photo upload
+    // Handle profile photo upload via FileProcessor
     $profile_photo_path = '';
     if (!empty($_FILES['profile_photo']['name'])) {
-        $ext = pathinfo($_FILES['profile_photo']['name'], PATHINFO_EXTENSION);
-        $filename = 'profile_tmp_' . time() . '.' . strtolower($ext);
-        $dest = UPLOAD_DIR . $filename;
-        if (move_uploaded_file($_FILES['profile_photo']['tmp_name'], $dest)) {
-            $profile_photo_path = 'uploads/' . $filename;
+        try {
+            $saved = FileProcessor::saveUpload($_FILES['profile_photo'], UPLOAD_DIR, ['jpg','jpeg','png','gif'], 2 * 1024 * 1024);
+            $profile_photo_path = 'uploads/' . basename($saved);
+        } catch (Exception $e) {
+            // don't block registration for upload failure; record error
+            $error = 'Profile photo upload failed: ' . $e->getMessage();
         }
     }
     
@@ -65,50 +66,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($role === 'clinic_admin' && empty($specialization)) {
         $error = "Specialization is required for clinic admins";
     } else {
-        $conn = getDBConnection();
-        
-        // Check if username exists
-        $stmt = $conn->prepare("SELECT id FROM users WHERE username = ? OR email = ?");
-        $stmt->bind_param("ss", $username, $email);
-        $stmt->execute();
-        if ($stmt->get_result()->num_rows > 0) {
-            $error = "Username or email already exists";
-        } else {
-            $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-            if (!empty($profile_photo_path) || !empty($home_address)) {
-                $stmt = $conn->prepare("INSERT INTO users (username, email, password, full_name, role, phone, profile_photo, home_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("ssssssss", $username, $email, $hashed_password, $full_name, $role, $phone, $profile_photo_path, $home_address);
+        try {
+            $db = Database::getInstance();
+
+            // Check if username or email exists
+            $existing = $db->fetch("SELECT id FROM users WHERE username = ? OR email = ?", [$username, $email]);
+            if ($existing) {
+                $error = "Username or email already exists";
             } else {
-                $stmt = $conn->prepare("INSERT INTO users (username, email, password, full_name, role, phone) VALUES (?, ?, ?, ?, ?, ?)");
-                $stmt->bind_param("ssssss", $username, $email, $hashed_password, $full_name, $role, $phone);
-            }
-            
-            if ($stmt->execute()) {
-                $user_id = $conn->insert_id;
-                
-                // Create patient profile if patient role
+                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+                // Insert user (include profile_photo and home_address columns; pass empty strings if not provided)
+                $sql = "INSERT INTO users (username, email, password, full_name, role, phone, profile_photo, home_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                $db->execute($sql, [$username, $email, $hashed_password, $full_name, $role, $phone, $profile_photo_path, $home_address]);
+                $user_id = $db->lastInsertId();
+
                 if ($role === 'patient') {
                     $patient_code = 'PAT-' . str_pad($user_id, 4, '0', STR_PAD_LEFT);
-                    $stmt2 = $conn->prepare("INSERT INTO patients (user_id, patient_code, date_of_birth, gender, address) VALUES (?, ?, ?, ?, ?)");
-                    $stmt2->bind_param("issss", $user_id, $patient_code, $date_of_birth, $gender, $address);
-                    $stmt2->execute();
-                    $stmt2->close();
+                    $db->execute("INSERT INTO patients (user_id, patient_code, date_of_birth, gender, address) VALUES (?, ?, ?, ?, ?)", [$user_id, $patient_code, $date_of_birth, $gender, $address]);
                 } elseif ($role === 'clinic_admin') {
-                    // Create clinic profile with medical license and specialization
                     $final_clinic_name = !empty($clinic_name) ? $clinic_name : $full_name . "'s Clinic";
-                    $stmt2 = $conn->prepare("INSERT INTO clinics (user_id, clinic_name, medical_license, specialization, address, contact_phone) VALUES (?, ?, ?, ?, ?, ?)");
-                    $stmt2->bind_param("isssss", $user_id, $final_clinic_name, $medical_license, $specialization, $clinic_address, $phone);
-                    $stmt2->execute();
-                    $stmt2->close();
+                    $db->execute("INSERT INTO clinics (user_id, clinic_name, medical_license, specialization, address, contact_phone) VALUES (?, ?, ?, ?, ?, ?)", [$user_id, $final_clinic_name, $medical_license, $specialization, $clinic_address, $phone]);
                 }
-                
+
                 $success = "Registration successful! You can now login.";
-            } else {
-                $error = "Registration failed";
             }
+        } catch (Exception $e) {
+            $error = 'Server error: ' . $e->getMessage();
         }
-        $stmt->close();
-        $conn->close();
     }
 }
 ?>
