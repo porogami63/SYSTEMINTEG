@@ -260,11 +260,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                         JOIN patients p ON r.patient_id = p.id
                                         JOIN users u ON p.user_id = u.id
                                         WHERE r.clinic_id = ? AND r.status = 'pending' ORDER BY r.created_at DESC", [$clinic_id]);
-                    $certificates = $db->fetchAll("SELECT c.*, u.full_name as patient_name FROM certificates c 
-                                       JOIN patients p ON c.patient_id = p.id 
-                                       JOIN users u ON p.user_id = u.id 
-                                       WHERE c.clinic_id = ? ORDER BY c.created_at DESC", [$clinic_id]);
-                } catch (Exception $e) {
+    $certificates = $db->fetchAll("SELECT c.*, u.full_name as patient_name FROM certificates c 
+                       JOIN patients p ON c.patient_id = p.id 
+                       JOIN users u ON p.user_id = u.id 
+                       WHERE c.clinic_id = ? ORDER BY c.created_at DESC", [$clinic_id]);
+} catch (Exception $e) {
                     $db->rollBack();
                     $error = 'Failed to create certificate: ' . $e->getMessage();
                 }
