@@ -65,6 +65,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db->execute("UPDATE certificates SET file_path = ? WHERE id = ?", [$qr_path, $cert_id_db]);
         
         $success = "Certificate created successfully! Cert ID: " . $cert_id;
+        
+        // Audit log
+        AuditLogger::log(
+            'CREATE_CERTIFICATE',
+            'certificate',
+            $cert_id_db,
+            ['cert_id' => $cert_id, 'patient_id' => $patient_id, 'from_request' => false]
+        );
+        
         // notify patient
         $ud = $db->fetch("SELECT u.id as user_id FROM patients p JOIN users u ON p.user_id = u.id WHERE p.id = ?", [$patient_id]);
         if ($ud) {

@@ -66,6 +66,11 @@ function isPatient() {
     return isset($_SESSION['role']) && $_SESSION['role'] === 'patient';
 }
 
+// Helper function to check if user is web admin
+function isWebAdmin() {
+    return isset($_SESSION['role']) && $_SESSION['role'] === 'web_admin';
+}
+
 // Redirect function
 function redirect($url) {
     // If URL is relative and doesn't start with /, prepend views/ directory
