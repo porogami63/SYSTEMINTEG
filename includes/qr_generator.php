@@ -2,6 +2,7 @@
 /**
  * QR Code Generator for MediArchive
  * Uses external API for QR code generation
+ * Uses HttpClient OOP class for cURL operations
  */
 
 function generateQRCode($cert_id, $cert_db_id) {
@@ -11,19 +12,16 @@ function generateQRCode($cert_id, $cert_db_id) {
     // Use QRServer API (reliable alternative to deprecated Google Charts QR)
     $qr_url = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=" . urlencode($url);
     
-    // Download and save QR code
+    // Download and save QR code using HttpClient OOP class
     $qr_file = 'MED-' . $cert_db_id . '.png';
     $qr_path = QR_DIR . $qr_file;
     
-    // Use cURL to download QR code
-    $ch = curl_init($qr_url);
-    $fp = fopen($qr_path, 'wb');
-    curl_setopt($ch, CURLOPT_FILE, $fp);
-    curl_setopt($ch, CURLOPT_HEADER, 0);
-    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-    curl_exec($ch);
-    curl_close($ch);
-    fclose($fp);
+    // Use HttpClient class for cURL download (demonstrates OOP and cURL)
+    try {
+        HttpClient::downloadToFile($qr_url, $qr_path);
+    } catch (Exception $e) {
+        throw new RuntimeException('Failed to generate QR code: ' . $e->getMessage());
+    }
     
     return 'qrcodes/' . $qr_file;
 }

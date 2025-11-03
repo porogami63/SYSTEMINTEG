@@ -8,11 +8,22 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <h5 class="text-white mb-0"><strong>MediArchive</strong></h5>
         </div>
         <?php if (isset($_SESSION['full_name'])): ?>
-        <div class="d-flex align-items-center gap-2 px-3 py-2 text-white">
-            <?php if (!empty($_SESSION['profile_photo'])): ?>
-                <img src="../<?php echo htmlspecialchars($_SESSION['profile_photo']); ?>" alt="Profile" class="rounded-circle" style="width:28px;height:28px;object-fit:cover;">
-            <?php endif; ?>
-            <div class="small">Hello, <?php echo htmlspecialchars($_SESSION['full_name']); ?></div>
+        <div class="d-flex align-items-center justify-content-between px-3 py-2 text-white">
+            <div class="d-flex align-items-center gap-2">
+                <?php if (!empty($_SESSION['profile_photo'])): ?>
+                    <img src="../<?php echo htmlspecialchars($_SESSION['profile_photo']); ?>" alt="Profile" class="rounded-circle" style="width:28px;height:28px;object-fit:cover;">
+                <?php endif; ?>
+                <div class="small">Hello, <?php echo htmlspecialchars($_SESSION['full_name']); ?></div>
+            </div>
+            <!-- Notification Bell -->
+            <div class="position-relative">
+                <button class="btn btn-link text-white p-0" id="notificationBell" style="text-decoration:none;" onclick="toggleNotifications()">
+                    <i class="bi bi-bell fs-5"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display:none;">
+                        0
+                    </span>
+                </button>
+            </div>
         </div>
         <?php endif; ?>
         <hr class="text-white">
@@ -24,18 +35,18 @@ $current_page = basename($_SERVER['PHP_SELF']);
             </li>
             <?php if (isClinicAdmin()): ?>
             <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'create_certificate.php' ? 'active' : ''; ?>" href="create_certificate.php">
-                    <i class="bi bi-file-earmark-plus"></i> Create Certificate
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link <?php echo in_array($current_page, ['certificates.php', 'my_certificates.php']) ? 'active' : ''; ?>" href="certificates.php">
-                    <i class="bi bi-files"></i> All Certificates
+                <a class="nav-link <?php echo $current_page === 'certificates.php' ? 'active' : ''; ?>" href="certificates.php">
+                    <i class="bi bi-files"></i> Certificates & Requests
                 </a>
             </li>
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'patients.php' ? 'active' : ''; ?>" href="patients.php">
                     <i class="bi bi-people"></i> Patients
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'analytics.php' ? 'active' : ''; ?>" href="analytics.php">
+                    <i class="bi bi-graph-up"></i> Analytics
                 </a>
             </li>
             <?php else: ?>
@@ -59,13 +70,6 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'find_doctors.php' ? 'active' : ''; ?>" href="find_doctors.php">
                     <i class="bi bi-search"></i> Find Doctors
-                </a>
-            </li>
-            <?php endif; ?>
-            <?php if (isClinicAdmin()): ?>
-            <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'certificate_requests.php' ? 'active' : ''; ?>" href="certificate_requests.php">
-                    <i class="bi bi-inbox"></i> Requests
                 </a>
             </li>
             <?php endif; ?>

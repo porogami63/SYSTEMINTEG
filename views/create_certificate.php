@@ -73,13 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             notifyUser($mysqli, intval($ud['user_id']), 'New Medical Certificate', 'A new medical certificate has been issued to you.', 'my_certificates.php');
             $mysqli->close();
         }
-    } elseif (empty($error)) {
-        $error = "Failed to create certificate";
     }
-    if (isset($stmt)) { $stmt->close(); }
 }
-
-$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">

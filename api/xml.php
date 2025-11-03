@@ -2,6 +2,7 @@
 /**
  * XML Export for Certificate Data
  * MediArchive - Digital Medical Certificate System
+ * Uses XmlHandler OOP class for XML generation
  */
 
 require_once '../config.php';
@@ -27,43 +28,42 @@ try {
                        JOIN users u ON p.user_id = u.id
                        WHERE c.cert_id = ?", [$cert_id]);
 
-    echo '<?xml version="1.0" encoding="UTF-8"?>';
-    echo '<certificate>';
-
     if ($cert) {
-    
-    echo '<cert_id>' . htmlspecialchars($cert['cert_id']) . '</cert_id>';
-    echo '<patient>';
-    echo '<name>' . htmlspecialchars($cert['patient_name']) . '</name>';
-    echo '<code>' . htmlspecialchars($cert['patient_code']) . '</code>';
-    echo '<email>' . htmlspecialchars($cert['patient_email']) . '</email>';
-    echo '<phone>' . htmlspecialchars($cert['patient_phone']) . '</phone>';
-    echo '<date_of_birth>' . $cert['date_of_birth'] . '</date_of_birth>';
-    echo '<gender>' . htmlspecialchars($cert['gender']) . '</gender>';
-    echo '</patient>';
-    
-    echo '<clinic>';
-    echo '<name>' . htmlspecialchars($cert['clinic_name']) . '</name>';
-    echo '<address>' . htmlspecialchars($cert['clinic_address']) . '</address>';
-    echo '</clinic>';
-    
-    echo '<issued_by>' . htmlspecialchars($cert['issued_by']) . '</issued_by>';
-    echo '<doctor_license>' . htmlspecialchars($cert['doctor_license']) . '</doctor_license>';
-    echo '<issue_date>' . $cert['issue_date'] . '</issue_date>';
-    echo '<expiry_date>' . $cert['expiry_date'] . '</expiry_date>';
-    echo '<purpose>' . htmlspecialchars($cert['purpose']) . '</purpose>';
-    echo '<diagnosis>' . htmlspecialchars($cert['diagnosis']) . '</diagnosis>';
-    echo '<recommendations>' . htmlspecialchars($cert['recommendations']) . '</recommendations>';
-    echo '<status>' . htmlspecialchars($cert['status']) . '</status>';
-    echo '<created_at>' . $cert['created_at'] . '</created_at>';
+        // Build structured array for XML conversion using OOP XmlHandler
+        $certData = [
+            'cert_id' => $cert['cert_id'],
+            'patient' => [
+                'name' => $cert['patient_name'],
+                'code' => $cert['patient_code'],
+                'email' => $cert['patient_email'],
+                'phone' => $cert['patient_phone'],
+                'date_of_birth' => $cert['date_of_birth'],
+                'gender' => $cert['gender']
+            ],
+            'clinic' => [
+                'name' => $cert['clinic_name'],
+                'address' => $cert['clinic_address']
+            ],
+            'issued_by' => $cert['issued_by'],
+            'doctor_license' => $cert['doctor_license'],
+            'issue_date' => $cert['issue_date'],
+            'expiry_date' => $cert['expiry_date'],
+            'purpose' => $cert['purpose'],
+            'diagnosis' => $cert['diagnosis'],
+            'recommendations' => $cert['recommendations'],
+            'status' => $cert['status'],
+            'created_at' => $cert['created_at']
+        ];
+        
+        // Use XmlHandler OOP class to generate XML
+        echo XmlHandler::arrayToXml($certData, 'certificate');
     } else {
-        echo '<error>Certificate not found</error>';
+        $errorData = ['error' => 'Certificate not found'];
+        echo XmlHandler::arrayToXml($errorData, 'certificate');
     }
-
-    echo '</certificate>';
 } catch (Exception $e) {
-    echo '<?xml version="1.0" encoding="UTF-8"?>';
-    echo '<error>Server error: ' . htmlspecialchars($e->getMessage()) . '</error>';
+    $errorData = ['error' => 'Server error: ' . $e->getMessage()];
+    echo XmlHandler::arrayToXml($errorData, 'certificate');
 }
 ?>
 

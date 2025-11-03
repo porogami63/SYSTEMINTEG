@@ -25,6 +25,27 @@ try {
     if (!$cert) {
         die("Certificate not found");
     }
+    
+    // Audit log
+    AuditLogger::log('DOWNLOAD_CERTIFICATE', 'certificate', $cert_id, ['cert_id' => $cert['cert_id']]);
+    
+    // Try to generate PDF using PdfGenerator
+    try {
+        require_once '../includes/PdfGenerator.php';
+        $temp_file = TEMP_DIR . 'cert_' . $cert_id . '_' . time() . '.pdf';
+        $pdf_path = PdfGenerator::generateCertificate($cert, $temp_file);
+        
+        if ($pdf_path && file_exists($pdf_path)) {
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: attachment; filename="certificate_' . $cert['cert_id'] . '.pdf"');
+            readfile($pdf_path);
+            @unlink($pdf_path); // Clean up temp file
+            exit;
+        }
+    } catch (Exception $e) {
+        // Fall through to HTML version if PDF generation fails
+        error_log('PDF generation failed: ' . $e->getMessage());
+    }
 } catch (Exception $e) {
     die('Server error: ' . $e->getMessage());
 }

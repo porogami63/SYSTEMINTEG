@@ -23,6 +23,14 @@ try {
         die("Certificate not found");
     }
 
+    // Audit log - certificate viewed
+    AuditLogger::log(
+        'VIEW_CERTIFICATE',
+        'certificate',
+        $cert_id,
+        ['cert_id' => $certificate['cert_id']]
+    );
+
     $qr_image = getQRCodeImage($certificate['cert_id'], $certificate['id']);
 } catch (Exception $e) {
     die('Server error: ' . $e->getMessage());

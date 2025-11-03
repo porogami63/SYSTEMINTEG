@@ -68,6 +68,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Update role-specific info
         if ($role === 'clinic_admin') {
+            // Get current availability status before update
+            $current_clinic = $db->fetch("SELECT is_available, id FROM clinics WHERE user_id = ?", [$user_id]);
+            $previous_available = $current_clinic ? intval($current_clinic['is_available']) : 0;
+            $clinic_id = $current_clinic ? intval($current_clinic['id']) : 0;
+            
             $medical_license = sanitizeInput($_POST['medical_license']);
             $specialization = sanitizeInput($_POST['specialization']);
             $clinic_name = sanitizeInput($_POST['clinic_name']);
@@ -102,6 +107,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $db->execute("UPDATE clinics SET clinic_name = ?, license_number = ?, medical_license = ?, specialization = ?, address = ?, contact_phone = ?, is_available = ?, available_from = ?, available_to = ? WHERE user_id = ?", [$clinic_name, $license_number, $medical_license, $specialization, $address, $contact_phone, $is_available, $available_from, $available_to, $user_id]);
             }
+            
+            // Notify patients if doctor became available (was unavailable, now available)
+            if ($previous_available == 0 && $is_available == 1 && $clinic_id > 0) {
+                // Find patients with pending requests for this clinic
+                $pending_patients = $db->fetchAll(
+                    "SELECT DISTINCT u.id as user_id, u.full_name 
+                     FROM certificate_requests cr 
+                     JOIN patients p ON cr.patient_id = p.id 
+                     JOIN users u ON p.user_id = u.id 
+                     WHERE cr.clinic_id = ? AND cr.status = 'pending'",
+                    [$clinic_id]
+                );
+                
+                if (!empty($pending_patients)) {
+                    $mysqli = getDBConnection();
+                    foreach ($pending_patients as $patient) {
+                        notifyUser($mysqli, intval($patient['user_id']), 
+                            'Doctor Available', 
+                            $clinic_name . ' is now available for appointments. Your pending certificate request can now be processed.', 
+                            'request_certificate.php');
+                    }
+                    $mysqli->close();
+                }
+            }
         } else {
             $date_of_birth = sanitizeInput($_POST['date_of_birth']);
             $gender = sanitizeInput($_POST['gender']);
@@ -111,33 +140,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         $success = "Profile updated successfully!";
+        
+        // Refresh data after successful update
+        try {
+            $user = $db->fetch("SELECT * FROM users WHERE id = ?", [$user_id]);
+            if ($role === 'clinic_admin') {
+                $profile = $db->fetch("SELECT * FROM clinics WHERE user_id = ?", [$user_id]);
+            } else {
+                $profile = $db->fetch("SELECT * FROM patients WHERE user_id = ?", [$user_id]);
+            }
+        } catch (Exception $e) {
+            // If refresh fails, keep existing data
+        }
     } catch (Exception $e) {
         $error = 'Failed to update profile: ' . $e->getMessage();
     }
 }
-
-// Refresh data
-$stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
-$stmt->bind_param("i", $user_id);
-$stmt->execute();
-$user = $stmt->get_result()->fetch_assoc();
-$stmt->close();
-
-if ($role === 'clinic_admin') {
-    $stmt = $conn->prepare("SELECT * FROM clinics WHERE user_id = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $profile = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-} else {
-    $stmt = $conn->prepare("SELECT * FROM patients WHERE user_id = ?");
-    $stmt->bind_param("i", $user_id);
-    $stmt->execute();
-    $profile = $stmt->get_result()->fetch_assoc();
-    $stmt->close();
-}
-
-$conn->close();
 ?>
 <!DOCTYPE html>
 <html lang="en">

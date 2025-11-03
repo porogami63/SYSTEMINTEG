@@ -6,6 +6,8 @@ require_once __DIR__ . '/XmlHandler.php';
 require_once __DIR__ . '/HttpClient.php';
 require_once __DIR__ . '/FileProcessor.php';
 require_once __DIR__ . '/SoapFacade.php';
+require_once __DIR__ . '/AuditLogger.php';
+require_once __DIR__ . '/ExpiryManager.php';
 
 // Optional: provide a global helper to get the PDO instance quickly
 function DB()

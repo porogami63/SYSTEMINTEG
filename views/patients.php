@@ -81,7 +81,7 @@ $conn->close();
                                         <td><?php echo $patient['date_of_birth'] ?? 'N/A'; ?></td>
                                         <td><?php echo $patient['gender'] ?? 'N/A'; ?></td>
                                         <td>
-                                            <a href="create_certificate.php?patient_id=<?php echo $patient['id']; ?>" class="btn btn-sm btn-primary">
+                                            <a href="certificates.php" class="btn btn-sm btn-primary">
                                                 <i class="bi bi-file-earmark-plus"></i> Create Cert
                                             </a>
                                         </td>

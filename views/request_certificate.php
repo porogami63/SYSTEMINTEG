@@ -44,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $clid = $cl->get_result()->fetch_assoc();
             $cl->close();
             if ($clid) {
-                notifyUser($conn, intval($clid['user_id']), 'New Certificate Request', 'A patient submitted a new certificate request.', 'certificate_requests.php');
+                notifyUser($conn, intval($clid['user_id']), 'New Certificate Request', 'A patient submitted a new certificate request.', 'certificates.php');
             }
         } else {
             $error = 'Failed to submit request';

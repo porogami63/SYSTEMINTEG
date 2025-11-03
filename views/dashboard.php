@@ -14,28 +14,76 @@ try {
     // Get clinic or patient info
     if ($role === 'clinic_admin') {
         $profile = $db->fetch("SELECT c.* FROM clinics c WHERE c.user_id = ?", [$user_id]);
+        $clinic_id = $profile['id'] ?? 0;
 
-        // Get certificate count
-        $cert_count = $db->fetch("SELECT COUNT(*) as total FROM certificates WHERE clinic_id = ?", [$profile['id'] ?? 0]);
+        // Get certificate counts
+        $cert_count = $db->fetch("SELECT COUNT(*) as total FROM certificates WHERE clinic_id = ?", [$clinic_id]);
+        $active_count = $db->fetch("SELECT COUNT(*) as total FROM certificates WHERE clinic_id = ? AND status = 'active'", [$clinic_id]);
+        $expired_count = $db->fetch("SELECT COUNT(*) as total FROM certificates WHERE clinic_id = ? AND status = 'expired'", [$clinic_id]);
+        
+        // Get expiry statistics
+        $expiry_stats = ExpiryManager::getExpiryStats($clinic_id);
+        
+        // Get pending requests count
+        $pending_requests_count = $db->fetch("SELECT COUNT(*) as total FROM certificate_requests WHERE clinic_id = ? AND status = 'pending'", [$clinic_id]);
+        
+        // Get certificates expiring soon for this clinic
+        $expiring_soon = ExpiryManager::getExpiringSoon(7, $clinic_id);
 
         // Get recent certificates
-        $recent_certs = $db->fetchAll("SELECT * FROM certificates WHERE clinic_id = ? ORDER BY created_at DESC LIMIT 5", [$profile['id'] ?? 0]);
+        $recent_certs = $db->fetchAll("SELECT * FROM certificates WHERE clinic_id = ? ORDER BY created_at DESC LIMIT 5", [$clinic_id]);
+        
+        // Get monthly certificate statistics (last 6 months)
+        $monthly_stats = $db->fetchAll(
+            "SELECT DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as count 
+             FROM certificates 
+             WHERE clinic_id = ? AND created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+             GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+             ORDER BY month ASC",
+            [$clinic_id]
+        );
     } else {
         // Patient dashboard
         $profile = $db->fetch("SELECT p.* FROM patients p WHERE p.user_id = ?", [$user_id]);
+        $patient_id = $profile['id'] ?? 0;
 
-        // Get certificate count
-        $cert_count = $db->fetch("SELECT COUNT(*) as total FROM certificates WHERE patient_id = ?", [$profile['id'] ?? 0]);
+        // Get certificate counts
+        $cert_count = $db->fetch("SELECT COUNT(*) as total FROM certificates WHERE patient_id = ?", [$patient_id]);
+        $active_count = $db->fetch("SELECT COUNT(*) as total FROM certificates WHERE patient_id = ? AND status = 'active'", [$patient_id]);
+        $expired_count = $db->fetch("SELECT COUNT(*) as total FROM certificates WHERE patient_id = ? AND status = 'expired'", [$patient_id]);
+        
+        // Get certificates expiring soon for this patient
+        $expiring_soon = $db->fetchAll(
+            "SELECT c.*, cl.clinic_name
+             FROM certificates c
+             JOIN clinics cl ON c.clinic_id = cl.id
+             WHERE c.patient_id = ?
+             AND c.status = 'active'
+             AND c.expiry_date IS NOT NULL
+             AND c.expiry_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
+             ORDER BY c.expiry_date ASC",
+            [$patient_id]
+        );
 
         // Get recent certificates
         $recent_certs = $db->fetchAll("SELECT c.*, cl.clinic_name FROM certificates c 
                            JOIN clinics cl ON c.clinic_id = cl.id 
-                           WHERE c.patient_id = ? ORDER BY c.created_at DESC LIMIT 5", [$profile['id'] ?? 0]);
+                           WHERE c.patient_id = ? ORDER BY c.created_at DESC LIMIT 5", [$patient_id]);
+        
+        $monthly_stats = [];
+        $pending_requests_count = ['total' => 0];
+        $expiry_stats = ['expiring_this_week' => count($expiring_soon), 'expiring_this_month' => 0, 'already_expired' => intval($expired_count['total'] ?? 0)];
     }
 } catch (Exception $e) {
     $profile = null;
     $cert_count = ['total' => 0];
+    $active_count = ['total' => 0];
+    $expired_count = ['total' => 0];
+    $pending_requests_count = ['total' => 0];
     $recent_certs = [];
+    $expiring_soon = [];
+    $expiry_stats = ['expiring_this_week' => 0, 'expiring_this_month' => 0, 'already_expired' => 0];
+    $monthly_stats = [];
 }
 ?>
 <!DOCTYPE html>
@@ -68,58 +116,60 @@ try {
 .stats-card {
     border-left: 4px solid #2e7d32;
 }
+.notification-dropdown {
+    position: fixed;
+    top: 70px;
+    left: 20px;
+    width: 350px;
+    max-height: 500px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    z-index: 1050;
+    display: none;
+    overflow: hidden;
+}
+@media (max-width: 768px) {
+    .notification-dropdown {
+        width: calc(100vw - 40px);
+        left: 20px;
+        right: 20px;
+    }
+}
+.notification-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.notification-item:hover {
+    background: #f8f9fa;
+}
+.notification-item.unread {
+    background: #e3f2fd;
+    font-weight: 500;
+}
+.notification-item .notification-title {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 4px;
+}
+.notification-item .notification-message {
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 4px;
+}
+.notification-item .notification-time {
+    color: #999;
+    font-size: 0.75rem;
+}
 </style>
 </head>
 <body>
 <div class="container-fluid">
     <div class="row">
         <!-- Sidebar -->
-        <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
-            <div class="position-sticky pt-3">
-                <h5 class="px-3 text-white"><strong>MediArchive</strong></h5>
-                <hr class="text-white">
-                <ul class="nav flex-column">
-                    <li class="nav-item">
-                        <a class="nav-link active" href="dashboard.php">
-                            <i class="bi bi-speedometer2"></i> Dashboard
-                        </a>
-                    </li>
-                    <?php if ($role === 'clinic_admin'): ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="create_certificate.php">
-                            <i class="bi bi-file-earmark-plus"></i> Create Certificate
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="certificates.php">
-                            <i class="bi bi-files"></i> All Certificates
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="patients.php">
-                            <i class="bi bi-people"></i> Patients
-                        </a>
-                    </li>
-                    <?php else: ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="my_certificates.php">
-                            <i class="bi bi-file-earmark-medical"></i> My Certificates
-                        </a>
-                    </li>
-                    <?php endif; ?>
-                    <li class="nav-item">
-                        <a class="nav-link" href="profile.php">
-                            <i class="bi bi-person"></i> Profile
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="logout.php">
-                            <i class="bi bi-box-arrow-right"></i> Logout
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </nav>
+        <?php include 'includes/sidebar.php'; ?>
 
         <!-- Main content -->
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
@@ -128,23 +178,71 @@ try {
                 
                 <!-- Stats Cards -->
                 <div class="row mb-4">
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-3 mb-3">
                         <div class="card stats-card shadow-sm">
                             <div class="card-body">
-                                <h5 class="card-title">Total Certificates</h5>
-                                <h2 class="text-primary"><?php echo $cert_count['total']; ?></h2>
+                                <h6 class="card-title text-muted">Total Certificates</h6>
+                                <h2 class="text-primary mb-0"><?php echo $cert_count['total']; ?></h2>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 mb-3">
-                        <div class="card stats-card shadow-sm">
+                    <div class="col-md-3 mb-3">
+                        <div class="card shadow-sm" style="border-left: 4px solid #28a745;">
                             <div class="card-body">
-                                <h5 class="card-title">Role</h5>
-                                <h4 class="text-capitalize"><?php echo str_replace('_', ' ', $role); ?></h4>
+                                <h6 class="card-title text-muted">Active</h6>
+                                <h2 class="text-success mb-0"><?php echo $active_count['total'] ?? 0; ?></h2>
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="card shadow-sm" style="border-left: 4px solid #ffc107;">
+                            <div class="card-body">
+                                <h6 class="card-title text-muted">Expired</h6>
+                                <h2 class="text-warning mb-0"><?php echo $expired_count['total'] ?? 0; ?></h2>
+                            </div>
+                        </div>
+                    </div>
+                    <?php if ($role === 'clinic_admin'): ?>
+                    <div class="col-md-3 mb-3">
+                        <div class="card shadow-sm" style="border-left: 4px solid #17a2b8;">
+                            <div class="card-body">
+                                <h6 class="card-title text-muted">Pending Requests</h6>
+                                <h2 class="text-info mb-0"><?php echo $pending_requests_count['total'] ?? 0; ?></h2>
+                            </div>
+                        </div>
+                    </div>
+                    <?php else: ?>
+                    <div class="col-md-3 mb-3">
+                        <div class="card shadow-sm" style="border-left: 4px solid #6c757d;">
+                            <div class="card-body">
+                                <h6 class="card-title text-muted">Expiring Soon</h6>
+                                <h2 class="text-secondary mb-0"><?php echo count($expiring_soon); ?></h2>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
                 </div>
+
+                <!-- Expiry Warnings -->
+                <?php if (!empty($expiring_soon)): ?>
+                <div class="alert alert-warning alert-dismissible fade show mb-4">
+                    <h6><i class="bi bi-exclamation-triangle"></i> Certificates Expiring Soon</h6>
+                    <p class="mb-2">The following certificates will expire within 7 days:</p>
+                    <ul class="mb-0">
+                        <?php foreach ($expiring_soon as $cert): ?>
+                        <li>
+                            <strong><?php echo htmlspecialchars($cert['cert_id']); ?></strong>
+                            <?php if ($role === 'patient'): ?>
+                            - <?php echo htmlspecialchars($cert['clinic_name']); ?>
+                            <?php endif; ?>
+                            (Expires: <?php echo date('M d, Y', strtotime($cert['expiry_date'])); ?>)
+                            <a href="view_certificate.php?id=<?php echo $cert['id']; ?>" class="btn btn-sm btn-outline-warning ms-2">View</a>
+                        </li>
+                        <?php endforeach; ?>
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <?php endif; ?>
 
                 <!-- Recent Certificates -->
                 <div class="card shadow-sm mb-4">
@@ -198,7 +296,170 @@ try {
         </main>
     </div>
 </div>
+
+<!-- Notification Dropdown -->
+<div class="notification-dropdown" id="notificationDropdown">
+    <div class="d-flex justify-content-between align-items-center p-3 border-bottom bg-light">
+        <h6 class="mb-0 fw-bold">Notifications</h6>
+        <div>
+            <button class="btn btn-sm btn-link text-primary" onclick="markAllAsRead()">Mark all as read</button>
+            <button class="btn btn-sm btn-link text-muted" onclick="closeNotifications()">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+    </div>
+    <div id="notificationList" style="max-height: 400px; overflow-y: auto;">
+        <div class="text-center p-4 text-muted">
+            <i class="bi bi-bell-slash fs-1"></i>
+            <p class="mt-2 mb-0">No notifications</p>
+        </div>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let notificationCheckInterval;
+
+// Fetch notification count
+async function fetchNotificationCount() {
+    try {
+        const response = await fetch('../api/notifications.php?action=count');
+        const data = await response.json();
+        const badge = document.getElementById('notificationBadge');
+        if (data.count > 0) {
+            badge.textContent = data.count > 99 ? '99+' : data.count;
+            badge.style.display = 'block';
+        } else {
+            badge.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error fetching notification count:', error);
+    }
+}
+
+// Fetch notifications
+async function fetchNotifications() {
+    try {
+        const response = await fetch('../api/notifications.php?limit=10');
+        const data = await response.json();
+        const list = document.getElementById('notificationList');
+        
+        if (!data.notifications || data.notifications.length === 0) {
+            list.innerHTML = `
+                <div class="text-center p-4 text-muted">
+                    <i class="bi bi-bell-slash fs-1"></i>
+                    <p class="mt-2 mb-0">No notifications</p>
+                </div>
+            `;
+            return;
+        }
+        
+        list.innerHTML = data.notifications.map(notif => `
+            <div class="notification-item ${notif.is_read ? '' : 'unread'}" data-notification-id="${notif.id}" data-link="${escapeHtml(notif.link || '')}" onclick="handleNotificationClick(${notif.id}, ${notif.link ? "'" + escapeHtml(notif.link) + "'" : "null"})">
+                <div class="notification-title">${escapeHtml(notif.title)}</div>
+                <div class="notification-message">${escapeHtml(notif.message)}</div>
+                <div class="notification-time">${notif.created_at}</div>
+            </div>
+        `).join('');
+    } catch (error) {
+        console.error('Error fetching notifications:', error);
+    }
+}
+
+// Toggle notifications dropdown
+function toggleNotifications() {
+    const dropdown = document.getElementById('notificationDropdown');
+    if (dropdown.style.display === 'block') {
+        closeNotifications();
+    } else {
+        dropdown.style.display = 'block';
+        fetchNotifications();
+    }
+}
+
+// Close notifications
+function closeNotifications() {
+    document.getElementById('notificationDropdown').style.display = 'none';
+}
+
+// Handle notification click
+async function handleNotificationClick(notificationId, link) {
+    // Mark as read
+    try {
+        const formData = new FormData();
+        formData.append('notification_id', notificationId);
+        await fetch('../api/notifications.php?action=mark_read', {
+            method: 'POST',
+            body: formData
+        });
+        
+        // Update badge count
+        fetchNotificationCount();
+        
+        // Update notification item
+        const item = document.querySelector(`[data-notification-id="${notificationId}"]`);
+        if (item) {
+            item.classList.remove('unread');
+        }
+        
+        // Navigate if link provided
+        if (link) {
+            window.location.href = link;
+        } else {
+            closeNotifications();
+        }
+    } catch (error) {
+        console.error('Error marking notification as read:', error);
+        if (link) {
+            window.location.href = link;
+        }
+    }
+}
+
+// Mark all as read
+async function markAllAsRead() {
+    try {
+        const formData = new FormData();
+        await fetch('../api/notifications.php?action=mark_read', {
+            method: 'POST',
+            body: formData
+        });
+        
+        fetchNotificationCount();
+        fetchNotifications();
+    } catch (error) {
+        console.error('Error marking all as read:', error);
+    }
+}
+
+// Escape HTML
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('notificationDropdown');
+    const bell = document.getElementById('notificationBell');
+    
+    if (dropdown && bell && !dropdown.contains(event.target) && !bell.contains(event.target)) {
+        closeNotifications();
+    }
+});
+
+// Initialize and refresh count every 30 seconds
+fetchNotificationCount();
+notificationCheckInterval = setInterval(fetchNotificationCount, 30000);
+
+// Clean up interval on page unload
+window.addEventListener('beforeunload', () => {
+    if (notificationCheckInterval) {
+        clearInterval(notificationCheckInterval);
+    }
+});
+</script>
 </body>
 </html>
 
