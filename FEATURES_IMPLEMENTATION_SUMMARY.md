@@ -212,6 +212,80 @@ composer require tecnickcom/tcpdf
 
 ---
 
+### 8. Notification Preferences ⭐⭐⭐⭐
+**Status: ✅ COMPLETED**
+
+**Location:** `views/notification_settings.php`
+
+**Features:**
+- Manage per-category preferences: Enabled, Email, In-App
+- Categories: `certificate_created`, `expiry_warning`, `system_update`
+- Upsert behavior on save
+
+**Navigation:**
+- Sidebar link: Notifications
+
+---
+
+### 9. Certificate Notes ⭐⭐⭐⭐
+**Status: ✅ COMPLETED**
+
+**Location:** `views/view_certificate.php`
+
+**Features:**
+- Notes listing with author and timestamp
+- Add note (clinic admins): internal/public toggle
+- Role-based visibility (patients see public notes only)
+
+**Audit:**
+- Logs `ADD_CERTIFICATE_NOTE`
+
+---
+
+### 10. Patient Medical History ⭐⭐⭐⭐
+**Status: ✅ COMPLETED**
+
+**Location:** `views/patient_history.php`
+
+**Features:**
+- Timeline of certificates with status badges
+- Quick actions: View certificate, New certificate (for admins)
+- Basic counts (total, active, expired)
+
+**Navigation:**
+- Sidebar link (patients): Medical History
+
+---
+
+### 11. Appointment Scheduling ⭐⭐⭐⭐
+**Status: ✅ COMPLETED**
+
+**Location:**
+- `migrations/004_appointments.sql` - appointments table
+- `views/request_appointment.php` - patient scheduling UI
+
+**Features:**
+- Select specialization, then choose only available doctors/clinics
+- Pick date and time slot; enter purpose and details
+- Saves structured answers for specialization-specific questions
+- Notifies clinic admin of new appointment request
+
+---
+
+### 12. Doctor Availability Toggle ⭐⭐⭐⭐
+**Status: ✅ COMPLETED**
+
+**Location:**
+- `views/includes/sidebar.php` - availability slider and indicator
+- `api/availability.php` - toggle endpoint
+
+**Features:**
+- Clinic admins toggle Available/Offline from sidebar
+- Real-time indicator dot next to profile name
+- Patients see availability in Find Doctors and when requesting
+
+---
+
 ## Database Changes
 
 ### New Tables

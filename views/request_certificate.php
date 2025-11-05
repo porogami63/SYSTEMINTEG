@@ -12,8 +12,8 @@ $success = '';
 // Fetch available clinics
 $selected_spec = isset($_GET['specialization']) ? sanitizeInput($_GET['specialization']) : '';
 $stmt = $selected_spec
-    ? $conn->prepare("SELECT c.id, c.clinic_name, c.specialization, c.address, c.is_available FROM clinics c WHERE c.specialization = ? ORDER BY c.clinic_name")
-    : $conn->prepare("SELECT c.id, c.clinic_name, c.specialization, c.address, c.is_available FROM clinics c ORDER BY c.clinic_name");
+    ? $conn->prepare("SELECT c.id, c.clinic_name, c.specialization, c.address, c.is_available FROM clinics c WHERE c.specialization = ? AND c.is_available = 1 ORDER BY c.clinic_name")
+    : $conn->prepare("SELECT c.id, c.clinic_name, c.specialization, c.address, c.is_available FROM clinics c WHERE c.is_available = 1 ORDER BY c.clinic_name");
 if ($selected_spec) { $stmt->bind_param("s", $selected_spec); }
 $stmt->execute();
 $clinics = $stmt->get_result();

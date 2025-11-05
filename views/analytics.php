@@ -20,6 +20,13 @@ try {
     $total_certs = $db->fetch("SELECT COUNT(*) as count FROM certificates WHERE clinic_id = ?", [$clinic_id]);
     $active_certs = $db->fetch("SELECT COUNT(*) as count FROM certificates WHERE clinic_id = ? AND status = 'active'", [$clinic_id]);
     $expired_certs = $db->fetch("SELECT COUNT(*) as count FROM certificates WHERE clinic_id = ? AND status = 'expired'", [$clinic_id]);
+    // Appointments overall
+    $total_appts = $db->fetch("SELECT COUNT(*) as count FROM appointments WHERE clinic_id = ?", [$clinic_id]);
+    $upcoming_appts = $db->fetch(
+        "SELECT COUNT(*) as count FROM appointments WHERE clinic_id = ? AND (appointment_date > CURDATE() OR (appointment_date = CURDATE() AND time_slot >= CURTIME()))",
+        [$clinic_id]
+    );
+    $pending_appts = $db->fetch("SELECT COUNT(*) as count FROM appointments WHERE clinic_id = ? AND status = 'pending'", [$clinic_id]);
     
     // Monthly statistics
     $monthly_data = $db->fetchAll(
@@ -27,6 +34,15 @@ try {
          FROM certificates 
          WHERE clinic_id = ? AND created_at BETWEEN ? AND ?
          GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+         ORDER BY month ASC",
+        [$clinic_id, $date_from, $date_to]
+    );
+    // Monthly appointments
+    $appointments_monthly = $db->fetchAll(
+        "SELECT DATE_FORMAT(appointment_date, '%Y-%m') as month, COUNT(*) as count
+         FROM appointments
+         WHERE clinic_id = ? AND appointment_date BETWEEN ? AND ?
+         GROUP BY DATE_FORMAT(appointment_date, '%Y-%m')
          ORDER BY month ASC",
         [$clinic_id, $date_from, $date_to]
     );
@@ -50,6 +66,11 @@ try {
          GROUP BY status",
         [$clinic_id]
     );
+    // Appointment status distribution
+    $appt_status_dist = $db->fetchAll(
+        "SELECT status, COUNT(*) as count FROM appointments WHERE clinic_id = ? GROUP BY status",
+        [$clinic_id]
+    );
     
     // Patient statistics
     $total_patients = $db->fetch("SELECT COUNT(DISTINCT patient_id) as count FROM certificates WHERE clinic_id = ?", [$clinic_id]);
@@ -57,8 +78,35 @@ try {
     // Expiry statistics
     $expiry_stats = ExpiryManager::getExpiryStats($clinic_id);
     
-    // Recent activity (last 10 actions) - filtered by clinic
-    $recent_activity = AuditLogger::getLogs(['entity_type' => 'certificate', 'clinic_id' => $clinic_id], 10, 0);
+    // Recent activity (last 10 actions) - include certificates and appointments for this clinic
+    $recent_certs = AuditLogger::getLogs(['entity_type' => 'certificate', 'clinic_id' => $clinic_id], 10, 0);
+    // Appointments need clinic filter via join; reuse certificates join by switching entity_type filtering logic in getLogs not available -> do custom fetch here
+    $recent_appts = $db->fetchAll(
+        "SELECT al.*, u.full_name AS user_name, u.username
+         FROM audit_logs al
+         LEFT JOIN users u ON al.user_id = u.id
+         LEFT JOIN appointments a ON (al.entity_type = 'appointment' AND al.entity_id = a.id)
+         WHERE al.entity_type = 'appointment' AND a.clinic_id = ?
+         ORDER BY al.created_at DESC
+         LIMIT 10",
+        [$clinic_id]
+    );
+    // Merge and sort by created_at
+    $recent_activity = array_slice(
+        array_values(
+            iterator_to_array(
+                new ArrayIterator(
+                    (function() use ($recent_certs, $recent_appts) {
+                        $all = array_merge($recent_certs ?: [], $recent_appts ?: []);
+                        usort($all, function($a,$b){ return strcmp($b['created_at'], $a['created_at']); });
+                        return $all;
+                    })()
+                )
+            )
+        ),
+        0,
+        10
+    );
     
 } catch (Exception $e) {
     $total_certs = ['count' => 0];
@@ -67,7 +115,12 @@ try {
     $monthly_data = [];
     $purpose_stats = [];
     $status_dist = [];
+    $appt_status_dist = [];
     $total_patients = ['count' => 0];
+    $total_appts = ['count' => 0];
+    $upcoming_appts = ['count' => 0];
+    $pending_appts = ['count' => 0];
+    $appointments_monthly = [];
     $expiry_stats = ['expiring_this_week' => 0, 'expiring_this_month' => 0, 'already_expired' => 0];
     $recent_activity = [];
 }
@@ -140,6 +193,34 @@ try {
                         </div>
                     </div>
                 </div>
+
+                <!-- Appointments Summary -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="card shadow-sm" style="border-left: 4px solid #0d6efd;">
+                            <div class="card-body">
+                                <h6 class="text-muted">Total Appointments</h6>
+                                <h2 class="text-primary"><?php echo $total_appts['count']; ?></h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card shadow-sm" style="border-left: 4px solid #20c997;">
+                            <div class="card-body">
+                                <h6 class="text-muted">Upcoming</h6>
+                                <h2 class="text-success"><?php echo $upcoming_appts['count']; ?></h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card shadow-sm" style="border-left: 4px solid #6c757d;">
+                            <div class="card-body">
+                                <h6 class="text-muted">Pending</h6>
+                                <h2 class="text-muted"><?php echo $pending_appts['count']; ?></h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 
                 <!-- Charts Row -->
                 <div class="row mb-4">
@@ -160,6 +241,30 @@ try {
                             </div>
                             <div class="card-body">
                                 <canvas id="statusChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Appointments Charts -->
+                <div class="row mb-4">
+                    <div class="col-md-6 mb-3">
+                        <div class="card shadow-sm">
+                            <div class="card-header">
+                                <h6 class="mb-0">Appointments (Monthly)</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="apptsMonthlyChart" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="card shadow-sm">
+                            <div class="card-header">
+                                <h6 class="mb-0">Appointments by Status</h6>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="apptsStatusChart" height="200"></canvas>
                             </div>
                         </div>
                     </div>
@@ -209,7 +314,7 @@ try {
                 <!-- Recent Activity -->
                 <div class="card shadow-sm">
                     <div class="card-header">
-                        <h6 class="mb-0">Recent Activity</h6>
+                        <h6 class="mb-0">Recent Activity (Certificates & Appointments)</h6>
                     </div>
                     <div class="card-body">
                         <?php if (!empty($recent_activity)): ?>
@@ -270,6 +375,27 @@ new Chart(monthlyCtx, {
     }
 });
 
+// Appointments Monthly Chart
+const apptsMonthlyCtx = document.getElementById('apptsMonthlyChart').getContext('2d');
+new Chart(apptsMonthlyCtx, {
+    type: 'line',
+    data: {
+        labels: [<?php echo implode(',', array_map(function($m) { return "'" . $m['month'] . "'"; }, $appointments_monthly)); ?>],
+        datasets: [{
+            label: 'Appointments',
+            data: [<?php echo implode(',', array_map(function($m) { return $m['count']; }, $appointments_monthly)); ?>],
+            borderColor: '#0d6efd',
+            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+            tension: 0.4
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true } }
+    }
+});
+
 // Status Chart
 const statusCtx = document.getElementById('statusChart').getContext('2d');
 new Chart(statusCtx, {
@@ -285,6 +411,20 @@ new Chart(statusCtx, {
         responsive: true,
         maintainAspectRatio: false
     }
+});
+
+// Appointments Status Chart
+const apptsStatusCtx = document.getElementById('apptsStatusChart').getContext('2d');
+new Chart(apptsStatusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: [<?php echo implode(',', array_map(function($s) { return "'" . ucfirst($s['status']) . "'"; }, $appt_status_dist)); ?>],
+        datasets: [{
+            data: [<?php echo implode(',', array_map(function($s) { return $s['count']; }, $appt_status_dist)); ?>],
+            backgroundColor: ['#198754', '#ffc107', '#0dcaf0', '#6c757d', '#dc3545']
+        }]
+    },
+    options: { responsive: true, maintainAspectRatio: false }
 });
 
 // Purpose Chart

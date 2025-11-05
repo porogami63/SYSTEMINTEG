@@ -4,6 +4,7 @@
  * Handles fetching notifications and marking them as read
  */
 require_once '../config.php';
+require_once '../includes/JsonHelper.php';
 
 header('Content-Type: application/json');
 
@@ -50,6 +51,17 @@ try {
         // Mark notification as read
         if ($action === 'mark_read') {
             $notif_id = isset($_POST['notification_id']) ? intval($_POST['notification_id']) : 0;
+            if ($notif_id === 0) {
+                try {
+                    $body = JsonHelper::getJsonInput(true);
+                    if (is_array($body) && isset($body['notification_id'])) {
+                        $notif_id = intval($body['notification_id']);
+                    }
+                } catch (RuntimeException $e) {
+                    echo json_encode(['error' => $e->getMessage()]);
+                    exit;
+                }
+            }
             if ($notif_id > 0) {
                 $db->execute("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?", [$notif_id, $user_id]);
                 echo json_encode(['success' => true]);

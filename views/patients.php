@@ -80,7 +80,10 @@ $conn->close();
                                         <td><?php echo htmlspecialchars($patient['phone'] ?? 'N/A'); ?></td>
                                         <td><?php echo $patient['date_of_birth'] ?? 'N/A'; ?></td>
                                         <td><?php echo $patient['gender'] ?? 'N/A'; ?></td>
-                                        <td>
+                                        <td class="d-flex gap-2">
+                                            <a href="patient_history.php?patient_id=<?php echo intval($patient['id']); ?>" class="btn btn-sm btn-outline-secondary">
+                                                <i class="bi bi-clock-history"></i> History
+                                            </a>
                                             <a href="certificates.php" class="btn btn-sm btn-primary">
                                                 <i class="bi bi-file-earmark-plus"></i> Create Cert
                                             </a>
