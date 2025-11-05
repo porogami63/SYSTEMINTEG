@@ -1,3 +1,4 @@
+<?php require_once __DIR__ . '/config.php'; ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -148,12 +149,21 @@ body {
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
+                <?php if (isLoggedIn()): ?>
+                <li class="nav-item">
+                    <a class="nav-link" href="views/dashboard.php">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="views/logout.php">Logout</a>
+                </li>
+                <?php else: ?>
                 <li class="nav-item">
                     <a class="nav-link" href="views/login.php">Login</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="views/register.php">Register</a>
                 </li>
+                <?php endif; ?>
             </ul>
         </div>
     </div>
@@ -166,7 +176,7 @@ body {
             <div class="col-lg-8 mx-auto text-center">
                 <h1 class="display-4 fw-bold">Digital Medical Certificate System</h1>
                 <p class="lead">Securely issue, access, and verify medical certificates with advanced QR code technology</p>
-                <a href="views/register.php" class="btn btn-light btn-hero">Get Started</a>
+                <a href="<?php echo isLoggedIn() ? 'views/dashboard.php' : 'views/register.php'; ?>" class="btn btn-light btn-hero">Get Started</a>
             </div>
         </div>
     </div>

@@ -27,15 +27,25 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     <?php endif; ?>
                 </div>
             </div>
-            <!-- Notification Bell -->
-            <div class="position-relative">
-                <button class="btn btn-link text-white p-0" id="notificationBell" style="text-decoration:none;" onclick="toggleNotifications()">
-                    <i class="bi bi-bell fs-5"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display:none;">
-                        0
-                    </span>
-                </button>
-            </div>
+			<!-- Notification Bell -->
+			<div class="position-relative">
+				<button class="btn btn-link text-white p-0" id="notificationBell" style="text-decoration:none;" onclick="toggleNotifications()">
+					<i class="bi bi-bell fs-5"></i>
+					<span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="notificationBadge" style="display:none;">
+						0
+					</span>
+				</button>
+				<div id="notificationDropdown" class="card shadow position-absolute end-0 mt-2" style="width:320px; display:none; z-index:1050;">
+					<div class="card-header d-flex align-items-center justify-content-between py-2">
+						<strong>Notifications</strong>
+						<button class="btn btn-sm btn-outline-secondary" type="button" onclick="markAllNotificationsRead()">Mark all read</button>
+					</div>
+					<div id="notificationList" class="list-group list-group-flush" style="max-height:360px; overflow:auto;"></div>
+					<div class="card-footer text-center py-2">
+						<a href="notification_settings.php" class="small">Settings</a>
+					</div>
+				</div>
+			</div>
         </div>
         <?php endif; ?>
         <hr class="text-white">
@@ -88,6 +98,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'my_appointments.php' ? 'active' : ''; ?>" href="my_appointments.php">
                     <i class="bi bi-calendar"></i> My Appointments
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'request_appointment.php' ? 'active' : ''; ?>" href="request_appointment.php">
+                    <i class="bi bi-calendar-plus"></i> Request Appointment
                 </a>
             </li>
             <?php endif; ?>
@@ -154,4 +169,96 @@ function setAvailability(isOn){
 }
 </script>
 <?php endif; ?>
+
+<script>
+// Notifications UI (patients and clinic admins)
+let notifOpen = false;
+function toggleNotifications(){
+	const dd = document.getElementById('notificationDropdown');
+	if (!dd) return;
+	notifOpen = !notifOpen;
+	dd.style.display = notifOpen ? 'block' : 'none';
+	if (notifOpen) { loadNotifications(); }
+}
+
+function closeNotificationsOnOutsideClick(e){
+	const dd = document.getElementById('notificationDropdown');
+	const bell = document.getElementById('notificationBell');
+	if (!dd || !bell) return;
+	if (notifOpen && !dd.contains(e.target) && !bell.contains(e.target)) {
+		dd.style.display = 'none';
+		notifOpen = false;
+	}
+}
+document.addEventListener('click', closeNotificationsOnOutsideClick);
+
+function refreshNotificationCount(){
+	fetch('../api/notifications.php?action=count')
+		.then(r => r.json())
+		.then(j => {
+			const badge = document.getElementById('notificationBadge');
+			if (!badge) return;
+			const c = parseInt(j.count || 0, 10);
+			if (c > 0) {
+				badge.style.display = 'inline-block';
+				badge.textContent = c;
+			} else {
+				badge.style.display = 'none';
+			}
+		})
+		.catch(()=>{});
+}
+
+function loadNotifications(){
+	const list = document.getElementById('notificationList');
+	if (list) list.innerHTML = '<div class="text-center py-3 small text-muted">Loading...</div>';
+	fetch('../api/notifications.php?limit=10')
+		.then(r => r.json())
+		.then(j => {
+			if (!list) return;
+			const items = (j.notifications || []).map(n => {
+				const linkStart = n.link ? '<a href="'+ n.link +'" class="list-group-item list-group-item-action">' : '<div class="list-group-item">';
+				const linkEnd = n.link ? '</a>' : '</div>';
+				return linkStart +
+					'<div class="d-flex justify-content-between align-items-start">'
+					+ '<div>'
+					+ '<div class="fw-semibold">' + escapeHtml(n.title) + '</div>'
+					+ '<div class="small text-muted">' + escapeHtml(n.created_at) + '</div>'
+					+ '</div>'
+					+ (n.is_read ? '' : '<span class="badge bg-primary">New</span>')
+					+ '</div>'
+					+ '<div class="small mt-1">' + escapeHtml(n.message) + '</div>'
+				+ linkEnd;
+			}).join('');
+			list.innerHTML = items || '<div class="text-center py-3 small text-muted">No notifications</div>';
+		})
+		.catch(()=>{ if (list) list.innerHTML = '<div class="text-center py-3 small text-muted">Failed to load</div>'; });
+	// also refresh count
+	setTimeout(refreshNotificationCount, 250);
+}
+
+function markAllNotificationsRead(){
+	const form = new FormData();
+	fetch('../api/notifications.php?action=mark_read', { method: 'POST', body: form })
+		.then(r => r.json())
+		.then(() => { refreshNotificationCount(); loadNotifications(); })
+		.catch(()=>{});
+}
+
+function escapeHtml(str){
+	if (str === null || str === undefined) return '';
+	return String(str)
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&#039;');
+}
+
+// initial and periodic refresh
+document.addEventListener('DOMContentLoaded', function(){
+	refreshNotificationCount();
+	setInterval(refreshNotificationCount, 30000);
+});
+</script>
 
