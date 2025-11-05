@@ -45,32 +45,35 @@
 - Password: `password` (SHA256 hashed)
 - Role: `web_admin`
 
-## 📋 Pending UI Implementations
+## 📋 Newly Completed UI Implementations
 
-The database infrastructure is complete for these features, but UI pages still need to be built:
-
-### 3. Notification Preferences (Infrastructure Ready)
+### 3. Notification Preferences
 - **Database**: `notification_preferences` table created
-- **Needed**: 
-  - Preference management UI page
-  - Settings form with toggle switches
-  - Integration with notification sending logic
+- **UI**: `views/notification_settings.php` with per-category toggles (Enabled, Email, In-App)
+- **Categories**: `certificate_created`, `expiry_warning`, `system_update`
+- **Integration**: Upsert logic on save; sidebar link added (`Notifications`)
 
-### 4. Certificate Notes (Infrastructure Ready)
-- **Database**: `certificate_notes` table created  
-- **Needed**:
-  - Add note form on certificate view page
-  - Notes display section
-  - Edit/delete functionality
-  - Permission checking (internal vs. visible)
+### 4. Certificate Notes
+- **Database**: `certificate_notes` table created
+- **UI**: Notes section and add form in `views/view_certificate.php`
+- **Permissions**: Patients see public notes only; clinic admins see/add internal/public notes
+- **Logging**: Adding a note is audited (`ADD_CERTIFICATE_NOTE`)
 
-### 5. Patient Medical History (Can be built from existing data)
-- **Database**: All necessary data exists in `certificates` table
-- **Needed**:
-  - Patient history page or section
-  - Timeline view of certificates
-  - Statistics and patterns
-  - Export functionality
+### 5. Patient Medical History
+- **Database**: Uses existing `certificates`
+- **UI**: `views/patient_history.php` timeline with status badges and quick actions
+- **Access**: Patients view their own history; clinic admins can pass `patient_id`
+- **Navigation**: Sidebar link added for patients (`Medical History`)
+
+### 6. Appointment Scheduling
+- **Database**: `appointments` table created
+- **UI**: `views/request_appointment.php` with specialization filter, available doctor/clinic selector, date/time slot, purpose, details, and specialty questions
+- **Notifications**: Clinic admin notified on new request
+
+### 7. Doctor Availability
+- **Sidebar**: Availability slider for clinic admins with live indicator dot
+- **API**: `api/availability.php` to toggle `clinics.is_available`
+- **Integration**: Patients can only select available doctors for certificate or appointment requests
 
 ## 🔧 Migration Instructions
 

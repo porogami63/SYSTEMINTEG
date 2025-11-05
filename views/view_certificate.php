@@ -35,6 +35,37 @@ try {
 } catch (Exception $e) {
     die('Server error: ' . $e->getMessage());
 }
+// Handle certificate notes (clinic admins only)
+try {
+    if (isClinicAdmin() && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['note_text'])) {
+        $noteText = trim($_POST['note_text']);
+        $isInternal = isset($_POST['is_internal']) ? 1 : 0;
+        if ($noteText !== '') {
+            $db->execute(
+                "INSERT INTO certificate_notes (certificate_id, user_id, note, is_internal) VALUES (?, ?, ?, ?)",
+                [$certificate['id'], $_SESSION['user_id'], $noteText, $isInternal]
+            );
+            AuditLogger::log('ADD_CERTIFICATE_NOTE', 'certificate', $cert_id, ['user_id' => $_SESSION['user_id']]);
+        }
+        // Refresh to prevent resubmission
+        redirect('view_certificate.php?id=' . $cert_id);
+    }
+
+    // Load notes: patients see only non-internal, clinic admins see all
+    if (isClinicAdmin()) {
+        $notes = $db->fetchAll(
+            "SELECT cn.*, u.full_name FROM certificate_notes cn JOIN users u ON cn.user_id = u.id WHERE certificate_id = ? ORDER BY cn.created_at DESC",
+            [$certificate['id']]
+        );
+    } else {
+        $notes = $db->fetchAll(
+            "SELECT cn.*, u.full_name FROM certificate_notes cn JOIN users u ON cn.user_id = u.id WHERE certificate_id = ? AND cn.is_internal = 0 ORDER BY cn.created_at DESC",
+            [$certificate['id']]
+        );
+    }
+} catch (Exception $e) {
+    $notes = [];
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -119,6 +150,55 @@ try {
             <p><?php echo nl2br(htmlspecialchars($certificate['recommendations'])); ?></p>
         </div>
         <?php endif; ?>
+
+        <!-- Certificate Notes -->
+        <div class="mb-4">
+            <div class="d-flex align-items-center justify-content-between">
+                <h6 class="text-muted mb-0">NOTES</h6>
+                <?php if (isClinicAdmin()): ?>
+                <button class="btn btn-sm btn-outline-primary no-print" type="button" data-bs-toggle="collapse" data-bs-target="#addNoteForm" aria-expanded="false">
+                    <i class="bi bi-plus"></i> Add Note
+                </button>
+                <?php endif; ?>
+            </div>
+            <div class="mt-3">
+                <?php if (!empty($notes)): ?>
+                    <ul class="list-group">
+                        <?php foreach ($notes as $n): ?>
+                        <li class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <strong><?php echo htmlspecialchars($n['full_name']); ?></strong>
+                                    <span class="text-muted small ms-2"><?php echo htmlspecialchars($n['created_at']); ?></span>
+                                    <?php if (!empty($n['is_internal'])): ?>
+                                        <span class="badge bg-secondary ms-2">Internal</span>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                            <div class="mt-2"><?php echo nl2br(htmlspecialchars($n['note'])); ?></div>
+                        </li>
+                        <?php endforeach; ?>
+                    </ul>
+                <?php else: ?>
+                    <div class="text-muted">No notes yet.</div>
+                <?php endif; ?>
+            </div>
+
+            <?php if (isClinicAdmin()): ?>
+            <div class="collapse mt-3" id="addNoteForm">
+                <form method="post">
+                    <div class="mb-2">
+                        <textarea class="form-control" name="note_text" rows="3" placeholder="Add a note..." required></textarea>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" name="is_internal" id="isInternal" checked>
+                        <label class="form-check-label" for="isInternal">Internal (visible to clinic staff only)</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Save Note</button>
+                </form>
+            </div>
+            <?php endif; ?>
+        </div>
 
         <!-- Signature/Seal and QR Code -->
         <div class="qr-code">

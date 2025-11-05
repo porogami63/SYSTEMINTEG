@@ -13,7 +13,19 @@ $current_page = basename($_SERVER['PHP_SELF']);
                 <?php if (!empty($_SESSION['profile_photo'])): ?>
                     <img src="../<?php echo htmlspecialchars($_SESSION['profile_photo']); ?>" alt="Profile" class="rounded-circle" style="width:28px;height:28px;object-fit:cover;">
                 <?php endif; ?>
-                <div class="small">Hello, <?php echo htmlspecialchars($_SESSION['full_name']); ?></div>
+                <div class="small d-flex align-items-center gap-2">
+                    <span>Hello, <?php echo htmlspecialchars($_SESSION['full_name']); ?></span>
+                    <?php if (isClinicAdmin()): ?>
+                        <?php 
+                        // fetch current availability
+                        try {
+                            $row = DB()->fetch("SELECT is_available FROM clinics WHERE user_id = ?", [$_SESSION['user_id']]);
+                            $isAvail = $row ? intval($row['is_available']) : 0;
+                        } catch (Exception $e) { $isAvail = 0; }
+                        ?>
+                        <span id="availIndicator" class="d-inline-block rounded-circle" style="width:8px;height:8px;background: <?php echo $isAvail ? '#2ecc71' : '#bdc3c7'; ?>;"></span>
+                    <?php endif; ?>
+                </div>
             </div>
             <!-- Notification Bell -->
             <div class="position-relative">
@@ -28,6 +40,19 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <?php endif; ?>
         <hr class="text-white">
         <ul class="nav flex-column">
+            <?php if (isClinicAdmin()): ?>
+            <li class="nav-item px-3 mb-2">
+                <div class="form-check form-switch text-white">
+                    <?php 
+                    if (!isset($isAvail)) {
+                        try { $row = DB()->fetch("SELECT is_available FROM clinics WHERE user_id = ?", [$_SESSION['user_id']]); $isAvail = $row ? intval($row['is_available']) : 0; } catch (Exception $e) { $isAvail = 0; }
+                    }
+                    ?>
+                    <input class="form-check-input" type="checkbox" role="switch" id="availabilitySwitch" <?php echo $isAvail ? 'checked' : ''; ?> onclick="setAvailability(this.checked)">
+                    <label class="form-check-label ms-2" for="availabilitySwitch">Available</label>
+                </div>
+            </li>
+            <?php endif; ?>
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>" href="dashboard.php">
                     <i class="bi bi-speedometer2"></i> Dashboard
@@ -37,6 +62,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'certificates.php' ? 'active' : ''; ?>" href="certificates.php">
                     <i class="bi bi-files"></i> Certificates & Requests
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'clinic_appointments.php' ? 'active' : ''; ?>" href="clinic_appointments.php">
+                    <i class="bi bi-calendar-event"></i> Appointments
                 </a>
             </li>
             <li class="nav-item">
@@ -55,6 +85,11 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     <i class="bi bi-file-earmark-medical"></i> My Certificates
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'my_appointments.php' ? 'active' : ''; ?>" href="my_appointments.php">
+                    <i class="bi bi-calendar"></i> My Appointments
+                </a>
+            </li>
             <?php endif; ?>
             
             <?php if (isWebAdmin()): ?>
@@ -69,6 +104,18 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <li class="nav-item">
                 <a class="nav-link <?php echo in_array($current_page, ['profile.php', 'edit_profile.php']) ? 'active' : ''; ?>" href="profile.php">
                     <i class="bi bi-person"></i> Profile
+                </a>
+            </li>
+            <?php if (!isClinicAdmin()): ?>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'patient_history.php' ? 'active' : ''; ?>" href="patient_history.php">
+                    <i class="bi bi-clock-history"></i> Medical History
+                </a>
+            </li>
+            <?php endif; ?>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'notification_settings.php' ? 'active' : ''; ?>" href="notification_settings.php">
+                    <i class="bi bi-bell"></i> Notifications
                 </a>
             </li>
             <?php if (!isClinicAdmin()): ?>
@@ -91,4 +138,20 @@ $current_page = basename($_SERVER['PHP_SELF']);
         </ul>
     </div>
 </nav>
+
+<?php if (isClinicAdmin()): ?>
+<script>
+function setAvailability(isOn){
+  const form = new FormData();
+  form.append('is_available', isOn ? 1 : 0);
+  fetch('../api/availability.php', { method: 'POST', body: form })
+    .then(r => r.json())
+    .then(j => {
+      const ind = document.getElementById('availIndicator');
+      if (ind) ind.style.background = (isOn ? '#2ecc71' : '#bdc3c7');
+    })
+    .catch(() => {});
+}
+</script>
+<?php endif; ?>
 

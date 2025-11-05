@@ -9,11 +9,11 @@ $conn = getDBConnection();
 $error = '';
 $success = '';
 
-// Fetch available clinics
+// Fetch available clinics filtered by specialization and availability
 $selected_spec = isset($_GET['specialization']) ? sanitizeInput($_GET['specialization']) : '';
 $stmt = $selected_spec
-    ? $conn->prepare("SELECT c.id, c.clinic_name, c.specialization, c.address, c.is_available FROM clinics c WHERE c.specialization = ? AND c.is_available = 1 ORDER BY c.clinic_name")
-    : $conn->prepare("SELECT c.id, c.clinic_name, c.specialization, c.address, c.is_available FROM clinics c WHERE c.is_available = 1 ORDER BY c.clinic_name");
+    ? $conn->prepare("SELECT c.id, c.clinic_name, c.specialization, c.address, c.is_available, c.available_from, c.available_to FROM clinics c WHERE c.specialization = ? AND c.is_available = 1 ORDER BY c.clinic_name")
+    : $conn->prepare("SELECT c.id, c.clinic_name, c.specialization, c.address, c.is_available, c.available_from, c.available_to FROM clinics c WHERE c.is_available = 1 ORDER BY c.clinic_name");
 if ($selected_spec) { $stmt->bind_param("s", $selected_spec); }
 $stmt->execute();
 $clinics = $stmt->get_result();
@@ -24,6 +24,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $requested_specialization = sanitizeInput($_POST['requested_specialization']);
     $purpose = sanitizeInput($_POST['purpose']);
     $details = sanitizeInput($_POST['details']);
+    $date = sanitizeInput($_POST['appointment_date']);
+    $time = sanitizeInput($_POST['time_slot']);
     $answers_json = isset($_POST['spec_answers']) ? json_encode($_POST['spec_answers']) : null;
 
     $patientStmt = $conn->prepare("SELECT id FROM patients WHERE user_id = ?");
@@ -33,10 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $patientStmt->close();
 
     if ($patient) {
-        $ins = $conn->prepare("INSERT INTO certificate_requests (patient_id, clinic_id, requested_specialization, purpose, details) VALUES (?, ?, ?, ?, ?)");
-        $ins->bind_param("iisss", $patient['id'], $clinic_id, $requested_specialization, $purpose, $details);
+        $ins = $conn->prepare("INSERT INTO appointments (patient_id, clinic_id, appointment_date, time_slot, purpose, details, spec_answers) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $ins->bind_param("iisssss", $patient['id'], $clinic_id, $date, $time, $purpose, $details, $answers_json);
         if ($ins->execute()) {
-            $success = 'Request submitted successfully';
+            $success = 'Appointment requested successfully';
             // notify clinic admin
             $cl = $conn->prepare("SELECT user_id FROM clinics WHERE id = ?");
             $cl->bind_param("i", $clinic_id);
@@ -44,10 +46,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $clid = $cl->get_result()->fetch_assoc();
             $cl->close();
             if ($clid) {
-                notifyUser($conn, intval($clid['user_id']), 'New Certificate Request', 'A patient submitted a new certificate request.', 'certificates.php');
+                notifyUser($conn, intval($clid['user_id']), 'New Appointment Request', 'A patient requested an appointment.', 'certificates.php');
             }
         } else {
-            $error = 'Failed to submit request';
+            $error = 'Failed to request appointment';
         }
         $ins->close();
     } else {
@@ -62,7 +64,7 @@ $conn->close();
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Request Certificate - MediArchive</title>
+<title>Request Appointment - MediArchive</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 <style>
@@ -79,7 +81,7 @@ $conn->close();
 
         <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
             <div class="main-content">
-                <h2 class="mb-4"><i class="bi bi-file-earmark-plus"></i> Request Certificate</h2>
+                <h2 class="mb-4"><i class="bi bi-calendar-plus"></i> Request Appointment</h2>
 
                 <?php if ($error): ?><div class="alert alert-danger"><?php echo $error; ?></div><?php endif; ?>
                 <?php if ($success): ?><div class="alert alert-success"><?php echo $success; ?></div><?php endif; ?>
@@ -99,29 +101,44 @@ $conn->close();
                                     </select>
                                 </div>
                                 <div class="col-md-6 mb-3">
-                                    <label class="form-label">Choose Clinic <span class="text-danger">*</span></label>
+                                    <label class="form-label">Choose Available Doctor/Clinic <span class="text-danger">*</span></label>
                                     <select name="clinic_id" class="form-select" required>
-                                        <option value="">Select clinic</option>
+                                        <option value="">Select doctor/clinic</option>
                                         <?php while ($cl = $clinics->fetch_assoc()): ?>
                                         <option value="<?php echo $cl['id']; ?>">
                                             <?php echo htmlspecialchars($cl['clinic_name'] . ' — ' . $cl['specialization']); ?>
-                                            <?php echo !$cl['is_available'] ? ' (Unavailable)' : ''; ?>
+                                            <?php if ($cl['available_from'] && $cl['available_to']): ?>
+                                                (<?php echo substr($cl['available_from'],0,5); ?> - <?php echo substr($cl['available_to'],0,5); ?>)
+                                            <?php endif; ?>
                                         </option>
                                         <?php endwhile; ?>
                                     </select>
                                 </div>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Purpose <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="purpose" required>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Date <span class="text-danger">*</span></label>
+                                    <input type="date" class="form-control" name="appointment_date" required min="<?php echo date('Y-m-d'); ?>">
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Time Slot <span class="text-danger">*</span></label>
+                                    <input type="time" class="form-control" name="time_slot" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label class="form-label">Purpose <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="purpose" required>
+                                </div>
                             </div>
+
                             <div class="mb-3">
                                 <label class="form-label">Details</label>
-                                <textarea class="form-control" name="details" rows="4"></textarea>
+                                <textarea class="form-control" name="details" rows="3"></textarea>
                             </div>
+
                             <div id="specQuestions"></div>
 
-                            <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Submit Request</button>
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Request Appointment</button>
                         </form>
                     </div>
                 </div>
@@ -129,6 +146,7 @@ $conn->close();
         </main>
     </div>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const specToQuestions = {
