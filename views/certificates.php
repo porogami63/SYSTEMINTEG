@@ -61,11 +61,20 @@ try {
         $req_params[] = $search_param;
     }
     
-    $pending_requests = $db->fetchAll("SELECT r.*, u.full_name as patient_name, u.email as patient_email, p.patient_code
+    $pending_requests = $db->fetchAll("SELECT r.*, u.full_name as patient_name, u.email as patient_email, u.phone as patient_phone, 
+                        u.profile_photo, p.patient_code, p.date_of_birth, p.gender, p.address
                         FROM certificate_requests r
                         JOIN patients p ON r.patient_id = p.id
                         JOIN users u ON p.user_id = u.id
                         WHERE " . implode(' AND ', $req_where) . " ORDER BY r.created_at DESC", $req_params);
+    
+    // Decode spec_answers JSON for each request
+    foreach ($pending_requests as &$request) {
+        if (!empty($request['spec_answers'])) {
+            $request['spec_answers'] = json_decode($request['spec_answers'], true);
+        }
+    }
+    unset($request);
 
     // Get all certificates with filters
     $certificates = $db->fetchAll("SELECT c.*, u.full_name as patient_name FROM certificates c 
@@ -281,25 +290,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 <title>Certificates & Requests - MediArchive</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<?php include 'includes/role_styles.php'; ?>
 <style>
-.sidebar {
-    min-height: 100vh;
-    background: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%);
-}
-.sidebar .nav-link {
-    color: white;
-    padding: 12px 20px;
-    margin: 5px 0;
-}
-.sidebar .nav-link:hover {
-    background: rgba(255,255,255,0.1);
-}
-.sidebar .nav-link.active {
-    background: rgba(255,255,255,0.2);
-}
-.main-content {
-    padding: 30px;
-}
 .request-card {
     border-left: 4px solid #ffc107;
     margin-bottom: 15px;
@@ -401,6 +393,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                         <small class="text-muted">Requested: <?php echo date('M d, Y', strtotime($request['created_at'])); ?></small>
                                     </div>
                                     <div class="col-md-4 text-end">
+                                        <button class="btn btn-info btn-sm me-2" data-bs-toggle="modal" data-bs-target="#requestDetailsModal" 
+                                                onclick='loadRequestDetails(<?php echo json_encode($request); ?>)'>
+                                            <i class="bi bi-info-circle"></i> More Details
+                                        </button>
                                         <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createFromRequestModal" 
                                                 onclick='loadRequestData(<?php echo json_encode($request); ?>)'>
                                             <i class="bi bi-file-earmark-plus"></i> Create Certificate
@@ -462,6 +458,70 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 </div>
             </div>
         </main>
+    </div>
+</div>
+
+<!-- Request Details Modal -->
+<div class="modal fade" id="requestDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-info-circle"></i> Patient Details & Request Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <!-- Patient Profile Picture -->
+                    <div class="col-md-4 text-center mb-4">
+                        <div id="details-profile-photo" class="mb-3">
+                            <!-- Profile picture will be loaded dynamically -->
+                        </div>
+                        <h5 id="details-patient-name" class="fw-bold"></h5>
+                        <span id="details-patient-code" class="badge bg-secondary"></span>
+                    </div>
+                    
+                    <!-- Patient Personal Details -->
+                    <div class="col-md-8">
+                        <h6 class="text-primary mb-3"><i class="bi bi-person"></i> Personal Information</h6>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Email:</strong> <span id="details-email"></span></p>
+                                <p class="mb-2"><strong>Phone:</strong> <span id="details-phone"></span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-2"><strong>Date of Birth:</strong> <span id="details-dob"></span></p>
+                                <p class="mb-2"><strong>Gender:</strong> <span id="details-gender"></span></p>
+                            </div>
+                        </div>
+                        <p class="mb-3"><strong>Address:</strong> <span id="details-address"></span></p>
+                        
+                        <hr>
+                        
+                        <!-- Request Information -->
+                        <h6 class="text-primary mb-3"><i class="bi bi-file-earmark-text"></i> Request Information</h6>
+                        <div class="mb-3">
+                            <p class="mb-2"><strong>Purpose:</strong> <span id="details-purpose"></span></p>
+                            <p class="mb-2"><strong>Specialization:</strong> <span id="details-specialization"></span></p>
+                            <p class="mb-2"><strong>Details:</strong> <span id="details-request-details"></span></p>
+                            <p class="mb-2"><strong>Requested Date:</strong> <span id="details-requested-date"></span></p>
+                        </div>
+                        
+                        <!-- Additional Questions Answers -->
+                        <div id="details-answers-section" style="display: none;">
+                            <hr>
+                            <h6 class="text-primary mb-3"><i class="bi bi-question-circle"></i> Additional Questions & Answers</h6>
+                            <div id="details-answers-list"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="createCertificateFromDetails()">
+                    <i class="bi bi-file-earmark-plus"></i> Create Certificate
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -603,6 +663,105 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+let currentRequestData = null;
+
+// Load request details into the modal
+function loadRequestDetails(request) {
+    currentRequestData = request;
+    
+    // Patient Profile Picture
+    const profilePhoto = document.getElementById('details-profile-photo');
+    if (request.profile_photo && request.profile_photo.trim() !== '') {
+        const imgPath = request.profile_photo.startsWith('../') ? request.profile_photo : '../' + request.profile_photo;
+        profilePhoto.innerHTML = `<img src="${imgPath}" alt="Profile Picture" class="img-thumbnail rounded-circle border-2" style="width: 150px; height: 150px; object-fit: cover;" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center\\' style=\\'width: 150px; height: 150px;\\'><i class=\\'bi bi-person fs-1 text-white\\'></i></div>';" />`;
+    } else {
+        profilePhoto.innerHTML = `<div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 150px; height: 150px;"><i class="bi bi-person fs-1 text-white"></i></div>`;
+    }
+    
+    // Patient Information
+    document.getElementById('details-patient-name').textContent = request.patient_name || 'N/A';
+    document.getElementById('details-patient-code').textContent = request.patient_code || 'N/A';
+    document.getElementById('details-email').textContent = request.patient_email || 'N/A';
+    document.getElementById('details-phone').textContent = request.patient_phone || 'N/A';
+    document.getElementById('details-dob').textContent = request.date_of_birth ? new Date(request.date_of_birth).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A';
+    document.getElementById('details-gender').textContent = request.gender || 'N/A';
+    document.getElementById('details-address').textContent = request.address || 'N/A';
+    
+    // Request Information
+    document.getElementById('details-purpose').textContent = request.purpose || 'N/A';
+    document.getElementById('details-specialization').textContent = request.requested_specialization || 'N/A';
+    document.getElementById('details-request-details').textContent = request.details || 'N/A';
+    document.getElementById('details-requested-date').textContent = request.created_at ? new Date(request.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A';
+    
+    // Additional Questions Answers
+    const answersSection = document.getElementById('details-answers-section');
+    const answersList = document.getElementById('details-answers-list');
+    
+    if (request.spec_answers) {
+        try {
+            const answers = typeof request.spec_answers === 'string' ? JSON.parse(request.spec_answers) : request.spec_answers;
+            if (answers && Object.keys(answers).length > 0) {
+                answersList.innerHTML = '';
+                Object.keys(answers).forEach(key => {
+                    const questionLabel = formatQuestionLabel(key);
+                    const answer = answers[key];
+                    const answerDiv = document.createElement('div');
+                    answerDiv.className = 'mb-3 p-3 border rounded';
+                    answerDiv.innerHTML = `
+                        <strong class="text-primary">${questionLabel}:</strong>
+                        <span class="ms-2">${answer || 'N/A'}</span>
+                    `;
+                    answersList.appendChild(answerDiv);
+                });
+                answersSection.style.display = 'block';
+            } else {
+                answersSection.style.display = 'none';
+            }
+        } catch (e) {
+            answersSection.style.display = 'none';
+        }
+    } else {
+        answersSection.style.display = 'none';
+    }
+}
+
+// Format question label from key
+function formatQuestionLabel(key) {
+    const labels = {
+        'duration': 'How long have symptoms been present?',
+        'fever': 'Do you have fever?',
+        'chest_pain': 'Chest pain present?',
+        'bp_history': 'History of hypertension?',
+        'headache': 'Headache severity',
+        'neuro_deficits': 'Any weakness/numbness?',
+        'child_age': 'Child age',
+        'vaccinations': 'Vaccination up to date?',
+        'injury': 'Recent injury?',
+        'pain_scale': 'Pain scale (0-10)',
+        'rash': 'Rash present?',
+        'mood': 'Mood',
+        'sleep': 'Sleep issues?',
+        'weight_loss': 'Unintentional weight loss?',
+        'family_history': 'Family history of cancer?',
+        'lmp': 'Last menstrual period',
+        'pregnant': 'Pregnant?',
+        'life_threat': 'Life-threatening symptoms?',
+        'chronic': 'Existing chronic illnesses',
+        'prior_surgery': 'Prior surgeries?',
+        'bleeding': 'Bleeding disorders?'
+    };
+    return labels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+}
+
+// Create certificate from details modal
+function createCertificateFromDetails() {
+    if (currentRequestData) {
+        loadRequestData(currentRequestData);
+        const modal = new bootstrap.Modal(document.getElementById('createFromRequestModal'));
+        modal.show();
+    }
+}
+
 function loadRequestData(request) {
     document.getElementById('modal_request_id').value = request.id;
     document.getElementById('modal_patient_name').value = request.patient_name + ' (' + request.patient_code + ')';

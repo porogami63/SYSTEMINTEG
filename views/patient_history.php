@@ -50,15 +50,12 @@ foreach ($certificates as $c) {
 <title>Patient History - MediArchive</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<?php include 'includes/role_styles.php'; ?>
 <style>
-.sidebar { min-height: 100vh; background: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%); }
-.sidebar .nav-link { color: white; padding: 12px 20px; margin: 5px 0; }
-.sidebar .nav-link.active { background: rgba(255,255,255,0.2); }
-.main-content { padding: 30px; }
 .timeline { position: relative; padding-left: 1.5rem; }
 .timeline:before { content: ""; position: absolute; left: 8px; top: 0; bottom: 0; width: 2px; background: #e0e0e0; }
 .timeline-item { position: relative; margin-bottom: 1.5rem; }
-.timeline-item:before { content: ""; position: absolute; left: 0; top: 4px; width: 18px; height: 18px; background: #2e7d32; border-radius: 50%; }
+.timeline-item:before { content: ""; position: absolute; left: 0; top: 4px; width: 18px; height: 18px; background: <?php echo $_SESSION['role'] === 'patient' ? '#1976d2' : '#2e7d32'; ?>; border-radius: 50%; }
 </style>
 </head>
 <body>

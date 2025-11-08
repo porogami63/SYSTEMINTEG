@@ -24,12 +24,7 @@ if ($q) {
 <title>Find Doctors - MediArchive</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-<style>
-.sidebar { min-height: 100vh; background: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%); }
-.sidebar .nav-link { color: white; padding: 12px 20px; margin: 5px 0; }
-.sidebar .nav-link.active { background: rgba(255,255,255,0.2); }
-.main-content { padding: 30px; }
-</style>
+<?php include 'includes/role_styles.php'; ?>
 </head>
 <body>
 <div class="container-fluid">

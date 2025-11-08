@@ -94,12 +94,9 @@ try {
 <title>Audit Logs - MediArchive</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+<?php include 'includes/role_styles.php'; ?>
 <style>
-.sidebar { min-height: 100vh; background: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%); }
-.sidebar .nav-link { color: white; padding: 12px 20px; margin: 5px 0; }
-.sidebar .nav-link.active { background: rgba(255,255,255,0.2); }
-.main-content { padding: 30px; }
-.stats-card { border-left: 4px solid #dc3545; }
+.stats-card { border-left: 4px solid <?php echo $_SESSION['role'] === 'web_admin' ? '#00ff88' : '#dc3545'; ?>; }
 .table-container { max-height: 600px; overflow-y: auto; }
 </style>
 </head>

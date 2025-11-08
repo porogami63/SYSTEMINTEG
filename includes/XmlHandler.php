@@ -22,7 +22,9 @@ class XmlHandler {
                 $node->appendChild($child);
                 self::appendArray($xml, $child, $value);
             } else {
-                $child = $xml->createElement($key, htmlspecialchars((string)$value));
+                // Handle null values by converting to empty string
+                $textValue = ($value === null) ? '' : (string)$value;
+                $child = $xml->createElement($key, htmlspecialchars($textValue, ENT_XML1, 'UTF-8'));
                 $node->appendChild($child);
             }
         }

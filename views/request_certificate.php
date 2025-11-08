@@ -33,8 +33,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $patientStmt->close();
 
     if ($patient) {
-        $ins = $conn->prepare("INSERT INTO certificate_requests (patient_id, clinic_id, requested_specialization, purpose, details) VALUES (?, ?, ?, ?, ?)");
-        $ins->bind_param("iisss", $patient['id'], $clinic_id, $requested_specialization, $purpose, $details);
+        // Check if spec_answers column exists, if not, add it
+        $checkCol = $conn->query("SHOW COLUMNS FROM certificate_requests LIKE 'spec_answers'");
+        if ($checkCol->num_rows == 0) {
+            $conn->query("ALTER TABLE certificate_requests ADD COLUMN spec_answers TEXT DEFAULT NULL");
+        }
+        
+        $ins = $conn->prepare("INSERT INTO certificate_requests (patient_id, clinic_id, requested_specialization, purpose, details, spec_answers) VALUES (?, ?, ?, ?, ?, ?)");
+        $ins->bind_param("iissss", $patient['id'], $clinic_id, $requested_specialization, $purpose, $details, $answers_json);
         if ($ins->execute()) {
             $success = 'Request submitted successfully';
             // notify clinic admin
@@ -65,12 +71,7 @@ $conn->close();
 <title>Request Certificate - MediArchive</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-<style>
-.sidebar { min-height: 100vh; background: linear-gradient(180deg, #2e7d32 0%, #1b5e20 100%); }
-.sidebar .nav-link { color: white; padding: 12px 20px; margin: 5px 0; }
-.sidebar .nav-link.active { background: rgba(255,255,255,0.2); }
-.main-content { padding: 30px; }
-</style>
+<?php include 'includes/role_styles.php'; ?>
 </head>
 <body>
 <div class="container-fluid">

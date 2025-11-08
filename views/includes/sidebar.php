@@ -1,11 +1,20 @@
 <?php
 $current_page = basename($_SERVER['PHP_SELF']);
+$role = $_SESSION['role'] ?? '';
 ?>
 <nav class="col-md-3 col-lg-2 d-md-block sidebar collapse">
     <div class="position-sticky pt-3">
         <div class="d-flex align-items-center gap-2 px-3 mb-2">
+            <?php if ($role === 'web_admin'): ?>
+            <span class="bg-success rounded-circle d-inline-flex align-items-center justify-content-center" style="width:30px;height:30px;color:#000;"><i class="bi bi-shield-check"></i></span>
+            <h5 class="text-white mb-0"><strong>MediArchive</strong></h5>
+            <?php elseif ($role === 'clinic_admin'): ?>
             <span class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:30px;height:30px;color:#2e7d32;"><i class="bi bi-heart-pulse-fill"></i></span>
             <h5 class="text-white mb-0"><strong>MediArchive</strong></h5>
+            <?php else: ?>
+            <span class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:30px;height:30px;color:#1976d2;"><i class="bi bi-heart-pulse-fill"></i></span>
+            <h5 class="text-white mb-0"><strong>MediArchive</strong></h5>
+            <?php endif; ?>
         </div>
         <?php if (isset($_SESSION['full_name'])): ?>
         <div class="d-flex align-items-center justify-content-between px-3 py-2 text-white">
@@ -89,7 +98,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     <i class="bi bi-graph-up"></i> Analytics
                 </a>
             </li>
-            <?php else: ?>
+            <?php elseif (isPatient()): ?>
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'my_certificates.php' ? 'active' : ''; ?>" href="my_certificates.php">
                     <i class="bi bi-file-earmark-medical"></i> My Certificates
@@ -110,6 +119,16 @@ $current_page = basename($_SERVER['PHP_SELF']);
             <?php if (isWebAdmin()): ?>
             <hr class="text-white">
             <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'all_certificates.php' ? 'active' : ''; ?>" href="all_certificates.php">
+                    <i class="bi bi-files"></i> All Certificates
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'all_appointments.php' ? 'active' : ''; ?>" href="all_appointments.php">
+                    <i class="bi bi-calendar-event"></i> All Appointments
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'audit_logs.php' ? 'active' : ''; ?>" href="audit_logs.php">
                     <i class="bi bi-shield-check"></i> Audit Logs
                 </a>
@@ -121,7 +140,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     <i class="bi bi-person"></i> Profile
                 </a>
             </li>
-            <?php if (!isClinicAdmin()): ?>
+            <?php if (isPatient()): ?>
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'patient_history.php' ? 'active' : ''; ?>" href="patient_history.php">
                     <i class="bi bi-clock-history"></i> Medical History
@@ -133,7 +152,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
                     <i class="bi bi-bell"></i> Notifications
                 </a>
             </li>
-            <?php if (!isClinicAdmin()): ?>
+            <?php if (isPatient()): ?>
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'request_certificate.php' ? 'active' : ''; ?>" href="request_certificate.php">
                     <i class="bi bi-file-earmark-plus"></i> Request Certificate
