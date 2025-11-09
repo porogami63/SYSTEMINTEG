@@ -14,7 +14,7 @@ $cert_id = intval($_GET['id'] ?? 0);
 
 try {
     $db = Database::getInstance();
-    $cert = $db->fetch("SELECT c.*, cl.clinic_name, cl.address as clinic_address,
+    $cert = $db->fetch("SELECT c.*, cl.clinic_name, cl.address as clinic_address, cl.signature_path,
                        u.full_name as patient_name, u.email as patient_email,
                        p.patient_code, p.date_of_birth, p.gender
                        FROM certificates c

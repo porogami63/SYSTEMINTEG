@@ -98,6 +98,11 @@ $role = $_SESSION['role'] ?? '';
                     <i class="bi bi-graph-up"></i> Analytics
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'chat.php' ? 'active' : ''; ?>" href="chat.php">
+                    <i class="bi bi-chat-dots"></i> Messages
+                </a>
+            </li>
             <?php elseif (isPatient()): ?>
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'my_certificates.php' ? 'active' : ''; ?>" href="my_certificates.php">
@@ -112,6 +117,11 @@ $role = $_SESSION['role'] ?? '';
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'request_appointment.php' ? 'active' : ''; ?>" href="request_appointment.php">
                     <i class="bi bi-calendar-plus"></i> Request Appointment
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'chat.php' ? 'active' : ''; ?>" href="chat.php">
+                    <i class="bi bi-chat-dots"></i> Messages
                 </a>
             </li>
             <?php endif; ?>

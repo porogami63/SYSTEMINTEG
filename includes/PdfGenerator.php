@@ -58,6 +58,13 @@ class PdfGenerator {
         $clinic_name = !empty($certificate['clinic_name']) ? htmlspecialchars($certificate['clinic_name']) : 'Medical Clinic';
         $clinic_address = !empty($certificate['clinic_address']) ? htmlspecialchars($certificate['clinic_address']) : '';
         
+        // E-signature path
+        $signature_path = !empty($certificate['signature_path']) ? $certificate['signature_path'] : '';
+        $signature_img = '';
+        if ($signature_path && file_exists($signature_path)) {
+            $signature_img = '<img src="' . $signature_path . '" style="height: 60px; margin-bottom: 10px;">';
+        }
+        
         // Format date nicely
         $formatted_date = date('F d, Y', strtotime($issue_date));
         
@@ -239,6 +246,7 @@ class PdfGenerator {
                     </div>
                 </div>
                 <div class="signature-box">
+                    ' . $signature_img . '
                     <div class="signature-line">
                         <div class="doctor-name">' . $issued_by . '</div>
                         <div class="doctor-title">Licensed Medical Practitioner</div>
