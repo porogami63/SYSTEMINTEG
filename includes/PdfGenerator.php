@@ -20,11 +20,16 @@ class PdfGenerator {
             // Load DomPDF
             require_once __DIR__ . '/dompdf/dompdf/autoload.inc.php';
             
+            // Enable remote file access for images
+            $options = new \Dompdf\Options();
+            $options->set('isRemoteEnabled', true);
+            $options->set('isHtml5ParserEnabled', true);
+            
             // Generate HTML content
             $html = self::getCertificateHTML($certificate);
             
             // Create DomPDF instance
-            $dompdf = new \Dompdf\Dompdf();
+            $dompdf = new \Dompdf\Dompdf($options);
             $dompdf->loadHtml($html);
             $dompdf->setPaper('A4', 'portrait');
             $dompdf->render();
@@ -48,6 +53,9 @@ class PdfGenerator {
     private static function getCertificateHTML($certificate) {
         $cert_id = htmlspecialchars($certificate['cert_id']);
         $patient_name = htmlspecialchars($certificate['patient_name']);
+        $patient_code = !empty($certificate['patient_code']) ? htmlspecialchars($certificate['patient_code']) : 'N/A';
+        $date_of_birth = !empty($certificate['date_of_birth']) ? htmlspecialchars($certificate['date_of_birth']) : 'N/A';
+        $gender = !empty($certificate['gender']) ? htmlspecialchars($certificate['gender']) : 'N/A';
         $purpose = htmlspecialchars($certificate['purpose']);
         $diagnosis = !empty($certificate['diagnosis']) ? htmlspecialchars($certificate['diagnosis']) : 'Not specified';
         $recommendations = !empty($certificate['recommendations']) ? htmlspecialchars($certificate['recommendations']) : 'As advised';
@@ -58,8 +66,93 @@ class PdfGenerator {
         $clinic_name = !empty($certificate['clinic_name']) ? htmlspecialchars($certificate['clinic_name']) : 'Medical Clinic';
         $clinic_address = !empty($certificate['clinic_address']) ? htmlspecialchars($certificate['clinic_address']) : '';
         
+        // E-signature path - check both signature_path and doctor_signature_path
+        $signature_path = !empty($certificate['signature_path']) ? $certificate['signature_path'] : '';
+        if (empty($signature_path) && !empty($certificate['doctor_signature_path'])) {
+            $signature_path = $certificate['doctor_signature_path'];
+        }
+        
+        $signature_img = '';
+        if ($signature_path) {
+            try {
+                // Remove leading ../ if present
+                $clean_path = $signature_path;
+                if (str_starts_with($clean_path, '../')) {
+                    $clean_path = substr($clean_path, 3);
+                }
+                
+                // Try different path combinations
+                $possible_paths = [
+                    __DIR__ . '/../' . $clean_path,
+                    'C:/xampp/htdocs/SYSTEMINTEG/' . $clean_path,
+                    $clean_path
+                ];
+                
+                $found_path = null;
+                foreach ($possible_paths as $path) {
+                    if (file_exists($path)) {
+                        $found_path = $path;
+                        break;
+                    }
+                }
+                
+                if ($found_path) {
+                    // Convert to data URI for DomPDF
+                    $image_data = base64_encode(file_get_contents($found_path));
+                    $image_type = pathinfo($found_path, PATHINFO_EXTENSION);
+                    $mime_type = 'image/' . ($image_type === 'jpg' ? 'jpeg' : $image_type);
+                    $signature_img = '<img src="data:' . $mime_type . ';base64,' . $image_data . '" style="height: 60px; margin-bottom: 10px;">';
+                }
+            } catch (Exception $e) {
+                error_log('Signature image processing error: ' . $e->getMessage());
+                // Continue without signature
+            }
+        }
+        
+        // Seal path
+        $seal_path = !empty($certificate['seal_path']) ? $certificate['seal_path'] : '';
+        $seal_img = '';
+        if ($seal_path) {
+            $full_seal_path = $seal_path;
+            if (!file_exists($full_seal_path) && !str_starts_with($seal_path, '/') && !str_starts_with($seal_path, 'C:')) {
+                $full_seal_path = __DIR__ . '/../' . $seal_path;
+            }
+            
+            if (file_exists($full_seal_path)) {
+                $seal_img = '<img src="' . $full_seal_path . '" style="height: 60px; margin-bottom: 10px;">';
+            }
+        }
+        
         // Format date nicely
         $formatted_date = date('F d, Y', strtotime($issue_date));
+        
+        // Generate QR code
+        $qr_img = '';
+        if (!empty($certificate['id'])) {
+            try {
+                require_once __DIR__ . '/qr_generator.php';
+                $qr_file = 'MED-' . $certificate['id'] . '.png';
+                $qr_path = __DIR__ . '/../qrcodes/' . $qr_file;
+                
+                // Generate QR if it doesn't exist
+                if (!file_exists($qr_path)) {
+                    try {
+                        generateQRCode($cert_id, $certificate['id']);
+                    } catch (Exception $e) {
+                        error_log('QR generation failed: ' . $e->getMessage());
+                    }
+                }
+                
+                // Convert QR to base64 if it exists
+                if (file_exists($qr_path)) {
+                    $qr_data = base64_encode(file_get_contents($qr_path));
+                    $qr_img = '<img src="data:image/png;base64,' . $qr_data . '" style="width: 150px; height: 150px;">';
+                }
+            } catch (Exception $e) {
+                error_log('QR code processing error: ' . $e->getMessage());
+                // Continue without QR code
+            }
+        }
         
         return '
         <!DOCTYPE html>
@@ -84,11 +177,12 @@ class PdfGenerator {
                     margin-bottom: 25px;
                 }
                 .clinic-name {
-                    font-size: 24px;
+                    font-size: 26px;
                     font-weight: bold;
                     color: #1565c0;
                     margin: 0;
                     text-transform: uppercase;
+                    letter-spacing: 1px;
                 }
                 .clinic-address {
                     font-size: 11px;
@@ -105,7 +199,7 @@ class PdfGenerator {
                 }
                 .cert-number {
                     text-align: right;
-                    font-size: 10px;
+                    font-size: 11px;
                     color: #666;
                     margin-bottom: 20px;
                 }
@@ -190,8 +284,8 @@ class PdfGenerator {
         </head>
         <body>
             <div class="letterhead">
-                <div class="clinic-name">' . $clinic_name . '</div>
-                ' . ($clinic_address ? '<div class="clinic-address">' . $clinic_address . '</div>' : '') . '
+                <div class="clinic-name">GREY SLOAN MEMORIAL HOSPITAL</div>
+                <div class="clinic-address">OOO</div>
                 <div class="clinic-address">Digital Medical Certificate System</div>
             </div>
             
@@ -201,12 +295,26 @@ class PdfGenerator {
             
             <div class="certification-text">
                 <p>This is to certify that <span class="patient-name">' . strtoupper($patient_name) . '</span> 
-                was examined and treated at this clinic on <strong>' . $formatted_date . '</strong>.</p>
-                
-                <p>Based on my professional medical examination and assessment, I hereby certify that the above-named patient:</p>
+                (Patient Code: <strong>' . $patient_code . '</strong>) was examined and treated at this clinic on <strong>' . $formatted_date . '</strong>.</p>
             </div>
             
             <div class="details-section">
+                <div class="detail-row">
+                    <span class="detail-label">Patient Name:</span>
+                    <span>' . $patient_name . '</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Patient Code:</span>
+                    <span>' . $patient_code . '</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Date of Birth:</span>
+                    <span>' . $date_of_birth . '</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Gender:</span>
+                    <span>' . $gender . '</span>
+                </div>
                 <div class="detail-row">
                     <span class="detail-label">Purpose:</span>
                     <span>' . $purpose . '</span>
@@ -219,10 +327,6 @@ class PdfGenerator {
                     <span class="detail-label">Medical Advice:</span>
                     <span>' . $recommendations . '</span>
                 </div>
-            </div>
-            
-            <div class="certification-text">
-                <p>I certify that the information provided above is true and correct based on my professional medical examination and the patient\'s medical history as presented to me.</p>
             </div>
             
             ' . ($expiry_date ? '
@@ -239,6 +343,7 @@ class PdfGenerator {
                     </div>
                 </div>
                 <div class="signature-box">
+                    ' . ($signature_img ? $signature_img . '<div style="font-size: 11px; color: #666; margin-top: 5px;">Doctor\'s Signature</div>' : '<div style="height: 60px; border: 1px dashed #ccc; text-align: center; line-height: 60px; font-size: 10px; color: #999; margin-bottom: 10px;">Image not found or type unknown</div><div style="font-size: 11px; color: #666; margin-top: 5px;">Doctor\'s Signature</div>') . '
                     <div class="signature-line">
                         <div class="doctor-name">' . $issued_by . '</div>
                         <div class="doctor-title">Licensed Medical Practitioner</div>
@@ -246,6 +351,13 @@ class PdfGenerator {
                     </div>
                 </div>
             </div>
+            
+            ' . ($qr_img ? '
+            <div style="text-align: center; margin-top: 30px;">
+                <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Scan QR code to verify certificate</p>
+                ' . $qr_img . '
+            </div>
+            ' : '') . '
             
             <div class="verification-box">
                 <strong>VERIFICATION:</strong> This certificate can be verified online at MediArchive System<br>
