@@ -1,178 +1,263 @@
 <?php
 /**
  * PDF Certificate Generator
- * Generates professional PDF certificates using TCPDF
+ * Generates professional PDF certificates using DomPDF
  * 
- * Note: Requires TCPDF library
- * Install via Composer: composer require tecnickcom/tcpdf
- * Or download from: https://tcpdf.org/
+ * DomPDF is included in includes/dompdf/dompdf/
+ * No Composer required!
  */
 class PdfGenerator {
     
     /**
-     * Generate PDF certificate
+     * Generate PDF certificate using DomPDF
      * 
      * @param array $certificate Certificate data
-     * @param string $outputPath Output file path (optional, if not provided returns PDF as string)
-     * @return string|bool PDF content or file path
+     * @param string $outputPath Output file path (optional)
+     * @return string|bool PDF file path or false on failure
      */
     public static function generateCertificate($certificate, $outputPath = null) {
-        // Check if TCPDF is available
-        if (!class_exists('TCPDF')) {
-            // Fallback: Create simple HTML-based PDF using built-in methods
-            return self::generateSimplePDF($certificate, $outputPath);
+        try {
+            // Load DomPDF
+            require_once __DIR__ . '/dompdf/dompdf/autoload.inc.php';
+            
+            // Generate HTML content
+            $html = self::getCertificateHTML($certificate);
+            
+            // Create DomPDF instance
+            $dompdf = new \Dompdf\Dompdf();
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'portrait');
+            $dompdf->render();
+            
+            // Output to file or return
+            if ($outputPath) {
+                file_put_contents($outputPath, $dompdf->output());
+                return $outputPath;
+            } else {
+                return $dompdf->output();
+            }
+        } catch (Exception $e) {
+            error_log('PDF Generation Error: ' . $e->getMessage());
+            return false;
         }
-        
-        // Use TCPDF if available
-        return self::generateWithTCPDF($certificate, $outputPath);
     }
     
     /**
-     * Generate simple PDF using output buffering (fallback method)
+     * Get certificate HTML content for DomPDF
      */
-    private static function generateSimplePDF($certificate, $outputPath = null) {
-        ob_start();
+    private static function getCertificateHTML($certificate) {
+        $cert_id = htmlspecialchars($certificate['cert_id']);
+        $patient_name = htmlspecialchars($certificate['patient_name']);
+        $purpose = htmlspecialchars($certificate['purpose']);
+        $diagnosis = !empty($certificate['diagnosis']) ? htmlspecialchars($certificate['diagnosis']) : 'Not specified';
+        $recommendations = !empty($certificate['recommendations']) ? htmlspecialchars($certificate['recommendations']) : 'As advised';
+        $issue_date = htmlspecialchars($certificate['issue_date']);
+        $expiry_date = !empty($certificate['expiry_date']) ? htmlspecialchars($certificate['expiry_date']) : '';
+        $issued_by = htmlspecialchars($certificate['issued_by']);
+        $doctor_license = !empty($certificate['doctor_license']) ? htmlspecialchars($certificate['doctor_license']) : '';
+        $clinic_name = !empty($certificate['clinic_name']) ? htmlspecialchars($certificate['clinic_name']) : 'Medical Clinic';
+        $clinic_address = !empty($certificate['clinic_address']) ? htmlspecialchars($certificate['clinic_address']) : '';
         
-        // Generate HTML certificate
-        $html = self::getCertificateHTML($certificate);
+        // Format date nicely
+        $formatted_date = date('F d, Y', strtotime($issue_date));
         
-        // For simple implementation, we'll create a printable HTML version
-        // In production, use a library like TCPDF, FPDF, or DomPDF
-        
-        $pdf_html = "
+        return '
         <!DOCTYPE html>
         <html>
         <head>
-            <meta charset='UTF-8'>
-            <title>Medical Certificate - {$certificate['cert_id']}</title>
+            <meta charset="UTF-8">
             <style>
-                @media print {
-                    body { margin: 0; padding: 20px; }
-                    .no-print { display: none; }
+                @page {
+                    margin: 30px;
                 }
-                body { font-family: 'Times New Roman', serif; max-width: 800px; margin: 0 auto; padding: 40px; }
-                .certificate-header { text-align: center; border-bottom: 3px solid #2e7d32; padding-bottom: 20px; margin-bottom: 30px; }
-                .certificate-body { line-height: 1.8; }
-                .certificate-footer { margin-top: 50px; border-top: 2px solid #2e7d32; padding-top: 20px; }
-                .signature-section { display: flex; justify-content: space-between; margin-top: 60px; }
-                .signature-box { width: 250px; text-align: center; }
-                .signature-line { border-top: 2px solid #000; margin-top: 50px; padding-top: 5px; }
-                .qr-code { text-align: center; margin: 20px 0; }
-                .cert-id { font-size: 18px; font-weight: bold; color: #2e7d32; }
+                body {
+                    font-family: "Times New Roman", Times, serif;
+                    margin: 0;
+                    padding: 30px;
+                    color: #000;
+                    line-height: 1.6;
+                }
+                .letterhead {
+                    text-align: center;
+                    border-bottom: 3px double #1565c0;
+                    padding-bottom: 15px;
+                    margin-bottom: 25px;
+                }
+                .clinic-name {
+                    font-size: 24px;
+                    font-weight: bold;
+                    color: #1565c0;
+                    margin: 0;
+                    text-transform: uppercase;
+                }
+                .clinic-address {
+                    font-size: 11px;
+                    color: #555;
+                    margin: 5px 0;
+                }
+                .certificate-title {
+                    text-align: center;
+                    font-size: 20px;
+                    font-weight: bold;
+                    text-decoration: underline;
+                    margin: 30px 0 25px 0;
+                    color: #1565c0;
+                }
+                .cert-number {
+                    text-align: right;
+                    font-size: 10px;
+                    color: #666;
+                    margin-bottom: 20px;
+                }
+                .certification-text {
+                    text-align: justify;
+                    margin: 20px 0;
+                    font-size: 13px;
+                }
+                .patient-name {
+                    font-weight: bold;
+                    text-decoration: underline;
+                    font-size: 14px;
+                }
+                .details-section {
+                    margin: 25px 0;
+                    padding: 15px;
+                    background-color: #f8f9fa;
+                    border-left: 4px solid #1565c0;
+                }
+                .detail-row {
+                    margin: 8px 0;
+                    font-size: 12px;
+                }
+                .detail-label {
+                    font-weight: bold;
+                    display: inline-block;
+                    width: 140px;
+                    color: #1565c0;
+                }
+                .validity {
+                    margin: 20px 0;
+                    font-size: 12px;
+                    font-style: italic;
+                }
+                .signature-section {
+                    margin-top: 60px;
+                    display: table;
+                    width: 100%;
+                }
+                .signature-box {
+                    display: table-cell;
+                    width: 50%;
+                    text-align: center;
+                    vertical-align: bottom;
+                }
+                .signature-line {
+                    border-top: 2px solid #000;
+                    margin: 50px auto 5px auto;
+                    width: 200px;
+                    padding-top: 5px;
+                }
+                .doctor-name {
+                    font-weight: bold;
+                    font-size: 13px;
+                }
+                .doctor-title {
+                    font-size: 11px;
+                    color: #555;
+                }
+                .license-number {
+                    font-size: 10px;
+                    color: #666;
+                    margin-top: 3px;
+                }
+                .footer-note {
+                    margin-top: 40px;
+                    padding-top: 15px;
+                    border-top: 1px solid #ddd;
+                    font-size: 9px;
+                    color: #888;
+                    text-align: center;
+                }
+                .verification-box {
+                    margin-top: 20px;
+                    padding: 10px;
+                    border: 1px dashed #1565c0;
+                    background-color: #e3f2fd;
+                    font-size: 10px;
+                    text-align: center;
+                }
             </style>
         </head>
         <body>
-            {$html}
+            <div class="letterhead">
+                <div class="clinic-name">' . $clinic_name . '</div>
+                ' . ($clinic_address ? '<div class="clinic-address">' . $clinic_address . '</div>' : '') . '
+                <div class="clinic-address">Digital Medical Certificate System</div>
+            </div>
+            
+            <div class="cert-number">Certificate No: ' . $cert_id . '</div>
+            
+            <div class="certificate-title">MEDICAL CERTIFICATE</div>
+            
+            <div class="certification-text">
+                <p>This is to certify that <span class="patient-name">' . strtoupper($patient_name) . '</span> 
+                was examined and treated at this clinic on <strong>' . $formatted_date . '</strong>.</p>
+                
+                <p>Based on my professional medical examination and assessment, I hereby certify that the above-named patient:</p>
+            </div>
+            
+            <div class="details-section">
+                <div class="detail-row">
+                    <span class="detail-label">Purpose:</span>
+                    <span>' . $purpose . '</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Medical Findings:</span>
+                    <span>' . $diagnosis . '</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Medical Advice:</span>
+                    <span>' . $recommendations . '</span>
+                </div>
+            </div>
+            
+            <div class="certification-text">
+                <p>I certify that the information provided above is true and correct based on my professional medical examination and the patient\'s medical history as presented to me.</p>
+            </div>
+            
+            ' . ($expiry_date ? '
+            <div class="validity">
+                <strong>Validity Period:</strong> This certificate is valid from ' . date('F d, Y', strtotime($issue_date)) . ' 
+                until ' . date('F d, Y', strtotime($expiry_date)) . '.
+            </div>
+            ' : '<div class="validity"><strong>Date of Issue:</strong> ' . $formatted_date . '</div>') . '
+            
+            <div class="signature-section">
+                <div class="signature-box">
+                    <div style="text-align: left; padding-left: 50px;">
+                        <div style="margin-bottom: 5px;"><strong>Date:</strong> ' . $formatted_date . '</div>
+                    </div>
+                </div>
+                <div class="signature-box">
+                    <div class="signature-line">
+                        <div class="doctor-name">' . $issued_by . '</div>
+                        <div class="doctor-title">Licensed Medical Practitioner</div>
+                        ' . ($doctor_license ? '<div class="license-number">License No: ' . $doctor_license . '</div>' : '') . '
+                    </div>
+                </div>
+            </div>
+            
+            <div class="verification-box">
+                <strong>VERIFICATION:</strong> This certificate can be verified online at MediArchive System<br>
+                Certificate ID: <strong>' . $cert_id . '</strong> | Issued: ' . $formatted_date . '
+            </div>
+            
+            <div class="footer-note">
+                This is a computer-generated medical certificate issued through MediArchive Digital Certificate System.<br>
+                This document is valid without signature if verified through the system.
+            </div>
         </body>
-        </html>";
-        
-        if ($outputPath) {
-            file_put_contents($outputPath . '.html', $pdf_html);
-            // Note: For actual PDF generation, install a library
-            // This creates an HTML version that can be printed to PDF
-            return $outputPath . '.html';
-        }
-        
-        echo $pdf_html;
-        return ob_get_clean();
-    }
-    
-    /**
-     * Generate PDF using TCPDF (if available)
-     */
-    private static function generateWithTCPDF($certificate, $outputPath = null) {
-        require_once('tcpdf/tcpdf.php');
-        
-        $pdf = new TCPDF(PDF_PAGE_ORIENTATION, PDF_UNIT, PDF_PAGE_FORMAT, true, 'UTF-8', false);
-        
-        // Set document information
-        $pdf->SetCreator('MediArchive');
-        $pdf->SetAuthor('MediArchive System');
-        $pdf->SetTitle('Medical Certificate - ' . $certificate['cert_id']);
-        
-        // Remove default header/footer
-        $pdf->setPrintHeader(false);
-        $pdf->setPrintFooter(false);
-        
-        // Add a page
-        $pdf->AddPage();
-        
-        // Generate certificate HTML
-        $html = self::getCertificateHTML($certificate);
-        
-        // Print HTML content
-        $pdf->writeHTML($html, true, false, true, false, '');
-        
-        // Output PDF
-        if ($outputPath) {
-            $pdf->Output($outputPath, 'F');
-            return $outputPath;
-        } else {
-            return $pdf->Output('certificate_' . $certificate['cert_id'] . '.pdf', 'D');
-        }
-    }
-    
-    /**
-     * Get certificate HTML content
-     */
-    private static function getCertificateHTML($certificate) {
-        $qr_code_url = !empty($certificate['file_path']) ? SITE_URL . $certificate['file_path'] : '';
-        $signature_img = !empty($certificate['doctor_signature_path']) ? '<img src="' . SITE_URL . $certificate['doctor_signature_path'] . '" style="max-height: 60px;">' : '';
-        
-        return "
-        <div class='certificate-header'>
-            <h1 style='color: #2e7d32; margin: 0;'>MEDICAL CERTIFICATE</h1>
-            <p class='cert-id'>Certificate ID: {$certificate['cert_id']}</p>
-        </div>
-        
-        <div class='certificate-body'>
-            <p><strong>This is to certify that:</strong></p>
-            <p style='font-size: 16px; margin-left: 40px;'><strong>{$certificate['patient_name']}</strong></p>
-            
-            <p><strong>Purpose:</strong> {$certificate['purpose']}</p>
-            
-            " . (!empty($certificate['diagnosis']) ? "<p><strong>Diagnosis:</strong> {$certificate['diagnosis']}</p>" : "") . "
-            
-            " . (!empty($certificate['recommendations']) ? "<p><strong>Recommendations:</strong> {$certificate['recommendations']}</p>" : "") . "
-            
-            <p><strong>Issue Date:</strong> {$certificate['issue_date']}</p>
-            " . (!empty($certificate['expiry_date']) ? "<p><strong>Expiry Date:</strong> {$certificate['expiry_date']}</p>" : "") . "
-            
-            <p><strong>Issued By:</strong> {$certificate['issued_by']}</p>
-            " . (!empty($certificate['doctor_license']) ? "<p><strong>License Number:</strong> {$certificate['doctor_license']}</p>" : "") . "
-        </div>
-        
-        <div class='certificate-footer'>
-            <div class='signature-section'>
-                <div class='signature-box'>
-                    {$signature_img}
-                    <div class='signature-line'>
-                        <strong>{$certificate['issued_by']}</strong><br>
-                        Licensed Medical Practitioner
-                    </div>
-                </div>
-                <div class='signature-box'>
-                    <div class='signature-line'>
-                        Date: {$certificate['issue_date']}
-                    </div>
-                </div>
-            </div>
-            
-            " . (!empty($qr_code_url) ? "
-            <div class='qr-code'>
-                <p><strong>Verify Certificate:</strong></p>
-                <img src='{$qr_code_url}' style='width: 150px; height: 150px;'><br>
-                <small>Scan QR code to verify authenticity</small>
-            </div>
-            " : "") . "
-        </div>
-        
-        <div style='text-align: center; margin-top: 30px; font-size: 12px; color: #666;'>
-            <p>This is a digital certificate issued by MediArchive System</p>
-            <p>Certificate ID: <strong>{$certificate['cert_id']}</strong></p>
-        </div>";
+        </html>
+        ';
     }
 }
-
-?>
-

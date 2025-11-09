@@ -9,10 +9,11 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 <style>
 :root {
-    --primary-green: #2e7d32;
-    --dark-green: #1b5e20;
-    --light-green: #c8e6c9;
-    --bg-light: #f8f9fa;
+    --primary-blue: #1565c0;
+    --dark-blue: #0d47a1;
+    --light-blue: #e3f2fd;
+    --accent-teal: #00897b;
+    --bg-light: #f5f7fa;
 }
 
 body {
@@ -21,7 +22,7 @@ body {
 }
 
 .navbar {
-    background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
     box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     padding: 1rem 0;
 }
@@ -44,10 +45,32 @@ body {
 }
 
 .hero-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #1565c0 0%, #0d47a1 100%);
+    background-image: 
+        linear-gradient(135deg, rgba(21, 101, 192, 0.95) 0%, rgba(13, 71, 161, 0.95) 100%),
+        url('data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
     color: white;
-    padding: 100px 0;
-    margin-bottom: 60px;
+    padding: 120px 0;
+    margin-bottom: 0;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 500px;
+    height: 500px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 50%;
+    animation: float 20s infinite ease-in-out;
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-30px) rotate(180deg); }
 }
 
 .hero-section h1 {
@@ -95,9 +118,9 @@ body {
 }
 
 .feature-icon {
-    width: 70px;
-    height: 70px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-teal) 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -108,7 +131,7 @@ body {
 }
 
 .feature-card h4 {
-    color: var(--primary-green);
+    color: var(--primary-blue);
     font-weight: 600;
     margin-bottom: 15px;
 }
@@ -119,7 +142,7 @@ body {
 }
 
 .footer {
-    background: linear-gradient(135deg, var(--primary-green) 0%, var(--dark-green) 100%);
+    background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
     color: white;
     padding: 30px 0;
     margin-top: 80px;
@@ -141,7 +164,7 @@ body {
 <nav class="navbar navbar-expand-lg navbar-dark">
     <div class="container">
         <a class="navbar-brand d-flex align-items-center gap-2" href="index.php">
-            <span class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:34px;height:34px;color:#2e7d32;"><i class="bi bi-heart-pulse-fill"></i></span>
+            <span class="bg-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width:40px;height:40px;color:#1565c0;"><i class="bi bi-hospital-fill"></i></span>
             <span>MediArchive</span>
         </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -187,7 +210,7 @@ body {
     <div class="container">
         <div class="row text-center mb-5">
             <div class="col-lg-12">
-                <h2 class="display-5 fw-bold mb-4" style="color: var(--primary-green);">System Features</h2>
+                <h2 class="display-5 fw-bold mb-4" style="color: var(--primary-blue);">System Features</h2>
                 <p class="lead text-muted">Comprehensive digital medical certificate management</p>
             </div>
         </div>

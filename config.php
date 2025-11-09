@@ -110,5 +110,3 @@ function notifyUser(mysqli $conn, int $userId, string $title, string $message, s
 if (file_exists(__DIR__ . '/includes/bootstrap.php')) {
     require_once __DIR__ . '/includes/bootstrap.php';
 }
-?>
-

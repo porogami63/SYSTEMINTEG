@@ -29,144 +29,36 @@ try {
     // Audit log
     AuditLogger::log('DOWNLOAD_CERTIFICATE', 'certificate', $cert_id, ['cert_id' => $cert['cert_id']]);
     
-    // Try to generate PDF using PdfGenerator
-    try {
-        require_once '../includes/PdfGenerator.php';
-        $temp_file = TEMP_DIR . 'cert_' . $cert_id . '_' . time() . '.pdf';
-        $pdf_path = PdfGenerator::generateCertificate($cert, $temp_file);
-        
-        if ($pdf_path && file_exists($pdf_path)) {
-            header('Content-Type: application/pdf');
-            header('Content-Disposition: attachment; filename="certificate_' . $cert['cert_id'] . '.pdf"');
-            readfile($pdf_path);
-            @unlink($pdf_path); // Clean up temp file
-            exit;
+    // Generate PDF using PdfGenerator
+    require_once '../includes/PdfGenerator.php';
+    $temp_file = TEMP_DIR . 'cert_' . $cert_id . '_' . time() . '.pdf';
+    $pdf_path = PdfGenerator::generateCertificate($cert, $temp_file);
+    
+    if ($pdf_path && file_exists($pdf_path)) {
+        // Clear any output buffers
+        while (ob_get_level()) {
+            ob_end_clean();
         }
-    } catch (Exception $e) {
-        // Fall through to HTML version if PDF generation fails
-        error_log('PDF generation failed: ' . $e->getMessage());
+        
+        // Set headers
+        header('Content-Type: application/pdf');
+        header('Content-Disposition: attachment; filename="certificate_' . $cert['cert_id'] . '.pdf"');
+        header('Content-Length: ' . filesize($pdf_path));
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+        
+        // Output file
+        readfile($pdf_path);
+        
+        // Clean up temp file
+        @unlink($pdf_path);
+        exit;
+    } else {
+        die('PDF generation failed. Please contact administrator.');
     }
+    
 } catch (Exception $e) {
-    die('Server error: ' . $e->getMessage());
+    error_log('Certificate download error: ' . $e->getMessage());
+    die('Server error: Unable to generate certificate. Please try again later.');
 }
-
-// Generate simple HTML certificate for print
-?>
-<!DOCTYPE html>
-<html>
-<head>
-<style>
-body {
-    font-family: Arial, sans-serif;
-    padding: 40px;
-}
-.header {
-    border-bottom: 3px solid #2e7d32;
-    padding-bottom: 20px;
-    margin-bottom: 30px;
-    text-align: center;
-}
-h1 {
-    color: #2e7d32;
-    margin: 0;
-}
-.info-section {
-    margin-bottom: 20px;
-}
-.info-row {
-    display: flex;
-    margin-bottom: 10px;
-}
-.info-label {
-    font-weight: bold;
-    width: 150px;
-}
-.footer {
-    margin-top: 50px;
-    text-align: center;
-    color: #666;
-}
-</style>
-</head>
-<body>
-<div class="header">
-    <h1>MEDICAL CERTIFICATE</h1>
-    <p>Certificate ID: <?php echo htmlspecialchars($cert['cert_id']); ?></p>
-</div>
-
-<div class="info-section">
-    <h3>Patient Information</h3>
-    <div class="info-row">
-        <span class="info-label">Name:</span>
-        <span><?php echo htmlspecialchars($cert['patient_name']); ?></span>
-    </div>
-    <div class="info-row">
-        <span class="info-label">Patient Code:</span>
-        <span><?php echo htmlspecialchars($cert['patient_code']); ?></span>
-    </div>
-    <div class="info-row">
-        <span class="info-label">Date of Birth:</span>
-        <span><?php echo $cert['date_of_birth']; ?></span>
-    </div>
-    <div class="info-row">
-        <span class="info-label">Gender:</span>
-        <span><?php echo $cert['gender']; ?></span>
-    </div>
-</div>
-
-<div class="info-section">
-    <h3>Issued By</h3>
-    <div class="info-row">
-        <span class="info-label">Clinic:</span>
-        <span><?php echo htmlspecialchars($cert['clinic_name']); ?></span>
-    </div>
-    <div class="info-row">
-        <span class="info-label">Doctor:</span>
-        <span><?php echo htmlspecialchars($cert['issued_by']); ?></span>
-    </div>
-    <div class="info-row">
-        <span class="info-label">License No:</span>
-        <span><?php echo htmlspecialchars($cert['doctor_license']); ?></span>
-    </div>
-</div>
-
-<div class="info-section">
-    <h3>Certificate Details</h3>
-    <div class="info-row">
-        <span class="info-label">Issue Date:</span>
-        <span><?php echo $cert['issue_date']; ?></span>
-    </div>
-    <div class="info-row">
-        <span class="info-label">Expiry Date:</span>
-        <span><?php echo $cert['expiry_date'] ?? 'N/A'; ?></span>
-    </div>
-    <div class="info-row">
-        <span class="info-label">Purpose:</span>
-        <span><?php echo htmlspecialchars($cert['purpose']); ?></span>
-    </div>
-</div>
-
-<?php if ($cert['diagnosis']): ?>
-<div class="info-section">
-    <h3>Diagnosis</h3>
-    <p><?php echo nl2br(htmlspecialchars($cert['diagnosis'])); ?></p>
-</div>
-<?php endif; ?>
-
-<?php if ($cert['recommendations']): ?>
-<div class="info-section">
-    <h3>Recommendations</h3>
-    <p><?php echo nl2br(htmlspecialchars($cert['recommendations'])); ?></p>
-</div>
-<?php endif; ?>
-
-<div class="footer">
-    <p>This certificate was issued digitally and can be verified online</p>
-    <p>Issued on: <?php echo $cert['created_at']; ?></p>
-</div>
-</body>
-</html>
-<script>
-window.print();
-</script>
 
