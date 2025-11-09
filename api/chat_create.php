@@ -43,10 +43,36 @@ try {
     $db->execute("INSERT INTO chat_messages (conversation_id, sender_id, message) VALUES (?, ?, ?)", 
                  [$conversation_id, $user_id, $message]);
     
+    $message_id = $db->lastInsertId();
+    
     // Update conversation timestamp
     $db->execute("UPDATE chat_conversations SET last_message_at = NOW() WHERE id = ?", [$conversation_id]);
     
-    redirect('../views/chat.php?conv=' . $conversation_id);
+    // Log conversation creation to audit trail
+    AuditLogger::log(
+        'CREATE_CONVERSATION',
+        'chat_conversation',
+        $conversation_id,
+        [
+            'clinic_id' => $clinic_id,
+            'patient_id' => $patient['id'],
+            'initial_message' => substr($message, 0, 50)
+        ]
+    );
+    
+    // Send notification to clinic
+    $clinic_user = $db->fetch("SELECT user_id FROM clinics WHERE id = ?", [$clinic_id]);
+    if ($clinic_user) {
+        $sender_name = $_SESSION['full_name'] ?? 'A patient';
+        $preview = substr($message, 0, 50);
+        $db->execute(
+            "INSERT INTO notifications (user_id, title, message, link) VALUES (?, ?, ?, ?)",
+            [$clinic_user['user_id'], "New conversation from " . $sender_name, $preview, "chat.php?conv=" . $conversation_id]
+        );
+    }
+    
+    header('Location: ../views/chat.php?conv=' . $conversation_id);
+    exit();
     
 } catch (Exception $e) {
     error_log('Chat create error: ' . $e->getMessage());

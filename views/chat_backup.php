@@ -10,15 +10,12 @@ $user_id = $_SESSION['user_id'];
 
 // Determine user type and get conversations
 $conversations = [];
-$patient = null;
-$clinic = null;
-
 if (isPatient()) {
     // Get patient's conversations with clinics
     $patient = $db->fetch("SELECT id FROM patients WHERE user_id = ?", [$user_id]);
     if ($patient) {
         $conversations = $db->fetchAll("
-            SELECT cc.*, cl.clinic_name, cl.is_available, u.full_name as doctor_name, u.profile_photo,
+            SELECT cc.*, cl.clinic_name, u.full_name as doctor_name, u.profile_photo,
                    (SELECT COUNT(*) FROM chat_messages cm 
                     WHERE cm.conversation_id = cc.id AND cm.is_read = 0 AND cm.sender_id != ?) as unread_count,
                    (SELECT message FROM chat_messages cm2 
@@ -36,7 +33,7 @@ if (isPatient()) {
     $clinic = $db->fetch("SELECT id FROM clinics WHERE user_id = ?", [$user_id]);
     if ($clinic) {
         $conversations = $db->fetchAll("
-            SELECT cc.*, u.full_name as patient_name, p.patient_code, p.is_available, u.profile_photo,
+            SELECT cc.*, u.full_name as patient_name, p.patient_code, u.profile_photo,
                    (SELECT COUNT(*) FROM chat_messages cm 
                     WHERE cm.conversation_id = cc.id AND cm.is_read = 0 AND cm.sender_id != ?) as unread_count,
                    (SELECT message FROM chat_messages cm2 
@@ -76,7 +73,6 @@ if (isPatient()) {
 $selected_conversation_id = isset($_GET['conv']) ? intval($_GET['conv']) : null;
 $messages = [];
 $conversation_partner = '';
-$partner_avatar = '';
 
 if ($selected_conversation_id) {
     // Verify user has access to this conversation
@@ -85,20 +81,12 @@ if ($selected_conversation_id) {
         $has_access = false;
         if (isPatient() && $patient && $conv['patient_id'] == $patient['id']) {
             $has_access = true;
-            $clinic_info = $db->fetch("SELECT cl.clinic_name, u.full_name, u.profile_photo FROM clinics cl JOIN users u ON cl.user_id = u.id WHERE cl.id = ?", [$conv['clinic_id']]);
+            $clinic_info = $db->fetch("SELECT cl.clinic_name, u.full_name FROM clinics cl JOIN users u ON cl.user_id = u.id WHERE cl.id = ?", [$conv['clinic_id']]);
             $conversation_partner = $clinic_info['clinic_name'] . ' - ' . $clinic_info['full_name'];
-            $partner_avatar = $clinic_info['profile_photo'] ?? '';
         } else if (isClinicAdmin() && $clinic && $conv['clinic_id'] == $clinic['id']) {
             $has_access = true;
-            $patient_info = $db->fetch("SELECT u.full_name, p.patient_code, u.profile_photo FROM patients p JOIN users u ON p.user_id = u.id WHERE p.id = ?", [$conv['patient_id']]);
+            $patient_info = $db->fetch("SELECT u.full_name, p.patient_code FROM patients p JOIN users u ON p.user_id = u.id WHERE p.id = ?", [$conv['patient_id']]);
             $conversation_partner = $patient_info['full_name'] . ' (' . $patient_info['patient_code'] . ')';
-            $partner_avatar = $patient_info['profile_photo'] ?? '';
-        } else if (isWebAdmin()) {
-            $has_access = true;
-            $clinic_info = $db->fetch("SELECT cl.clinic_name, u1.full_name as doctor_name FROM clinics cl JOIN users u1 ON cl.user_id = u1.id WHERE cl.id = ?", [$conv['clinic_id']]);
-            $patient_info = $db->fetch("SELECT u.full_name, p.patient_code, u.profile_photo FROM patients p JOIN users u ON p.user_id = u.id WHERE p.id = ?", [$conv['patient_id']]);
-            $conversation_partner = $patient_info['full_name'] . ' ↔ ' . $clinic_info['clinic_name'];
-            $partner_avatar = $patient_info['profile_photo'] ?? '';
         }
         
         if ($has_access) {
@@ -110,10 +98,8 @@ if ($selected_conversation_id) {
                 ORDER BY cm.created_at ASC
             ", [$selected_conversation_id]);
             
-            // Mark messages as read (not for web admin)
-            if (!isWebAdmin()) {
-                $db->execute("UPDATE chat_messages SET is_read = 1 WHERE conversation_id = ? AND sender_id != ?", [$selected_conversation_id, $user_id]);
-            }
+            // Mark messages as read
+            $db->execute("UPDATE chat_messages SET is_read = 1 WHERE conversation_id = ? AND sender_id != ?", [$selected_conversation_id, $user_id]);
         }
     }
 }
@@ -125,15 +111,19 @@ require_once 'includes/role_styles.php';
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Messages - MediArchive</title>
+<title>Chat - MediArchive</title>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 <style>
 body {
     overflow: hidden;
 }
+.main-content {
+    padding: 0 !important;
+    height: calc(100vh - 60px);
+}
 .chat-wrapper {
-    height: 100vh;
+    height: 100%;
     display: flex;
     background: white;
 }
@@ -148,9 +138,6 @@ body {
     padding: 20px;
     background: white;
     border-bottom: 1px solid #e0e0e0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 .conversations-header h5 {
     margin: 0;
@@ -248,6 +235,11 @@ body {
     align-items: center;
     justify-content: space-between;
 }
+.chat-header h5 {
+    margin: 0;
+    font-weight: 600;
+    color: #333;
+}
 .chat-header-info {
     display: flex;
     align-items: center;
@@ -269,11 +261,6 @@ body {
     width: 100%;
     height: 100%;
     object-fit: cover;
-}
-.chat-header h5 {
-    margin: 0;
-    font-weight: 600;
-    color: #333;
 }
 .messages-container {
     flex: 1;
@@ -425,6 +412,14 @@ body {
     font-size: 11px;
     font-weight: 600;
 }
+.delete-message-btn {
+    opacity: 0;
+    transition: opacity 0.2s;
+    margin-left: 8px;
+}
+.message:hover .delete-message-btn {
+    opacity: 1;
+}
 @media (max-width: 768px) {
     .conversations-sidebar {
         width: 100%;
@@ -436,177 +431,124 @@ body {
         display: none;
     }
 }
-/* Chat widget still visible on chat page but positioned differently */
 </style>
 </head>
 <body>
-<div class="container-fluid">
-    <div class="row">
-        <?php include 'includes/sidebar.php'; ?>
-        
-        <main class="col-md-9 ms-sm-auto col-lg-10 px-0">
-            <div class="chat-wrapper">
-        <!-- Conversations Sidebar -->
-        <div class="conversations-sidebar">
-            <div class="conversations-header">
-                <h5><i class="bi bi-chat-dots"></i> Messages</h5>
-                <?php if (isPatient()): ?>
-                <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newChatModal">
-                    <i class="bi bi-plus"></i>
-                </button>
-                <?php endif; ?>
-            </div>
-            
-            <div class="conversations-list">
-                <?php if (empty($conversations)): ?>
-                    <div class="empty-state p-4">
-                        <i class="bi bi-chat-dots"></i>
-                        <p>No conversations yet</p>
-                    </div>
-                <?php else: ?>
-                    <?php foreach ($conversations as $conv): ?>
-                    <div class="conversation-item <?php echo $selected_conversation_id == $conv['id'] ? 'active' : ''; ?>" 
-                         onclick="window.location.href='chat.php?conv=<?php echo $conv['id']; ?>'">
-                        <div class="conversation-avatar">
-                            <?php if (!empty($conv['profile_photo']) && file_exists('../' . $conv['profile_photo'])): ?>
-                                <img src="../<?php echo htmlspecialchars($conv['profile_photo']); ?>" alt="Avatar">
-                            <?php else: ?>
-                                <?php 
-                                $name = isWebAdmin() ? $conv['patient_name'] : (isPatient() ? $conv['clinic_name'] : $conv['patient_name']);
-                                echo strtoupper(substr($name, 0, 1)); 
-                                ?>
-                            <?php endif; ?>
-                        </div>
-                        <div class="conversation-info">
-                            <div class="conversation-name">
-                                <?php 
-                                if (isWebAdmin()) {
-                                    echo htmlspecialchars($conv['patient_name'] . ' ↔ ' . $conv['clinic_name']);
-                                } else if (isPatient()) {
-                                    echo htmlspecialchars($conv['clinic_name']);
-                                    // Show availability indicator for clinics
-                                    if (isset($conv['is_available'])) {
-                                        $availColor = $conv['is_available'] ? '#2ecc71' : '#95a5a6';
-                                        echo ' <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ' . $availColor . '; margin-left: 4px; vertical-align: middle;"></span>';
-                                    }
-                                } else {
-                                    // Clinic admin view - show patient name with availability
-                                    echo htmlspecialchars($conv['patient_name']);
-                                    // Show availability indicator for patients
-                                    if (isset($conv['is_available'])) {
-                                        $availColor = $conv['is_available'] ? '#2ecc71' : '#95a5a6';
-                                        echo ' <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ' . $availColor . '; margin-left: 4px; vertical-align: middle;"></span>';
-                                    }
-                                }
-                                ?>
-                            </div>
-                            <div class="conversation-preview">
-                                <?php echo htmlspecialchars(substr($conv['last_message'] ?? 'No messages yet', 0, 40)); ?>
-                            </div>
-                        </div>
-                        <div class="conversation-meta">
-                            <div class="conversation-time">
-                                <?php echo date('M d', strtotime($conv['last_message_at'])); ?>
-                            </div>
-                            <?php if (isset($conv['unread_count']) && $conv['unread_count'] > 0): ?>
-                            <span class="unread-badge"><?php echo $conv['unread_count']; ?></span>
-                            <?php endif; ?>
-                        </div>
-                    </div>
-                    <?php endforeach; ?>
-                <?php endif; ?>
-            </div>
-        </div>
+<?php include 'includes/sidebar.php'; ?>
 
-        <!-- Chat Main Area -->
-        <div class="chat-main">
-            <?php if ($selected_conversation_id && !empty($messages)): ?>
-                <!-- Chat Header -->
-                <div class="chat-header">
-                    <div class="chat-header-info">
-                        <div class="chat-header-avatar">
-                            <?php if (!empty($partner_avatar) && file_exists('../' . $partner_avatar)): ?>
-                                <img src="../<?php echo htmlspecialchars($partner_avatar); ?>" alt="Avatar">
-                            <?php else: ?>
-                                <?php echo strtoupper(substr($conversation_partner, 0, 1)); ?>
-                            <?php endif; ?>
+<div class="main-content">
+    <div class="chat-wrapper">
+                <!-- Conversations List -->
+                <div class="conversations-list">
+                    <?php if (empty($conversations)): ?>
+                        <div class="text-center text-muted p-4">
+                            <i class="bi bi-chat-dots" style="font-size: 48px;"></i>
+                            <p class="mt-2">No conversations yet</p>
                         </div>
-                        <h5><?php echo htmlspecialchars($conversation_partner); ?></h5>
-                    </div>
-                    <?php if (isWebAdmin()): ?>
-                    <span class="admin-badge">MODERATOR</span>
+                    <?php else: ?>
+                        <?php foreach ($conversations as $conv): ?>
+                        <div class="conversation-item <?php echo $selected_conversation_id == $conv['id'] ? 'active' : ''; ?>" 
+                             onclick="window.location.href='chat.php?conv=<?php echo $conv['id']; ?>'">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <strong>
+                                        <?php echo isPatient() ? htmlspecialchars($conv['clinic_name']) : htmlspecialchars($conv['patient_name']); ?>
+                                    </strong>
+                                    <?php if (isClinicAdmin()): ?>
+                                    <div class="text-muted small"><?php echo htmlspecialchars($conv['patient_code']); ?></div>
+                                    <?php endif; ?>
+                                </div>
+                                <?php if ($conv['unread_count'] > 0): ?>
+                                <span class="unread-badge"><?php echo $conv['unread_count']; ?></span>
+                                <?php endif; ?>
+                            </div>
+                            <div class="text-muted small mt-1">
+                                <?php echo date('M d, Y g:i A', strtotime($conv['last_message_at'])); ?>
+                            </div>
+                        </div>
+                        <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
-                
-                <!-- Messages Container -->
-                <div class="messages-container" id="messagesContainer">
-                    <?php foreach ($messages as $msg): ?>
-                    <div class="message <?php echo $msg['sender_id'] == $user_id ? 'sent' : 'received'; ?>">
-                        <div class="message-avatar">
-                            <?php if (!empty($msg['profile_photo']) && file_exists('../' . $msg['profile_photo'])): ?>
-                                <img src="../<?php echo htmlspecialchars($msg['profile_photo']); ?>" alt="<?php echo htmlspecialchars($msg['sender_name']); ?>">
-                            <?php else: ?>
-                                <?php echo strtoupper(substr($msg['sender_name'], 0, 1)); ?>
-                            <?php endif; ?>
+
+                <!-- Chat Area -->
+                <div class="chat-area">
+                    <?php if ($selected_conversation_id && !empty($messages)): ?>
+                        <div class="p-3 border-bottom bg-white">
+                            <h5 class="mb-0"><?php echo htmlspecialchars($conversation_partner); ?></h5>
                         </div>
-                        <div class="message-content">
-                            <?php if ($msg['sender_id'] != $user_id): ?>
-                            <div class="message-sender"><?php echo htmlspecialchars($msg['sender_name']); ?></div>
-                            <?php endif; ?>
-                            <div class="message-bubble">
-                                <?php if (!empty($msg['message'])): ?>
-                                <div><?php echo nl2br(htmlspecialchars($msg['message'])); ?></div>
-                                <?php endif; ?>
-                                <?php if (!empty($msg['attachment_path'])): ?>
-                                <div class="mt-2">
-                                    <a href="../<?php echo htmlspecialchars($msg['attachment_path']); ?>" target="_blank" class="text-decoration-none" download>
-                                        <i class="bi bi-paperclip"></i> <?php echo htmlspecialchars($msg['attachment_name']); ?>
-                                        <span class="small">(<?php echo number_format($msg['attachment_size'] / 1024, 1); ?> KB)</span>
-                                    </a>
+                        
+                        <div class="messages-container" id="messagesContainer">
+                            <?php foreach ($messages as $msg): ?>
+                            <div class="message <?php echo $msg['sender_id'] == $user_id ? 'sent' : 'received'; ?>">
+                                <div class="message-avatar">
+                                    <?php if (!empty($msg['profile_photo']) && file_exists('../' . $msg['profile_photo'])): ?>
+                                        <img src="../<?php echo htmlspecialchars($msg['profile_photo']); ?>" alt="<?php echo htmlspecialchars($msg['sender_name']); ?>">
+                                    <?php else: ?>
+                                        <?php echo strtoupper(substr($msg['sender_name'], 0, 1)); ?>
+                                    <?php endif; ?>
                                 </div>
-                                <?php endif; ?>
+                                <div class="message-bubble">
+                                    <?php if ($msg['sender_id'] != $user_id): ?>
+                                    <div class="small text-muted mb-1"><?php echo htmlspecialchars($msg['sender_name']); ?></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($msg['message'])): ?>
+                                    <div><?php echo nl2br(htmlspecialchars($msg['message'])); ?></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($msg['attachment_path'])): ?>
+                                    <div class="mt-2">
+                                        <a href="../<?php echo htmlspecialchars($msg['attachment_path']); ?>" target="_blank" class="text-decoration-none" download>
+                                            <i class="bi bi-paperclip"></i> <?php echo htmlspecialchars($msg['attachment_name']); ?>
+                                            <span class="small">(<?php echo number_format($msg['attachment_size'] / 1024, 1); ?> KB)</span>
+                                        </a>
+                                    </div>
+                                    <?php endif; ?>
+                                    <div class="small mt-1" style="opacity: 0.7;">
+                                        <?php echo date('M d, Y g:i A', strtotime($msg['created_at'])); ?>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="message-time">
-                                <?php echo date('M d, g:i A', strtotime($msg['created_at'])); ?>
+                            <?php endforeach; ?>
+                        </div>
+                        
+                        <div class="message-input-area">
+                            <form id="sendMessageForm" enctype="multipart/form-data">
+                                <input type="hidden" name="conversation_id" value="<?php echo $selected_conversation_id; ?>">
+                                <div class="d-flex gap-2 align-items-end">
+                                    <div class="flex-grow-1">
+                                        <input type="text" name="message" id="messageInput" class="form-control" placeholder="Type a message..." autocomplete="off">
+                                        <div id="attachmentPreview" class="small text-muted mt-1" style="display: none;">
+                                            <i class="bi bi-paperclip"></i> <span id="attachmentName"></span>
+                                            <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" id="removeAttachment">Remove</button>
+                                        </div>
+                                    </div>
+                                    <input type="file" name="attachment" id="attachmentInput" style="display: none;" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.zip">
+                                    <button type="button" class="btn btn-outline-secondary" id="attachFileBtn" title="Attach file">
+                                        <i class="bi bi-paperclip"></i>
+                                    </button>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-send"></i> Send
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    <?php elseif ($selected_conversation_id): ?>
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <div class="text-center text-muted">
+                                <i class="bi bi-chat-dots" style="font-size: 64px;"></i>
+                                <p class="mt-3">Start a conversation</p>
                             </div>
                         </div>
-                    </div>
-                    <?php endforeach; ?>
-                </div>
-                
-                <!-- Message Input Area -->
-                <?php if (!isWebAdmin()): ?>
-                <div class="message-input-area">
-                    <form id="sendMessageForm" enctype="multipart/form-data">
-                        <input type="hidden" name="conversation_id" value="<?php echo $selected_conversation_id; ?>">
-                        <div class="message-input-wrapper">
-                            <button type="button" class="btn-attach" id="attachFileBtn" title="Attach file">
-                                <i class="bi bi-paperclip"></i>
-                            </button>
-                            <input type="text" name="message" id="messageInput" placeholder="Type a message..." autocomplete="off">
-                            <input type="file" name="attachment" id="attachmentInput" style="display: none;" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.zip">
-                            <button type="submit" class="btn-send">
-                                <i class="bi bi-send-fill"></i>
-                            </button>
+                    <?php else: ?>
+                        <div class="d-flex align-items-center justify-content-center h-100">
+                            <div class="text-center text-muted">
+                                <i class="bi bi-chat-left-text" style="font-size: 64px;"></i>
+                                <p class="mt-3">Select a conversation to start messaging</p>
+                            </div>
                         </div>
-                        <div id="attachmentPreview" class="small text-muted mt-2" style="display: none;">
-                            <i class="bi bi-paperclip"></i> <span id="attachmentName"></span>
-                            <button type="button" class="btn btn-sm btn-link text-danger p-0 ms-2" id="removeAttachment">Remove</button>
-                        </div>
-                    </form>
+                    <?php endif; ?>
                 </div>
-                <?php endif; ?>
-            <?php else: ?>
-                <!-- Empty State -->
-                <div class="empty-state">
-                    <i class="bi bi-chat-left-text"></i>
-                    <p>Select a conversation to start messaging</p>
-                </div>
-            <?php endif; ?>
-        </div>
-    </div>
             </div>
-        </main>
+        </div>
     </div>
 </div>
 
@@ -674,12 +616,16 @@ attachmentInput?.addEventListener('change', function() {
     if (this.files.length > 0) {
         attachmentName.textContent = this.files[0].name;
         attachmentPreview.style.display = 'block';
+        // Make message optional when file is attached
+        messageInput.removeAttribute('required');
     }
 });
 
 removeAttachment?.addEventListener('click', function() {
     attachmentInput.value = '';
     attachmentPreview.style.display = 'none';
+    // Make message required again
+    messageInput.setAttribute('required', 'required');
 });
 
 // Send message via AJAX
@@ -705,11 +651,11 @@ document.getElementById('sendMessageForm')?.addEventListener('submit', function(
     });
 });
 
-// Auto-refresh messages every 10 seconds
+// Auto-refresh messages every 5 seconds
 <?php if ($selected_conversation_id): ?>
 setInterval(() => {
     location.reload();
-}, 10000);
+}, 5000);
 <?php endif; ?>
 </script>
 </body>

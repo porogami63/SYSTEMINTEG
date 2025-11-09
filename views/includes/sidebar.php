@@ -72,6 +72,20 @@ $role = $_SESSION['role'] ?? '';
                 </div>
             </li>
             <?php endif; ?>
+            <?php if (isPatient()): ?>
+            <li class="nav-item px-3 mb-2">
+                <div class="form-check form-switch text-white">
+                    <?php 
+                    try {
+                        $row = DB()->fetch("SELECT is_available FROM patients WHERE user_id = ?", [$_SESSION['user_id']]);
+                        $isAvail = $row ? intval($row['is_available']) : 1;
+                    } catch (Exception $e) { $isAvail = 1; }
+                    ?>
+                    <input class="form-check-input" type="checkbox" role="switch" id="patientAvailabilitySwitch" <?php echo $isAvail ? 'checked' : ''; ?> onclick="setPatientAvailability(this.checked)">
+                    <label class="form-check-label ms-2" for="patientAvailabilitySwitch">Available for Chat</label>
+                </div>
+            </li>
+            <?php endif; ?>
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>" href="dashboard.php">
                     <i class="bi bi-speedometer2"></i> Dashboard
@@ -143,6 +157,11 @@ $role = $_SESSION['role'] ?? '';
                     <i class="bi bi-shield-check"></i> Audit Logs
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'chat.php' ? 'active' : ''; ?>" href="chat.php">
+                    <i class="bi bi-chat-dots"></i> Messages (Moderation)
+                </a>
+            </li>
             <?php endif; ?>
             
             <li class="nav-item">
@@ -183,6 +202,8 @@ $role = $_SESSION['role'] ?? '';
     </div>
 </nav>
 
+<!-- Chat widget removed - full interface accessible via Messages tab -->
+
 <?php if (isClinicAdmin()): ?>
 <script>
 function setAvailability(isOn){
@@ -193,6 +214,21 @@ function setAvailability(isOn){
     .then(j => {
       const ind = document.getElementById('availIndicator');
       if (ind) ind.style.background = (isOn ? '#2ecc71' : '#bdc3c7');
+    })
+    .catch(() => {});
+}
+</script>
+<?php endif; ?>
+
+<?php if (isPatient()): ?>
+<script>
+function setPatientAvailability(isOn){
+  const form = new FormData();
+  form.append('is_available', isOn ? 1 : 0);
+  fetch('../api/patient_availability.php', { method: 'POST', body: form })
+    .then(r => r.json())
+    .then(j => {
+      console.log('Patient availability updated:', isOn);
     })
     .catch(() => {});
 }

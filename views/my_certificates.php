@@ -78,6 +78,11 @@ try {
                                             <a href="../api/download.php?id=<?php echo $cert['id']; ?>" class="btn btn-sm btn-success">
                                                 <i class="bi bi-download"></i> Download
                                             </a>
+                                            <?php if (isClinicAdmin() || isWebAdmin()): ?>
+                                            <button class="btn btn-sm btn-danger delete-cert-btn" data-cert-id="<?php echo $cert['id']; ?>" data-cert-name="<?php echo htmlspecialchars($cert['cert_id']); ?>">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
@@ -94,6 +99,47 @@ try {
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// Handle certificate deletion
+document.querySelectorAll('.delete-cert-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const certId = this.getAttribute('data-cert-id');
+        const certName = this.getAttribute('data-cert-name');
+        
+        if (confirm(`Are you sure you want to delete certificate ${certName}? This action cannot be undone.`)) {
+            // Show loading state
+            this.disabled = true;
+            this.innerHTML = '<i class="bi bi-hourglass-split"></i> Deleting...';
+            
+            // Send delete request
+            fetch('../api/delete_certificate.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'cert_id=' + certId
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Certificate deleted successfully');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to delete certificate'));
+                    this.disabled = false;
+                    this.innerHTML = '<i class="bi bi-trash"></i> Delete';
+                }
+            })
+            .catch(error => {
+                alert('Error deleting certificate');
+                console.error(error);
+                this.disabled = false;
+                this.innerHTML = '<i class="bi bi-trash"></i> Delete';
+            });
+        }
+    });
+});
+</script>
 </body>
 </html>
 
