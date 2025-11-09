@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS certificate_requests (
     requested_specialization VARCHAR(100) NOT NULL,
     purpose VARCHAR(200) NOT NULL,
     details TEXT,
+    spec_answers TEXT COMMENT 'JSON data for specialization-specific questions',
     status ENUM('pending', 'approved', 'rejected', 'completed') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
