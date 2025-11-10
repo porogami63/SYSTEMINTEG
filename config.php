@@ -106,6 +106,12 @@ function sanitizeInput($data, $type = 'string', $options = []) {
         }, $data);
     }
     
+    // Allow empty strings for optional fields (don't validate if empty)
+    $trimmed = trim($data);
+    if ($trimmed === '') {
+        return '';
+    }
+    
     // Use InputValidator for comprehensive validation
     $result = InputValidator::validate($data, $type, $options);
     if ($result['valid']) {

@@ -4,6 +4,14 @@
 
 This document outlines the comprehensive security features implemented in the MediArchive system to protect against common web vulnerabilities and ensure data security.
 
+**Version:** 4.1  
+**Last Updated:** November 10, 2025
+
+## Quick Links
+- [Security Implementation Guide](#security-implementation-guide)
+- [Security Audit System](#security-audit-system)
+- [Testing & Monitoring](#testing-and-monitoring)
+
 ## Security Features Implemented
 
 ### 1. SQL Injection Prevention

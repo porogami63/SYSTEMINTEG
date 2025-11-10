@@ -125,7 +125,8 @@ class SecurityAuditor {
         return [
             'protected' => $usesPrepared,
             'method' => $usesPrepared ? 'Prepared statements (PDO)' : 'None detected',
-            'issue' => $usesPrepared ? null : 'Database queries may be vulnerable to SQL injection'
+            'issue' => $usesPrepared ? null : 'Database queries may be vulnerable to SQL injection',
+            'description' => 'SQL Injection is a code injection technique that exploits vulnerabilities in database queries. Prepared statements prevent attackers from inserting malicious SQL code by separating data from commands.'
         ];
     }
     
@@ -141,7 +142,8 @@ class SecurityAuditor {
         return [
             'protected' => $usesEscape,
             'method' => $usesEscape ? 'Output escaping' : 'None detected',
-            'issue' => $usesEscape ? null : 'Output may be vulnerable to XSS attacks'
+            'issue' => $usesEscape ? null : 'Output may be vulnerable to XSS attacks',
+            'description' => 'Cross-Site Scripting (XSS) allows attackers to inject malicious scripts into web pages viewed by other users. Output escaping converts special characters to HTML entities, preventing script execution.'
         ];
     }
     
@@ -157,7 +159,8 @@ class SecurityAuditor {
         return [
             'protected' => $hasCSRF,
             'method' => $hasCSRF ? 'CSRF tokens' : 'None detected',
-            'issue' => $hasCSRF ? null : 'Forms may be vulnerable to CSRF attacks'
+            'issue' => $hasCSRF ? null : 'Forms may be vulnerable to CSRF attacks',
+            'description' => 'Cross-Site Request Forgery (CSRF) tricks users into executing unwanted actions. CSRF tokens are unique values that validate legitimate requests and prevent attackers from forging requests.'
         ];
     }
     
@@ -186,7 +189,8 @@ class SecurityAuditor {
                 'secure' => ini_get('session.cookie_secure') == '1',
                 'strict_mode' => ini_get('session.use_strict_mode') == '1'
             ],
-            'issue' => $secure ? null : implode(', ', $issues)
+            'issue' => $secure ? null : implode(', ', $issues),
+            'description' => 'Session security protects user authentication data. HttpOnly cookies prevent JavaScript access, Secure flags ensure HTTPS-only transmission, and strict mode prevents session fixation attacks.'
         ];
     }
     
@@ -202,7 +206,8 @@ class SecurityAuditor {
         return [
             'secure' => $usesHash,
             'method' => $usesHash ? 'bcrypt (password_hash)' : 'Plain text or weak hashing',
-            'issue' => $usesHash ? null : 'Passwords may not be securely stored'
+            'issue' => $usesHash ? null : 'Passwords may not be securely stored',
+            'description' => 'Password hashing converts passwords into irreversible strings. Bcrypt is a strong algorithm that includes salting and adaptive cost factors, making it resistant to brute-force attacks.'
         ];
     }
     
@@ -222,7 +227,8 @@ class SecurityAuditor {
                 'type_check' => $validatesType,
                 'size_check' => $validatesSize
             ],
-            'issue' => ($validatesType && $validatesSize) ? null : 'File uploads may not be properly validated'
+            'issue' => ($validatesType && $validatesSize) ? null : 'File uploads may not be properly validated',
+            'description' => 'File upload vulnerabilities allow attackers to upload malicious files. Validation checks file types, sizes, and content to prevent executable files and oversized uploads from compromising the system.'
         ];
     }
     
@@ -243,7 +249,8 @@ class SecurityAuditor {
                 'x_frame' => $hasXFrame,
                 'x_xss_protection' => strpos($securityFile, 'X-XSS-Protection') !== false
             ],
-            'issue' => ($hasHeaders && $hasCSP && $hasXFrame) ? null : 'Security headers may be incomplete'
+            'issue' => ($hasHeaders && $hasCSP && $hasXFrame) ? null : 'Security headers may be incomplete',
+            'description' => 'HTTP security headers instruct browsers on how to handle content. CSP prevents XSS, X-Frame-Options prevents clickjacking, and other headers provide defense-in-depth protection.'
         ];
     }
     
@@ -256,7 +263,8 @@ class SecurityAuditor {
         
         return [
             'enabled' => $hasRateLimit,
-            'recommendation' => $hasRateLimit ? null : 'Consider implementing rate limiting for authentication and API endpoints'
+            'recommendation' => $hasRateLimit ? null : 'Consider implementing rate limiting for authentication and API endpoints',
+            'description' => 'Rate limiting restricts the number of requests from a single source within a time period. This prevents brute-force attacks, API abuse, and denial-of-service attempts.'
         ];
     }
     
@@ -269,7 +277,8 @@ class SecurityAuditor {
         
         return [
             'comprehensive' => $hasValidation,
-            'recommendation' => $hasValidation ? null : 'Ensure all user inputs are validated before processing'
+            'recommendation' => $hasValidation ? null : 'Ensure all user inputs are validated before processing',
+            'description' => 'Input validation ensures data meets expected formats and constraints before processing. This prevents injection attacks, data corruption, and application errors from malformed input.'
         ];
     }
     
@@ -281,7 +290,8 @@ class SecurityAuditor {
         
         return [
             'enabled' => $isHttps,
-            'recommendation' => $isHttps ? null : 'Enable HTTPS in production to encrypt data in transit'
+            'recommendation' => $isHttps ? null : 'Enable HTTPS in production to encrypt data in transit',
+            'description' => 'HTTPS encrypts all data transmitted between the browser and server using TLS/SSL. This protects sensitive information from eavesdropping, tampering, and man-in-the-middle attacks.'
         ];
     }
     
@@ -332,6 +342,27 @@ class SecurityAuditor {
         } catch (Exception $e) {
             error_log('Failed to get audit reports: ' . $e->getMessage());
             return [];
+        }
+    }
+    
+    /**
+     * Get single audit report by ID
+     */
+    public static function getAuditReport($auditId) {
+        try {
+            $db = Database::getInstance();
+            self::ensureSecurityAuditsTable();
+            
+            return $db->fetch(
+                "SELECT sa.*, u.username, u.full_name 
+                 FROM security_audits sa
+                 LEFT JOIN users u ON sa.user_id = u.id
+                 WHERE sa.id = ?",
+                [$auditId]
+            );
+        } catch (Exception $e) {
+            error_log('Failed to get audit report: ' . $e->getMessage());
+            return null;
         }
     }
     

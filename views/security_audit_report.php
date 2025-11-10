@@ -28,12 +28,35 @@ if ($canRunAudit && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['actio
         
         if ($auditId) {
             $success = "Security audit completed successfully. Score: {$audit['score']}/100";
+            
+            // Log security audit activity
+            AuditLogger::log(
+                'SECURITY_AUDIT_RUN',
+                'security_audit',
+                $auditId,
+                [
+                    'score' => $audit['score'],
+                    'status' => $audit['status'],
+                    'vulnerabilities_count' => count($audit['vulnerabilities'] ?? []),
+                    'recommendations_count' => count($audit['recommendations'] ?? [])
+                ],
+                $user_id
+            );
         } else {
             $error = "Failed to save audit report";
         }
     } catch (Exception $e) {
         $error = "Error running audit: " . $e->getMessage();
         error_log('Security audit error: ' . $e->getMessage());
+        
+        // Log failed audit attempt
+        AuditLogger::log(
+            'SECURITY_AUDIT_FAILED',
+            'security_audit',
+            null,
+            ['error' => $e->getMessage()],
+            $user_id
+        );
     }
 }
 
@@ -166,13 +189,18 @@ try {
 }
 
 .table tbody td {
-    color: #e0e0e0;
-    border-color: #333;
+    color: #000;
+    background-color: #fff;
+    border-color: #dee2e6;
 }
 
 .table tbody td strong {
-    color: #fff;
+    color: #000;
     font-weight: 600;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fa;
 }
 
 .alert {
@@ -337,6 +365,48 @@ try {
                     <?php endif; ?>
                 </div>
                 
+                <!-- Security Audit Instructions -->
+                <div class="card shadow-sm mb-4" style="background: #1a1a1a; border: 1px solid #333;">
+                    <div class="card-header" style="background: linear-gradient(135deg, #00a8ff 0%, #0088cc 100%); color: #fff; font-weight: 600;">
+                        <h5 class="mb-0"><i class="bi bi-info-circle"></i> What is Security Audit?</h5>
+                    </div>
+                    <div class="card-body" style="color: #e0e0e0;">
+                        <p><strong>Security Audit</strong> is a comprehensive automated assessment that evaluates the security posture of the MediArchive system. It performs multiple checks to identify vulnerabilities and provide recommendations for improvement.</p>
+                        
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <h6 style="color: #00ff88; font-weight: 600;"><i class="bi bi-check-circle"></i> What It Does:</h6>
+                                <ul style="color: #ccc;">
+                                    <li>Scans for SQL Injection vulnerabilities</li>
+                                    <li>Checks XSS (Cross-Site Scripting) protection</li>
+                                    <li>Validates CSRF token implementation</li>
+                                    <li>Assesses session security configuration</li>
+                                    <li>Verifies password hashing methods</li>
+                                    <li>Reviews file upload security</li>
+                                    <li>Examines HTTP security headers</li>
+                                    <li>Tests rate limiting mechanisms</li>
+                                    <li>Evaluates input validation coverage</li>
+                                    <li>Confirms HTTPS encryption status</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 style="color: #ffaa00; font-weight: 600;"><i class="bi bi-graph-up"></i> How It Works:</h6>
+                                <ul style="color: #ccc;">
+                                    <li><strong>Automated Scanning:</strong> Analyzes code and configuration files</li>
+                                    <li><strong>Scoring System:</strong> Assigns a score out of 100 based on findings</li>
+                                    <li><strong>Status Rating:</strong> Excellent (90+), Good (75-89), Fair (60-74), Poor (<60)</li>
+                                    <li><strong>Detailed Reports:</strong> Lists vulnerabilities and recommendations</li>
+                                    <li><strong>Export Options:</strong> Generate certificates in PDF, JSON, or XML format</li>
+                                </ul>
+                                
+                                <div class="alert alert-info mt-3" style="background: rgba(0, 168, 255, 0.15) !important; border-color: #00a8ff !important; color: #66ccff !important;">
+                                    <strong><i class="bi bi-lightbulb"></i> Tip:</strong> Run audits regularly (weekly or after major changes) to maintain security standards.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
                 <?php if ($error): ?>
                 <div class="alert alert-danger"><?php echo SecurityManager::escapeOutput($error); ?></div>
                 <?php endif; ?>
@@ -409,9 +479,12 @@ try {
                                                (isset($check['comprehensive']) ? $check['comprehensive'] : false))));
                                     echo $isPassed ? 'check-passed' : 'check-failed';
                                 ?>">
-                                    <strong><?php echo ucfirst(str_replace('_', ' ', $checkName)); ?></strong>
+                                    <strong><?php echo $isPassed ? '<i class="bi bi-check-circle-fill" style="color: #00ff88;"></i>' : '<i class="bi bi-x-circle-fill" style="color: #ff4444;"></i>'; ?> <?php echo ucfirst(str_replace('_', ' ', $checkName)); ?></strong>
                                     <?php if (isset($check['method'])): ?>
                                     <br><small><?php echo SecurityManager::escapeOutput($check['method']); ?></small>
+                                    <?php endif; ?>
+                                    <?php if (isset($check['description'])): ?>
+                                    <br><small style="color: #aaa; font-style: italic;"><?php echo SecurityManager::escapeOutput($check['description']); ?></small>
                                     <?php endif; ?>
                                     <?php if (isset($check['issue']) && $check['issue']): ?>
                                     <br><small class="text-danger"><?php echo SecurityManager::escapeOutput($check['issue']); ?></small>
@@ -510,9 +583,20 @@ try {
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <button class="btn btn-sm btn-info" onclick="viewAuditDetails(<?php echo $audit['id']; ?>)">
+                                            <a href="../api/view_audit.php?id=<?php echo $audit['id']; ?>" target="_blank" class="btn btn-sm btn-info" title="View Audit Certificate">
                                                 <i class="bi bi-eye"></i> View
-                                            </button>
+                                            </a>
+                                            <div class="btn-group" role="group">
+                                                <a href="../api/view_audit.php?id=<?php echo $audit['id']; ?>&format=pdf" class="btn btn-sm btn-danger" title="Export as PDF">
+                                                    <i class="bi bi-file-pdf"></i>
+                                                </a>
+                                                <a href="../api/view_audit.php?id=<?php echo $audit['id']; ?>&format=json" class="btn btn-sm btn-primary" title="Export as JSON">
+                                                    <i class="bi bi-filetype-json"></i>
+                                                </a>
+                                                <a href="../api/view_audit.php?id=<?php echo $audit['id']; ?>&format=xml" class="btn btn-sm btn-warning" title="Export as XML">
+                                                    <i class="bi bi-filetype-xml"></i>
+                                                </a>
+                                            </div>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
@@ -562,17 +646,6 @@ try {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-function viewAuditDetails(auditId) {
-    // This would typically fetch audit details via AJAX
-    // For now, we'll just show an alert
-    alert('Audit details view - Audit ID: ' + auditId);
-    // In a full implementation, you would:
-    // 1. Fetch audit data via AJAX
-    // 2. Display in modal
-    // 3. Format the JSON data nicely
-}
-</script>
 </body>
 </html>
 

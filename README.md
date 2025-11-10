@@ -4,8 +4,8 @@
 
 **MediArchive** is a comprehensive web-based medical certificate management system that digitizes the process of issuing, managing, and verifying medical certificates. The system connects clinics, patients, and verification entities through a secure platform with QR code validation, real-time chat, appointment scheduling, and multiple API integrations.
 
-**Version:** 4.0 (Production Ready)  
-**Last Updated:** November 9, 2025  
+**Version:** 4.1 (Production Ready)  
+**Last Updated:** November 10, 2025  
 **Developed For:** System Integration Course
 
 ---
@@ -84,10 +84,15 @@
 - **Mark as Read**: Manage notification status
 
 ### 🛡️ Security & Audit
+- **Comprehensive Security**: SQL injection, XSS, CSRF protection
+- **Automated Security Audits**: 10-point security assessment system
+- **Audit Certificates**: Export security reports as PDF, JSON, XML
 - **Audit Logging**: Track all system actions (create, view, delete, update)
+- **Security Event Logging**: Monitor security-related activities
 - **User Activity Tracking**: Monitor user actions with timestamps
 - **IP Address Logging**: Record IP addresses for security
 - **Certificate Verification Logs**: Track QR code scans
+- **System Statistics**: Comprehensive analytics dashboard
 - **Web Admin Dashboard**: View system-wide analytics and logs
 - **Data Privacy**: Secure handling of sensitive medical information
 
