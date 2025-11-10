@@ -158,6 +158,11 @@ $role = $_SESSION['role'] ?? '';
                 </a>
             </li>
             <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'security_audit_report.php' ? 'active' : ''; ?>" href="security_audit_report.php">
+                    <i class="bi bi-shield-exclamation"></i> Security Audit
+                </a>
+            </li>
+            <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'chat.php' ? 'active' : ''; ?>" href="chat.php">
                     <i class="bi bi-chat-dots"></i> Messages (Moderation)
                 </a>

@@ -1,9 +1,8 @@
 <?php
 require_once '../config.php';
 
-// Destroy session
-session_unset();
-session_destroy();
+// Use SessionManager for secure logout
+SessionManager::destroySession();
 
 // Redirect to login
 redirect('login.php');

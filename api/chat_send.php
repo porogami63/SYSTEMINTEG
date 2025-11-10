@@ -12,8 +12,26 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     exit;
 }
 
-$conversation_id = intval($_POST['conversation_id'] ?? 0);
-$message = trim($_POST['message'] ?? '');
+// Verify CSRF token for API requests (if provided)
+if (isset($_POST['csrf_token'])) {
+    if (!SecurityManager::validateCSRFToken($_POST['csrf_token'])) {
+        echo json_encode(['success' => false, 'error' => 'CSRF token validation failed']);
+        exit;
+    }
+}
+
+// Rate limiting for chat messages
+$clientIP = SecurityManager::getClientIP();
+$userId = $_SESSION['user_id'];
+if (!SecurityManager::checkRateLimit('chat_send', 30, 60, $userId . ':' . $clientIP)) {
+    echo json_encode(['success' => false, 'error' => 'Rate limit exceeded. Please wait before sending more messages.']);
+    exit;
+}
+
+// Validate and sanitize input
+$conversation_id = isset($_POST['conversation_id']) ? intval($_POST['conversation_id']) : 0;
+$messageResult = InputValidator::validate($_POST['message'] ?? '', 'string', ['max_length' => 5000, 'allow_html' => false]);
+$message = $messageResult['valid'] ? $messageResult['value'] : '';
 
 // Allow empty message if there's an attachment
 $has_attachment = !empty($_FILES['attachment']['name']);
@@ -61,17 +79,29 @@ try {
     if ($has_attachment) {
         require_once '../includes/FileProcessor.php';
         try {
-            // Allow common file types
+            // Allow common file types with security validation
             $allowed_extensions = ['jpg', 'jpeg', 'png', 'gif', 'pdf', 'doc', 'docx', 'txt', 'zip'];
             $max_size = 10 * 1024 * 1024; // 10MB
             
+            // Validate file upload with SecurityManager
+            $uploadValidation = SecurityManager::validateFileUpload($_FILES['attachment'], $allowed_extensions, $max_size);
+            if (!$uploadValidation['valid']) {
+                echo json_encode(['success' => false, 'error' => 'File upload validation failed: ' . implode(', ', $uploadValidation['errors'])]);
+                exit;
+            }
+            
             $saved_path = FileProcessor::saveUpload($_FILES['attachment'], UPLOAD_DIR, $allowed_extensions, $max_size);
             $attachment_path = 'uploads/' . basename($saved_path);
-            $attachment_name = $_FILES['attachment']['name'];
-            $attachment_type = $_FILES['attachment']['type'];
+            $attachment_name = SecurityManager::escapeOutput($_FILES['attachment']['name']);
+            $attachment_type = SecurityManager::escapeOutput($_FILES['attachment']['type']);
             $attachment_size = $_FILES['attachment']['size'];
         } catch (Exception $e) {
             echo json_encode(['success' => false, 'error' => 'File upload failed: ' . $e->getMessage()]);
+            SecurityManager::logSecurityEvent('FILE_UPLOAD_ERROR', [
+                'error' => $e->getMessage(),
+                'user_id' => $userId,
+                'ip' => $clientIP
+            ]);
             exit;
         }
     }

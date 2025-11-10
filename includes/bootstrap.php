@@ -11,6 +11,12 @@ require_once __DIR__ . '/ExpiryManager.php';
 require_once __DIR__ . '/PdfGenerator.php';
 require_once __DIR__ . '/EmailNotifier.php';
 
+// Security classes
+require_once __DIR__ . '/SecurityManager.php';
+require_once __DIR__ . '/InputValidator.php';
+require_once __DIR__ . '/SessionManager.php';
+require_once __DIR__ . '/SecurityAuditor.php';
+
 // Optional: provide a global helper to get the PDO instance quickly
 function DB()
 {
