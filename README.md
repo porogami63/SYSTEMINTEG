@@ -529,11 +529,10 @@ This project is developed for educational purposes as part of the System Integra
 
 ## 👥 Credits
 
-**Developed By**: [Your Name/Team Name]  
-**Course**: System Integration  
-**Institution**: [Your Institution]  
+**Developed By**: Kurt Zildjian C. Santos
+**Course**: Systems Integration & CBS 401
+**Institution**: Technological Institute of The Philippines
 **Academic Year**: 2024-2025  
-**Instructor**: [Instructor Name]
 
 ---
 
@@ -580,6 +579,6 @@ This project is developed for educational purposes as part of the System Integra
 
 ---
 
-**Thank you for using MediArchive!** 🏥✨
+**Thank you** 
 
-For questions or issues, please refer to the SETUP_GUIDE.md or contact your course instructor.
+For questions or issues, please refer to the SETUP_GUIDE.md 
