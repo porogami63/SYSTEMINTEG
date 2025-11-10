@@ -24,75 +24,122 @@ $specializations = [
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = sanitizeInput($_POST['username']);
-    $email = sanitizeInput($_POST['email']);
-    $password = $_POST['password'];
-    $confirm_password = $_POST['confirm_password'];
-    $full_name = sanitizeInput($_POST['full_name']);
-    $role = sanitizeInput($_POST['role']);
-    $phone = sanitizeInput($_POST['phone']);
-    $home_address = isset($_POST['home_address']) ? sanitizeInput($_POST['home_address']) : '';
+    // Verify CSRF token
+    SecurityManager::verifyCSRFToken();
     
-    // Handle profile photo upload via FileProcessor
-    $profile_photo_path = '';
-    if (!empty($_FILES['profile_photo']['name'])) {
-        try {
-            $saved = FileProcessor::saveUpload($_FILES['profile_photo'], UPLOAD_DIR, ['jpg','jpeg','png','gif'], 2 * 1024 * 1024);
-            $profile_photo_path = 'uploads/' . basename($saved);
-        } catch (Exception $e) {
-            // don't block registration for upload failure; record error
-            $error = 'Profile photo upload failed: ' . $e->getMessage();
-        }
-    }
-    
-    // Clinic admin specific fields
-    $medical_license = isset($_POST['medical_license']) ? sanitizeInput($_POST['medical_license']) : '';
-    $specialization = isset($_POST['specialization']) ? sanitizeInput($_POST['specialization']) : '';
-    $clinic_name = isset($_POST['clinic_name']) ? sanitizeInput($_POST['clinic_name']) : '';
-    $clinic_address = isset($_POST['clinic_address']) ? sanitizeInput($_POST['clinic_address']) : '';
-    
-    // Patient specific fields
-    $date_of_birth = isset($_POST['date_of_birth']) ? sanitizeInput($_POST['date_of_birth']) : '';
-    $gender = isset($_POST['gender']) ? sanitizeInput($_POST['gender']) : '';
-    $address = isset($_POST['address']) ? sanitizeInput($_POST['address']) : '';
-    
-    // Validation
-    if ($password !== $confirm_password) {
-        $error = "Passwords do not match";
-    } elseif (strlen($password) < 6) {
-        $error = "Password must be at least 6 characters";
-    } elseif ($role === 'clinic_admin' && empty($medical_license)) {
-        $error = "Medical license is required for clinic admins";
-    } elseif ($role === 'clinic_admin' && empty($specialization)) {
-        $error = "Specialization is required for clinic admins";
+    // Rate limiting for registration
+    $clientIP = SecurityManager::getClientIP();
+    if (!SecurityManager::checkRateLimit('register', 3, 3600, $clientIP)) {
+        $error = "Too many registration attempts. Please try again later.";
     } else {
-        try {
-            $db = Database::getInstance();
-
-            // Check if username or email exists
-            $existing = $db->fetch("SELECT id FROM users WHERE username = ? OR email = ?", [$username, $email]);
-            if ($existing) {
-                $error = "Username or email already exists";
-            } else {
-                $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-                // Insert user (include profile_photo and home_address columns; pass empty strings if not provided)
-                $sql = "INSERT INTO users (username, email, password, full_name, role, phone, profile_photo, home_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-                $db->execute($sql, [$username, $email, $hashed_password, $full_name, $role, $phone, $profile_photo_path, $home_address]);
-                $user_id = $db->lastInsertId();
-
-                if ($role === 'patient') {
-                    $patient_code = 'PAT-' . str_pad($user_id, 4, '0', STR_PAD_LEFT);
-                    $db->execute("INSERT INTO patients (user_id, patient_code, date_of_birth, gender, address) VALUES (?, ?, ?, ?, ?)", [$user_id, $patient_code, $date_of_birth, $gender, $address]);
-                } elseif ($role === 'clinic_admin') {
-                    $final_clinic_name = !empty($clinic_name) ? $clinic_name : $full_name . "'s Clinic";
-                    $db->execute("INSERT INTO clinics (user_id, clinic_name, medical_license, specialization, address, contact_phone) VALUES (?, ?, ?, ?, ?, ?)", [$user_id, $final_clinic_name, $medical_license, $specialization, $clinic_address, $phone]);
+        $usernameResult = InputValidator::validate($_POST['username'] ?? '', 'string', ['min_length' => 3, 'max_length' => 50]);
+        $emailResult = InputValidator::validate($_POST['email'] ?? '', 'email');
+        $password = $_POST['password'] ?? '';
+        $confirm_password = $_POST['confirm_password'] ?? '';
+        $fullNameResult = InputValidator::validate($_POST['full_name'] ?? '', 'string', ['min_length' => 2, 'max_length' => 100]);
+        $roleResult = InputValidator::validate($_POST['role'] ?? '', 'string', ['min_length' => 1, 'max_length' => 20]);
+        
+        if (!$usernameResult['valid']) {
+            $error = "Invalid username: " . ($usernameResult['error'] ?? 'Invalid format');
+        } elseif (!$emailResult['valid']) {
+            $error = "Invalid email: " . ($emailResult['error'] ?? 'Invalid format');
+        } elseif (!$fullNameResult['valid']) {
+            $error = "Invalid full name: " . ($fullNameResult['error'] ?? 'Invalid format');
+        } elseif (!$roleResult['valid']) {
+            $error = "Invalid role";
+        } else {
+            $username = $usernameResult['value'];
+            $email = $emailResult['value'];
+            $full_name = $fullNameResult['value'];
+            $role = $roleResult['value'];
+            $phone = isset($_POST['phone']) ? InputValidator::validate($_POST['phone'], 'phone')['value'] ?? '' : '';
+            $home_address = isset($_POST['home_address']) ? sanitizeInput($_POST['home_address']) : '';
+            
+            // Handle profile photo upload via FileProcessor with security validation
+            $profile_photo_path = '';
+            if (!empty($_FILES['profile_photo']['name'])) {
+                $uploadValidation = SecurityManager::validateFileUpload(
+                    $_FILES['profile_photo'],
+                    ['jpg', 'jpeg', 'png', 'gif'],
+                    2 * 1024 * 1024 // 2MB
+                );
+                if ($uploadValidation['valid']) {
+                    try {
+                        $saved = FileProcessor::saveUpload($_FILES['profile_photo'], UPLOAD_DIR, ['jpg','jpeg','png','gif'], 2 * 1024 * 1024);
+                        $profile_photo_path = 'uploads/' . basename($saved);
+                    } catch (Exception $e) {
+                        $error = 'Profile photo upload failed: ' . $e->getMessage();
+                    }
+                } else {
+                    $error = 'Invalid file upload: ' . implode(', ', $uploadValidation['errors']);
                 }
-
-                $success = "Registration successful! You can now login.";
             }
-        } catch (Exception $e) {
-            $error = 'Server error: ' . $e->getMessage();
+            
+            // Clinic admin specific fields
+            $medical_license = isset($_POST['medical_license']) ? sanitizeInput($_POST['medical_license']) : '';
+            $specialization = isset($_POST['specialization']) ? sanitizeInput($_POST['specialization']) : '';
+            $clinic_name = isset($_POST['clinic_name']) ? sanitizeInput($_POST['clinic_name']) : '';
+            $clinic_address = isset($_POST['clinic_address']) ? sanitizeInput($_POST['clinic_address']) : '';
+            
+            // Patient specific fields
+            $date_of_birth = isset($_POST['date_of_birth']) ? sanitizeInput($_POST['date_of_birth']) : '';
+            $gender = isset($_POST['gender']) ? sanitizeInput($_POST['gender']) : '';
+            $address = isset($_POST['address']) ? sanitizeInput($_POST['address']) : '';
+            
+            // Password validation
+            $passwordResult = InputValidator::validatePassword($password, 6);
+            if (!$passwordResult['valid']) {
+                $error = $passwordResult['error'] ?? "Password does not meet requirements";
+            } elseif ($password !== $confirm_password) {
+                $error = "Passwords do not match";
+            } elseif ($role === 'clinic_admin' && empty($medical_license)) {
+                $error = "Medical license is required for clinic admins";
+            } elseif ($role === 'clinic_admin' && empty($specialization)) {
+                $error = "Specialization is required for clinic admins";
+            } else {
+                try {
+                    $db = Database::getInstance();
+
+                    // Check if username or email exists
+                    $existing = $db->fetch("SELECT id FROM users WHERE username = ? OR email = ?", [$username, $email]);
+                    if ($existing) {
+                        $error = "Username or email already exists";
+                    } else {
+                        $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+                        // Insert user (include profile_photo and home_address columns; pass empty strings if not provided)
+                        $sql = "INSERT INTO users (username, email, password, full_name, role, phone, profile_photo, home_address) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                        $db->execute($sql, [$username, $email, $hashed_password, $full_name, $role, $phone, $profile_photo_path, $home_address]);
+                        $user_id = $db->lastInsertId();
+
+                        if ($role === 'patient') {
+                            $patient_code = 'PAT-' . str_pad($user_id, 4, '0', STR_PAD_LEFT);
+                            $db->execute("INSERT INTO patients (user_id, patient_code, date_of_birth, gender, address) VALUES (?, ?, ?, ?, ?)", [$user_id, $patient_code, $date_of_birth, $gender, $address]);
+                        } elseif ($role === 'clinic_admin') {
+                            $final_clinic_name = !empty($clinic_name) ? $clinic_name : $full_name . "'s Clinic";
+                            $db->execute("INSERT INTO clinics (user_id, clinic_name, medical_license, specialization, address, contact_phone) VALUES (?, ?, ?, ?, ?, ?)", [$user_id, $final_clinic_name, $medical_license, $specialization, $clinic_address, $phone]);
+                        }
+
+                        // Log registration
+                        AuditLogger::log('USER_REGISTERED', 'user', $user_id, [
+                            'role' => $role,
+                            'ip_address' => SecurityManager::getClientIP()
+                        ]);
+                        
+                        // Reset rate limit on successful registration
+                        SecurityManager::resetRateLimit('register', $clientIP);
+                        
+                        $success = "Registration successful! You can now login.";
+                    }
+                } catch (Exception $e) {
+                    $error = 'Server error: ' . $e->getMessage();
+                    error_log('Registration error: ' . $e->getMessage());
+                    SecurityManager::logSecurityEvent('REGISTRATION_ERROR', [
+                        'error' => $e->getMessage(),
+                        'ip' => $clientIP
+                    ]);
+                }
+            }
         }
     }
 }
@@ -144,6 +191,7 @@ body {
         <?php endif; ?>
         
         <form method="POST" id="registerForm" enctype="multipart/form-data">
+            <?php echo SecurityManager::getCSRFField(); ?>
             <div class="mb-3">
                 <label class="form-label">Full Name <span class="text-danger">*</span></label>
                 <input type="text" class="form-control" name="full_name" required>

@@ -28,8 +28,18 @@ if (!file_exists(TEMP_DIR)) {
     mkdir(TEMP_DIR, 0777, true);
 }
 
-// Session Configuration
-session_start();
+// Load OOP utilities first (includes security classes)
+if (file_exists(__DIR__ . '/includes/bootstrap.php')) {
+    require_once __DIR__ . '/includes/bootstrap.php';
+}
+
+// Session Configuration - Secure session handling (must be before any output)
+SessionManager::startSecureSession();
+
+// Security Headers - Set before any output (but after session start)
+if (!headers_sent()) {
+    SecurityManager::setSecurityHeaders();
+}
 
 // Error Reporting (disable in production)
 error_reporting(E_ALL);
@@ -51,9 +61,9 @@ function getDBConnection() {
     }
 }
 
-// Helper function to check if user is logged in
+// Helper function to check if user is logged in (with session validation)
 function isLoggedIn() {
-    return isset($_SESSION['user_id']);
+    return SessionManager::isAuthenticated();
 }
 
 // Helper function to check user role
@@ -88,9 +98,35 @@ function redirect($url) {
     exit();
 }
 
-// Sanitize input
-function sanitizeInput($data) {
-    return htmlspecialchars(strip_tags(trim($data)));
+// Sanitize input (enhanced with security validation)
+function sanitizeInput($data, $type = 'string', $options = []) {
+    if (is_array($data)) {
+        return array_map(function($item) use ($type, $options) {
+            return sanitizeInput($item, $type, $options);
+        }, $data);
+    }
+    
+    // Allow empty strings for optional fields (don't validate if empty)
+    $trimmed = trim($data);
+    if ($trimmed === '') {
+        return '';
+    }
+    
+    // Use InputValidator for comprehensive validation
+    $result = InputValidator::validate($data, $type, $options);
+    if ($result['valid']) {
+        return $result['value'];
+    }
+    
+    // If validation fails, log and return sanitized version
+    SecurityManager::logSecurityEvent('INPUT_VALIDATION_FAILED', [
+        'input' => substr($data, 0, 100),
+        'type' => $type,
+        'error' => $result['error'] ?? 'Validation failed'
+    ]);
+    
+    // Fallback to basic sanitization
+    return htmlspecialchars(strip_tags(trim($data)), ENT_QUOTES, 'UTF-8');
 }
 
 // Generate unique certificate ID
@@ -106,7 +142,4 @@ function notifyUser(mysqli $conn, int $userId, string $title, string $message, s
     $stmt->close();
 }
 
-// Load OOP utilities (non-breaking; classes will use DB_* constants)
-if (file_exists(__DIR__ . '/includes/bootstrap.php')) {
-    require_once __DIR__ . '/includes/bootstrap.php';
-}
+// Note: Security classes are loaded at the top of this file

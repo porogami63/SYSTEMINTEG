@@ -9,29 +9,97 @@ if (isLoggedIn()) {
 $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $username = sanitizeInput($_POST['username']);
-    $password = $_POST['password'];
-
-    try {
-        $db = Database::getInstance();
-        $sql = "SELECT id, username, password, full_name, role FROM users WHERE username = ?";
-        $user = $db->fetch($sql, [$username]);
-
-        if ($user) {
-            if (password_verify($password, $user['password'])) {
-                $_SESSION['user_id'] = $user['id'];
-                $_SESSION['username'] = $user['username'];
-                $_SESSION['full_name'] = $user['full_name'];
-                $_SESSION['role'] = $user['role'];
-                redirect('dashboard.php');
-            } else {
-                $error = "Invalid password";
-            }
+    // Verify CSRF token
+    SecurityManager::verifyCSRFToken();
+    
+    // Rate limiting for login attempts
+    $clientIP = SecurityManager::getClientIP();
+    if (!SecurityManager::checkRateLimit('login', 5, 300, $clientIP)) {
+        $error = "Too many login attempts. Please try again in 5 minutes.";
+        SecurityManager::logSecurityEvent('LOGIN_RATE_LIMIT_EXCEEDED', ['ip' => $clientIP]);
+    } else {
+        // Validate and sanitize input
+        $usernameResult = InputValidator::validate($_POST['username'] ?? '', 'string', ['min_length' => 1, 'max_length' => 50]);
+        if (!$usernameResult['valid']) {
+            $error = "Invalid username format";
         } else {
-            $error = "Invalid username";
+            $username = $usernameResult['value'];
+            $password = $_POST['password'] ?? '';
+
+            try {
+                $db = Database::getInstance();
+                $sql = "SELECT id, username, password, full_name, role, failed_login_attempts, account_locked_until 
+                        FROM users WHERE username = ?";
+                $user = $db->fetch($sql, [$username]);
+
+                if ($user) {
+                    // Check if account is locked
+                    if ($user['account_locked_until'] && strtotime($user['account_locked_until']) > time()) {
+                        $error = "Account is temporarily locked. Please try again later.";
+                        SecurityManager::logSecurityEvent('LOGIN_ATTEMPT_LOCKED_ACCOUNT', [
+                            'username' => $username,
+                            'ip' => $clientIP
+                        ]);
+                    } elseif (password_verify($password, $user['password'])) {
+                        // Successful login
+                        SessionManager::createSession(
+                            $user['id'],
+                            $user['username'],
+                            $user['full_name'],
+                            $user['role']
+                        );
+                        
+                        // Reset failed login attempts and update last login
+                        $db->execute(
+                            "UPDATE users SET failed_login_attempts = 0, account_locked_until = NULL, last_login = NOW() WHERE id = ?",
+                            [$user['id']]
+                        );
+                        
+                        // Reset rate limit on successful login
+                        SecurityManager::resetRateLimit('login', $clientIP);
+                        
+                        redirect('dashboard.php');
+                    } else {
+                        // Failed login - increment attempts
+                        $failedAttempts = ($user['failed_login_attempts'] ?? 0) + 1;
+                        $lockUntil = null;
+                        
+                        // Lock account after 5 failed attempts for 15 minutes
+                        if ($failedAttempts >= 5) {
+                            $lockUntil = date('Y-m-d H:i:s', time() + 900); // 15 minutes
+                            $error = "Too many failed attempts. Account locked for 15 minutes.";
+                        } else {
+                            $error = "Invalid password";
+                        }
+                        
+                        $db->execute(
+                            "UPDATE users SET failed_login_attempts = ?, account_locked_until = ? WHERE id = ?",
+                            [$failedAttempts, $lockUntil, $user['id']]
+                        );
+                        
+                        SecurityManager::logSecurityEvent('LOGIN_FAILED', [
+                            'username' => $username,
+                            'ip' => $clientIP,
+                            'attempts' => $failedAttempts
+                        ]);
+                    }
+                } else {
+                    // Don't reveal if username exists (security best practice)
+                    $error = "Invalid username or password";
+                    SecurityManager::logSecurityEvent('LOGIN_FAILED_INVALID_USER', [
+                        'username' => $username,
+                        'ip' => $clientIP
+                    ]);
+                }
+            } catch (Exception $e) {
+                $error = 'Server error. Please try again later.';
+                error_log('Login error: ' . $e->getMessage());
+                SecurityManager::logSecurityEvent('LOGIN_ERROR', [
+                    'error' => $e->getMessage(),
+                    'ip' => $clientIP
+                ]);
+            }
         }
-    } catch (Exception $e) {
-        $error = 'Server error: ' . $e->getMessage();
     }
 }
 ?>
@@ -70,13 +138,14 @@ body {
         <?php endif; ?>
         
         <form method="POST">
+            <?php echo SecurityManager::getCSRFField(); ?>
             <div class="mb-3">
                 <label class="form-label">Username</label>
-                <input type="text" class="form-control" name="username" required>
+                <input type="text" class="form-control" name="username" required autocomplete="username">
             </div>
             <div class="mb-3">
                 <label class="form-label">Password</label>
-                <input type="password" class="form-control" name="password" required>
+                <input type="password" class="form-control" name="password" required autocomplete="current-password">
             </div>
             <button type="submit" class="btn btn-primary w-100">Login</button>
         </form>
