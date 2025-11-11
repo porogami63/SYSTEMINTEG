@@ -14,14 +14,97 @@ if (!isLoggedIn() || !isWebAdmin()) {
 
 $auditId = isset($_GET['id']) ? intval($_GET['id']) : 0;
 $format = isset($_GET['format']) ? sanitizeInput($_GET['format']) : 'html';
-
-if (!$auditId) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Audit ID required']);
-    exit;
-}
+$isZap = isset($_GET['zap']) ? true : false;
 
 try {
+    // If exporting ZAP report, handle separately
+    if ($isZap) {
+        $root = realpath(__DIR__ . '/..');
+        $htmlPath = $root . '/security_audit/zap_report.html';
+        $jsonPath = $root . '/security_audit/zap_report.json';
+        
+        if (!file_exists($htmlPath) && !file_exists($jsonPath)) {
+            http_response_code(404);
+            echo json_encode(['error' => 'ZAP report not found. Run a ZAP scan first.']);
+            exit;
+        }
+        
+        switch ($format) {
+            case 'json':
+                header('Content-Type: application/json');
+                header('Content-Disposition: attachment; filename="zap_report.json"');
+                if (ob_get_level()) { ob_clean(); }
+                if (file_exists($jsonPath)) {
+                    readfile($jsonPath);
+                } else {
+                    echo json_encode(['message' => 'JSON not available; run scan again.']);
+                }
+                break;
+            case 'xml':
+                // Convert JSON to XML
+                header('Content-Type: application/xml; charset=UTF-8');
+                header('Content-Disposition: attachment; filename="zap_report.xml"');
+                if (ob_get_level()) { ob_clean(); }
+                $zapJson = file_exists($jsonPath) ? json_decode(file_get_contents($jsonPath), true) : ['message' => 'JSON not available'];
+                echo XmlHandler::arrayToXml($zapJson, 'zap_report');
+                break;
+            case 'pdf':
+                // Render the HTML report to PDF
+                require_once '../includes/dompdf/dompdf/autoload.inc.php';
+                $options = new Dompdf\Options();
+                $options->set('isHtml5ParserEnabled', true);
+                $options->set('isRemoteEnabled', true);
+                $dompdf = new Dompdf\Dompdf($options);
+                $html = file_exists($htmlPath) ? file_get_contents($htmlPath) : '<h1>ZAP Report</h1><p>HTML report missing.</p>';
+                $dompdf->loadHtml($html);
+                $dompdf->setPaper('A4', 'portrait');
+                $dompdf->render();
+                if (ob_get_level()) { ob_clean(); }
+                $dompdf->stream('zap_report.pdf', ['Attachment' => true]);
+                break;
+            case 'html':
+            default:
+                // Display a small wrapper that summarizes and embeds the ZAP HTML
+                $summary = 'OWASP ZAP Report';
+                if (file_exists($jsonPath)) {
+                    $zap = json_decode(file_get_contents($jsonPath), true);
+                    $high = $medium = $low = $info = 0;
+                    if (isset($zap['site']) && is_array($zap['site'])) {
+                        foreach ($zap['site'] as $s) {
+                            if (!empty($s['alerts'])) {
+                                foreach ($s['alerts'] as $a) {
+                                    $risk = strtolower($a['riskdesc'] ?? ($a['risk'] ?? ''));
+                                    if (strpos($risk, 'high') !== false) $high++; elseif (strpos($risk, 'medium') !== false) $medium++; elseif (strpos($risk, 'low') !== false) $low++; else $info++;
+                                }
+                            }
+                        }
+                    }
+                    $summary = sprintf('OWASP ZAP Report Summary - High %d, Medium %d, Low %d, Info %d', $high, $medium, $low, $info);
+                }
+                echo '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ZAP Report</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"></head><body class="p-3">';
+                echo '<div class="container"><div class="mb-3"><h4>' . htmlspecialchars($summary) . '</h4>';
+                echo '<div class="btn-group mb-2" role="group">';
+                echo '<a class="btn btn-sm btn-danger" href="?zap=1&format=pdf&id=' . intval($auditId) . '">Export PDF</a>';
+                echo '<a class="btn btn-sm btn-primary" href="?zap=1&format=json&id=' . intval($auditId) . '">Export JSON</a>';
+                echo '<a class="btn btn-sm btn-warning" href="?zap=1&format=xml&id=' . intval($auditId) . '">Export XML</a>';
+                echo '</div></div>';
+                if (file_exists($htmlPath)) {
+                    echo '<iframe style="width:100%;height:85vh;border:1px solid #ccc;border-radius:6px;" src="../security_audit/zap_report.html"></iframe>';
+                } else {
+                    echo '<div class="alert alert-warning">ZAP report HTML not found. Run a ZAP scan first.</div>';
+                }
+                echo '</div></body></html>';
+                break;
+        }
+        exit;
+    }
+    
+    if (!$auditId) {
+        http_response_code(400);
+        echo json_encode(['error' => 'Audit ID required']);
+        exit;
+    }
+    
     // Get audit report
     $audit = SecurityAuditor::getAuditReport($auditId);
     
@@ -45,6 +128,7 @@ try {
                 'score' => $audit['score'],
                 'status' => $audit['status'],
                 'checks' => $auditData['checks'] ?? [],
+                'manual_tests' => $auditData['manual_tests'] ?? [],
                 'vulnerabilities' => $auditData['vulnerabilities'] ?? [],
                 'recommendations' => $auditData['recommendations'] ?? []
             ], JSON_PRETTY_PRINT);
@@ -66,6 +150,7 @@ try {
                 'score' => $audit['score'],
                 'status' => $audit['status'],
                 'checks' => $auditData['checks'] ?? [],
+                'manual_tests' => $auditData['manual_tests'] ?? [],
                 'vulnerabilities' => $auditData['vulnerabilities'] ?? [],
                 'recommendations' => $auditData['recommendations'] ?? []
             ], 'security_audit');
@@ -211,6 +296,16 @@ function generateAuditHTML($audit, $auditData) {
         $html .= '</div>';
     }
     
+    // Manual probes section
+    if (!empty($auditData['manual_tests']) && !empty($auditData['manual_tests']['available'])) {
+        $html .= '<div class="section-title"><i class="bi bi-terminal"></i> Manual Security Probes</div>';
+        $summary = 'Passed: ' . intval($auditData['manual_tests']['passed'] ?? 0) . ' | Failed: ' . intval($auditData['manual_tests']['failed'] ?? 0);
+        $html .= '<div class="alert alert-info"><strong>Summary:</strong> ' . SecurityManager::escapeOutput($summary) . '</div>';
+        if (!empty($auditData['manual_tests']['raw_output'])) {
+            $html .= '<pre style="background:#111;color:#0f0;padding:1rem;border-radius:6px;white-space:pre-wrap;">' . SecurityManager::escapeOutput($auditData['manual_tests']['raw_output']) . '</pre>';
+        }
+    }
+    
     if (!empty($auditData['recommendations'])) {
         $html .= '<div class="section-title"><i class="bi bi-lightbulb"></i> Recommendations</div>
         <div class="alert alert-warning">';
@@ -320,6 +415,15 @@ function generateAuditPDF($audit, $auditData) {
         $html .= '<div class="section-title">Vulnerabilities Found</div>';
         foreach ($auditData['vulnerabilities'] as $vuln) {
             $html .= '<div style="margin: 5px 0;">• ' . SecurityManager::escapeOutput($vuln) . '</div>';
+        }
+    }
+    // Manual probes section for PDF
+    if (!empty($auditData['manual_tests']) && !empty($auditData['manual_tests']['available'])) {
+        $html .= '<div class="section-title">Manual Security Probes</div>';
+        $html .= '<div>Passed: ' . intval($auditData['manual_tests']['passed'] ?? 0) . ' | Failed: ' . intval($auditData['manual_tests']['failed'] ?? 0) . '</div>';
+        if (!empty($auditData['manual_tests']['raw_output'])) {
+            $escaped = htmlspecialchars($auditData['manual_tests']['raw_output'], ENT_QUOTES, 'UTF-8');
+            $html .= '<pre style="white-space: pre-wrap; font-size: 10px; background: #f5f5f5; padding: 10px; border-radius: 4px;">' . $escaped . '</pre>';
         }
     }
     

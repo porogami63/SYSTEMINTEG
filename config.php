@@ -17,6 +17,16 @@ define('UPLOAD_DIR', __DIR__ . '/uploads/');
 define('QR_DIR', __DIR__ . '/qrcodes/');
 define('TEMP_DIR', __DIR__ . '/temp/');
 
+// OAuth / SSO (optional)
+if (!defined('GOOGLE_CLIENT_ID')) {
+	define('GOOGLE_CLIENT_ID', '392529540320-25vrp1h5n2innamfk1tk03u1arnqpip6.apps.googleusercontent.com'); // set your Google OAuth Client ID to enable Google Sign-In
+}
+
+// ZAP (optional) - API key if enabled in ZAP settings
+if (!defined('ZAP_API_KEY')) {
+	define('ZAP_API_KEY', 'l72g2qdt4hc9ah6kp6do5trd71');
+}
+
 // Ensure upload directories exist
 if (!file_exists(UPLOAD_DIR)) {
     mkdir(UPLOAD_DIR, 0777, true);

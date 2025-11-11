@@ -80,6 +80,7 @@ $error = isset($_SESSION['flash_error']) ? $_SESSION['flash_error'] : null;
 unset($_SESSION['flash_success'], $_SESSION['flash_error']);
 
 $appointments = [];
+$appointment_results = [];
 if (empty($loadError)) {
     try {
         $show = isset($_GET['show']) ? $_GET['show'] : 'all';
@@ -91,6 +92,16 @@ if (empty($loadError)) {
              WHERE a.clinic_id = ? $filterWhere ORDER BY a.appointment_date ASC, a.time_slot ASC",
             [$clinic['id']]
         );
+        
+        // Fetch results for all appointments
+        if (!empty($appointments)) {
+            $appt_ids = array_column($appointments, 'id');
+            $placeholders = implode(',', array_fill(0, count($appt_ids), '?'));
+            $results = $db->fetchAll("SELECT * FROM appointment_results WHERE appointment_id IN ($placeholders)", $appt_ids);
+            foreach ($results as $r) {
+                $appointment_results[$r['appointment_id']] = $r;
+            }
+        }
     } catch (Exception $e) {
         $loadError = 'Failed to load appointments.';
     }
@@ -163,18 +174,27 @@ if (empty($loadError)) {
                                             <td><?php echo htmlspecialchars($a['patient_code']); ?></td>
                                             <td><?php echo htmlspecialchars($a['purpose']); ?></td>
                                             <td><span class="badge bg-<?php echo $a['status']==='approved'?'success':($a['status']==='pending'?'warning':($a['status']==='rescheduled'?'info':'secondary')); ?>"><?php echo htmlspecialchars(ucfirst($a['status'])); ?></span></td>
-                                            <td class="d-flex gap-2">
+                                            <td class="d-flex gap-2 flex-wrap">
+                                                <?php if ($a['status'] === 'pending'): ?>
                                                 <form method="post" class="d-inline">
                                                     <input type="hidden" name="appointment_id" value="<?php echo intval($a['id']); ?>">
                                                     <input type="hidden" name="action" value="approve">
-                                                    <button type="submit" class="btn btn-sm btn-success" <?php echo $a['status']==='approved'?'disabled':''; ?>><i class="bi bi-check"></i> Accept</button>
+                                                    <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-check"></i> Accept</button>
                                                 </form>
                                                 <form method="post" class="d-inline" onsubmit="return confirm('Reject this appointment?');">
                                                     <input type="hidden" name="appointment_id" value="<?php echo intval($a['id']); ?>">
                                                     <input type="hidden" name="action" value="reject">
                                                     <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-x"></i> Reject</button>
                                                 </form>
+                                                <?php endif; ?>
+                                                <?php if ($a['status'] === 'approved' || $a['status'] === 'rescheduled'): ?>
                                                 <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="collapse" data-bs-target="#res_<?php echo intval($a['id']); ?>"><i class="bi bi-calendar2-event"></i> Reschedule</button>
+                                                <?php endif; ?>
+                                                <?php if ($a['status'] === 'approved' || $a['status'] === 'completed'): ?>
+                                                <button class="btn btn-sm btn-info" type="button" data-bs-toggle="modal" data-bs-target="#resultModal_<?php echo intval($a['id']); ?>">
+                                                    <i class="bi bi-file-medical"></i> <?php echo $a['status'] === 'completed' ? 'View/Edit Results' : 'Add Results'; ?>
+                                                </button>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                         <tr class="collapse" id="res_<?php echo intval($a['id']); ?>">
@@ -279,6 +299,70 @@ document.addEventListener('DOMContentLoaded', function() {
     showList();
 });
 </script>
+
+<!-- Appointment Results Modals -->
+<?php foreach ($appointments as $a): 
+    $result = $appointment_results[$a['id']] ?? null;
+?>
+<div class="modal fade" id="resultModal_<?php echo intval($a['id']); ?>" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Appointment Results - <?php echo htmlspecialchars($a['patient_name']); ?></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="resultForm_<?php echo intval($a['id']); ?>">
+                <div class="modal-body">
+                    <?php echo SecurityManager::getCSRFField(); ?>
+                    <input type="hidden" name="appointment_id" value="<?php echo intval($a['id']); ?>">
+                    <div class="mb-3">
+                        <label class="form-label">Diagnosis</label>
+                        <textarea class="form-control" name="diagnosis" rows="3" placeholder="Enter diagnosis..."><?php echo htmlspecialchars($result['diagnosis'] ?? ''); ?></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Treatment Notes</label>
+                        <textarea class="form-control" name="treatment_notes" rows="4" placeholder="Enter treatment notes..."><?php echo htmlspecialchars($result['treatment_notes'] ?? ''); ?></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Prescriptions</label>
+                        <textarea class="form-control" name="prescriptions" rows="3" placeholder="Enter prescriptions..."><?php echo htmlspecialchars($result['prescriptions'] ?? ''); ?></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Follow-up Instructions</label>
+                        <textarea class="form-control" name="follow_up_instructions" rows="3" placeholder="Enter follow-up instructions..."><?php echo htmlspecialchars($result['follow_up_instructions'] ?? ''); ?></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save Results</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+document.getElementById('resultForm_<?php echo intval($a['id']); ?>')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    fetch('../api/appointment_result.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to save results'));
+        }
+    })
+    .catch(error => {
+        alert('Error saving results');
+        console.error(error);
+    });
+});
+</script>
+<?php endforeach; ?>
 </body>
 </html>
 

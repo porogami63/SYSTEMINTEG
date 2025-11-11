@@ -32,12 +32,19 @@ class SecurityManager {
         }
         
         // Content Security Policy
+        $googleCsp = "";
+        if (defined('GOOGLE_CLIENT_ID') && GOOGLE_CLIENT_ID) {
+            // Allow Google Identity Services when Google Sign-In is enabled
+            // Use wildcards to include required subdomains
+            $googleCsp = " https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com";
+        }
         $csp = "default-src 'self'; " .
-               "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " .
-               "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " .
-               "img-src 'self' data: https:; " .
-               "font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; " .
-               "connect-src 'self'; " .
+               "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com" . $googleCsp . "; " .
+               "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com" . $googleCsp . "; " .
+               "img-src 'self' data: https:" . $googleCsp . "; " .
+               "font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com" . $googleCsp . "; " .
+               "connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com" . $googleCsp . "; " .
+               "frame-src 'self'" . $googleCsp . "; " .
                "frame-ancestors 'self';";
         header("Content-Security-Policy: $csp");
         

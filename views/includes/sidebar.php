@@ -59,8 +59,9 @@ $role = $_SESSION['role'] ?? '';
         <?php endif; ?>
         <hr class="text-white">
         <ul class="nav flex-column">
+            <!-- Availability Toggle -->
             <?php if (isClinicAdmin()): ?>
-            <li class="nav-item px-3 mb-2">
+            <li class="nav-item px-3 mb-3">
                 <div class="form-check form-switch text-white">
                     <?php 
                     if (!isset($isAvail)) {
@@ -68,12 +69,12 @@ $role = $_SESSION['role'] ?? '';
                     }
                     ?>
                     <input class="form-check-input" type="checkbox" role="switch" id="availabilitySwitch" <?php echo $isAvail ? 'checked' : ''; ?> onclick="setAvailability(this.checked)">
-                    <label class="form-check-label ms-2" for="availabilitySwitch">Available</label>
+                    <label class="form-check-label ms-2 small" for="availabilitySwitch">Available</label>
                 </div>
             </li>
             <?php endif; ?>
             <?php if (isPatient()): ?>
-            <li class="nav-item px-3 mb-2">
+            <li class="nav-item px-3 mb-3">
                 <div class="form-check form-switch text-white">
                     <?php 
                     try {
@@ -82,19 +83,23 @@ $role = $_SESSION['role'] ?? '';
                     } catch (Exception $e) { $isAvail = 1; }
                     ?>
                     <input class="form-check-input" type="checkbox" role="switch" id="patientAvailabilitySwitch" <?php echo $isAvail ? 'checked' : ''; ?> onclick="setPatientAvailability(this.checked)">
-                    <label class="form-check-label ms-2" for="patientAvailabilitySwitch">Available for Chat</label>
+                    <label class="form-check-label ms-2 small" for="patientAvailabilitySwitch">Available for Chat</label>
                 </div>
             </li>
             <?php endif; ?>
+            
+            <!-- Main Navigation -->
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'dashboard.php' ? 'active' : ''; ?>" href="dashboard.php">
                     <i class="bi bi-speedometer2"></i> Dashboard
                 </a>
             </li>
+            
+            <!-- Role-Specific Main Sections -->
             <?php if (isClinicAdmin()): ?>
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'certificates.php' ? 'active' : ''; ?>" href="certificates.php">
-                    <i class="bi bi-files"></i> Certificates & Requests
+                    <i class="bi bi-files"></i> Certificates
                 </a>
             </li>
             <li class="nav-item">
@@ -112,11 +117,6 @@ $role = $_SESSION['role'] ?? '';
                     <i class="bi bi-graph-up"></i> Analytics
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'chat.php' ? 'active' : ''; ?>" href="chat.php">
-                    <i class="bi bi-chat-dots"></i> Messages
-                </a>
-            </li>
             <?php elseif (isPatient()): ?>
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'my_certificates.php' ? 'active' : ''; ?>" href="my_certificates.php">
@@ -130,18 +130,32 @@ $role = $_SESSION['role'] ?? '';
             </li>
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'request_appointment.php' ? 'active' : ''; ?>" href="request_appointment.php">
-                    <i class="bi bi-calendar-plus"></i> Request Appointment
+                    <i class="bi bi-calendar-plus"></i> Book Appointment
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'request_certificate.php' ? 'active' : ''; ?>" href="request_certificate.php">
+                    <i class="bi bi-file-earmark-plus"></i> Request Certificate
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'find_doctors.php' ? 'active' : ''; ?>" href="find_doctors.php">
+                    <i class="bi bi-search"></i> Find Doctors
+                </a>
+            </li>
+            <?php endif; ?>
+            
+            <!-- Communication -->
+            <hr class="text-white my-2" style="opacity: 0.3;">
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'chat.php' ? 'active' : ''; ?>" href="chat.php">
                     <i class="bi bi-chat-dots"></i> Messages
                 </a>
             </li>
-            <?php endif; ?>
             
+            <!-- Web Admin Section -->
             <?php if (isWebAdmin()): ?>
-            <hr class="text-white">
+            <hr class="text-white my-2" style="opacity: 0.3;">
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'all_certificates.php' ? 'active' : ''; ?>" href="all_certificates.php">
                     <i class="bi bi-files"></i> All Certificates
@@ -162,13 +176,10 @@ $role = $_SESSION['role'] ?? '';
                     <i class="bi bi-shield-exclamation"></i> Security Audit
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'chat.php' ? 'active' : ''; ?>" href="chat.php">
-                    <i class="bi bi-chat-dots"></i> Messages (Moderation)
-                </a>
-            </li>
             <?php endif; ?>
             
+            <!-- Account & Settings -->
+            <hr class="text-white my-2" style="opacity: 0.3;">
             <li class="nav-item">
                 <a class="nav-link <?php echo in_array($current_page, ['profile.php', 'edit_profile.php']) ? 'active' : ''; ?>" href="profile.php">
                     <i class="bi bi-person"></i> Profile
@@ -186,20 +197,8 @@ $role = $_SESSION['role'] ?? '';
                     <i class="bi bi-bell"></i> Notifications
                 </a>
             </li>
-            <?php if (isPatient()): ?>
-            <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'request_certificate.php' ? 'active' : ''; ?>" href="request_certificate.php">
-                    <i class="bi bi-file-earmark-plus"></i> Request Certificate
-                </a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link <?php echo $current_page === 'find_doctors.php' ? 'active' : ''; ?>" href="find_doctors.php">
-                    <i class="bi bi-search"></i> Find Doctors
-                </a>
-            </li>
-            <?php endif; ?>
-            <li class="nav-item">
-                <a class="nav-link" href="logout.php">
+            <li class="nav-item mt-2">
+                <a class="nav-link text-danger" href="logout.php">
                     <i class="bi bi-box-arrow-right"></i> Logout
                 </a>
             </li>

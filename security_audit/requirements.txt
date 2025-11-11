@@ -1,0 +1,4 @@
+requests>=2.31.0
+python-owasp-zap-v2.4>=0.0.24
+
+

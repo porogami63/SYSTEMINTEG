@@ -9,6 +9,13 @@ if (!isLoggedIn()) {
 $user_id = $_SESSION['user_id'];
 $role = $_SESSION['role'];
 
+$clinic_certificate_requests = [];
+$patient_certificate_requests = [];
+$system_certificate_requests = [];
+$recent_messages = [];
+$system_upcoming_appts = [];
+$upcoming_appt_count = ['total' => 0];
+
 try {
     $db = Database::getInstance();
     // Get clinic, patient, or webadmin info
@@ -33,6 +40,101 @@ try {
         // Get recent certificates
         $recent_certs = $db->fetchAll("SELECT * FROM certificates WHERE clinic_id = ? ORDER BY created_at DESC LIMIT 5", [$clinic_id]);
         
+        // Recent certificate requests
+        $clinic_certificate_requests = $db->fetchAll(
+            "SELECT r.*, u.full_name AS patient_name, p.patient_code
+             FROM certificate_requests r
+             JOIN patients p ON r.patient_id = p.id
+             JOIN users u ON p.user_id = u.id
+             WHERE r.clinic_id = ?
+             ORDER BY r.created_at DESC
+             LIMIT 5",
+            [$clinic_id]
+        );
+        
+        // Get upcoming appointments
+        $upcoming_appts = $db->fetchAll(
+            "SELECT a.*, p.patient_code, u.full_name AS patient_name 
+             FROM appointments a
+             JOIN patients p ON a.patient_id = p.id
+             JOIN users u ON p.user_id = u.id
+             WHERE a.clinic_id = ? 
+             AND (a.appointment_date > CURDATE() OR (a.appointment_date = CURDATE() AND a.time_slot >= CURTIME()))
+             AND a.status IN ('approved', 'rescheduled')
+             ORDER BY a.appointment_date ASC, a.time_slot ASC LIMIT 5",
+            [$clinic_id]
+        );
+        
+        // Get recent appointments
+        $recent_appointments = $db->fetchAll(
+            "SELECT a.*, p.patient_code, u.full_name AS patient_name 
+             FROM appointments a
+             JOIN patients p ON a.patient_id = p.id
+             JOIN users u ON p.user_id = u.id
+             WHERE a.clinic_id = ? 
+             AND (a.appointment_date < CURDATE() OR (a.appointment_date = CURDATE() AND a.time_slot < CURTIME()))
+             ORDER BY a.appointment_date DESC, a.time_slot DESC LIMIT 5",
+            [$clinic_id]
+        );
+
+        // Latest clinic chat messages
+        $clinic_chat_messages = $db->fetchAll(
+            "SELECT cm.*, u_sender.full_name AS sender_name, u_sender.id AS sender_id,
+                    u_patient.full_name AS patient_name, p.patient_code
+             FROM chat_messages cm
+             JOIN chat_conversations cc ON cm.conversation_id = cc.id
+             JOIN patients p ON cc.patient_id = p.id
+             JOIN users u_patient ON p.user_id = u_patient.id
+             JOIN users u_sender ON cm.sender_id = u_sender.id
+             WHERE cc.clinic_id = ?
+             ORDER BY cm.created_at DESC
+             LIMIT 5",
+            [$clinic_id]
+        );
+
+        // Latest direct messages for this user
+        $clinic_direct_messages = $db->fetchAll(
+            "SELECT dm.*, sender.full_name AS sender_name, receiver.full_name AS receiver_name
+             FROM direct_messages dm
+             JOIN users sender ON dm.sender_id = sender.id
+             JOIN users receiver ON dm.receiver_id = receiver.id
+             WHERE dm.sender_id = ? OR dm.receiver_id = ?
+             ORDER BY dm.created_at DESC
+             LIMIT 5",
+            [$user_id, $user_id]
+        );
+
+        $recent_messages = [];
+
+        foreach ($clinic_chat_messages as $msg) {
+            $preview = trim((string)($msg['message'] ?? '')) !== '' ? $msg['message'] : '[Attachment]';
+            $recent_messages[] = [
+                'created_at' => $msg['created_at'],
+                'direction' => $msg['sender_id'] == $user_id
+                    ? 'You → ' . ($msg['patient_name'] ?? 'Patient')
+                    : ($msg['sender_name'] ?? 'Patient') . ' → You',
+                'channel' => 'Clinic Chat',
+                'preview' => $preview
+            ];
+        }
+
+        foreach ($clinic_direct_messages as $msg) {
+            $preview = trim((string)($msg['message'] ?? '')) !== '' ? $msg['message'] : '[Attachment]';
+            $isSender = $msg['sender_id'] == $user_id;
+            $partner = $isSender ? ($msg['receiver_name'] ?? 'Partner') : ($msg['sender_name'] ?? 'Partner');
+            $recent_messages[] = [
+                'created_at' => $msg['created_at'],
+                'direction' => $isSender ? 'You → ' . $partner : $msg['sender_name'] . ' → You',
+                'channel' => 'Direct Message',
+                'preview' => $preview
+            ];
+        }
+
+        usort($recent_messages, function ($a, $b) {
+            return strtotime($b['created_at']) <=> strtotime($a['created_at']);
+        });
+        $recent_messages = array_slice($recent_messages, 0, 5);
+        
         // Get monthly certificate statistics (last 6 months)
         $monthly_stats = $db->fetchAll(
             "SELECT DATE_FORMAT(created_at, '%Y-%m') as month, COUNT(*) as count 
@@ -56,7 +158,7 @@ try {
         
         // Get all appointments count
         $appt_count = $db->fetch("SELECT COUNT(*) as total FROM appointments");
-        $upcoming_appts = $db->fetch("SELECT COUNT(*) as total FROM appointments WHERE appointment_date >= CURDATE() AND status = 'approved'");
+        $upcoming_appt_count = $db->fetch("SELECT COUNT(*) as total FROM appointments WHERE appointment_date >= CURDATE() AND status IN ('approved','rescheduled')");
         
         // Get all clinics count
         $clinic_count = $db->fetch("SELECT COUNT(*) as total FROM clinics");
@@ -81,6 +183,80 @@ try {
              LEFT JOIN users u ON p.user_id = u.id
              ORDER BY a.appointment_date DESC, a.time_slot DESC LIMIT 5"
         );
+
+        // System-wide upcoming appointments
+        $system_upcoming_appts = $db->fetchAll(
+            "SELECT a.*, cl.clinic_name, u.full_name AS patient_name, p.patient_code
+             FROM appointments a
+             LEFT JOIN clinics cl ON a.clinic_id = cl.id
+             LEFT JOIN patients p ON a.patient_id = p.id
+             LEFT JOIN users u ON p.user_id = u.id
+             WHERE a.appointment_date >= CURDATE()
+             AND a.status IN ('approved','rescheduled')
+             ORDER BY a.appointment_date ASC, a.time_slot ASC
+             LIMIT 5"
+        );
+
+        // Recent certificate requests system-wide
+        $system_certificate_requests = $db->fetchAll(
+            "SELECT r.*, cl.clinic_name, u.full_name AS patient_name, p.patient_code
+             FROM certificate_requests r
+             JOIN clinics cl ON r.clinic_id = cl.id
+             JOIN patients p ON r.patient_id = p.id
+             JOIN users u ON p.user_id = u.id
+             ORDER BY r.created_at DESC
+             LIMIT 5"
+        );
+
+        // System-wide recent messages for moderation overview
+        $admin_chat_messages = $db->fetchAll(
+            "SELECT cm.*, u_sender.full_name AS sender_name,
+                    cl.clinic_name, u_patient.full_name AS patient_name
+             FROM chat_messages cm
+             JOIN chat_conversations cc ON cm.conversation_id = cc.id
+             JOIN clinics cl ON cc.clinic_id = cl.id
+             JOIN patients p ON cc.patient_id = p.id
+             JOIN users u_patient ON p.user_id = u_patient.id
+             JOIN users u_sender ON cm.sender_id = u_sender.id
+             ORDER BY cm.created_at DESC
+             LIMIT 5"
+        );
+
+        $admin_direct_messages = $db->fetchAll(
+            "SELECT dm.*, sender.full_name AS sender_name, receiver.full_name AS receiver_name
+             FROM direct_messages dm
+             JOIN users sender ON dm.sender_id = sender.id
+             JOIN users receiver ON dm.receiver_id = receiver.id
+             ORDER BY dm.created_at DESC
+             LIMIT 5"
+        );
+
+        $recent_messages = [];
+
+        foreach ($admin_chat_messages as $msg) {
+            $preview = trim((string)($msg['message'] ?? '')) !== '' ? $msg['message'] : '[Attachment]';
+            $recent_messages[] = [
+                'created_at' => $msg['created_at'],
+                'direction' => ($msg['sender_name'] ?? 'User') . ' → ' . ($msg['patient_name'] ?? 'Patient') . ' @ ' . ($msg['clinic_name'] ?? 'Clinic'),
+                'channel' => 'Clinic Chat',
+                'preview' => $preview
+            ];
+        }
+
+        foreach ($admin_direct_messages as $msg) {
+            $preview = trim((string)($msg['message'] ?? '')) !== '' ? $msg['message'] : '[Attachment]';
+            $recent_messages[] = [
+                'created_at' => $msg['created_at'],
+                'direction' => ($msg['sender_name'] ?? 'User') . ' → ' . ($msg['receiver_name'] ?? 'User'),
+                'channel' => 'Direct Message',
+                'preview' => $preview
+            ];
+        }
+
+        usort($recent_messages, function ($a, $b) {
+            return strtotime($b['created_at']) <=> strtotime($a['created_at']);
+        });
+        $recent_messages = array_slice($recent_messages, 0, 5);
         
         // Get recent activity feed (all activities, not just certificates)
         $recent_activity = AuditLogger::getLogs([], 10, 0);
@@ -117,6 +293,98 @@ try {
                            JOIN clinics cl ON c.clinic_id = cl.id 
                            WHERE c.patient_id = ? ORDER BY c.created_at DESC LIMIT 5", [$patient_id]);
         
+        // Recent certificate requests
+        $patient_certificate_requests = $db->fetchAll(
+            "SELECT r.*, cl.clinic_name
+             FROM certificate_requests r
+             JOIN clinics cl ON r.clinic_id = cl.id
+             WHERE r.patient_id = ?
+             ORDER BY r.created_at DESC
+             LIMIT 5",
+            [$patient_id]
+        );
+        
+        // Get upcoming appointments
+        $upcoming_appts = $db->fetchAll(
+            "SELECT a.*, c.clinic_name, c.specialization 
+             FROM appointments a 
+             JOIN clinics c ON a.clinic_id = c.id 
+             WHERE a.patient_id = ? 
+             AND (a.appointment_date > CURDATE() OR (a.appointment_date = CURDATE() AND a.time_slot >= CURTIME()))
+             AND a.status IN ('approved', 'rescheduled')
+             ORDER BY a.appointment_date ASC, a.time_slot ASC LIMIT 5",
+            [$patient_id]
+        );
+        
+        // Get recent appointments
+        $recent_appointments = $db->fetchAll(
+            "SELECT a.*, c.clinic_name, c.specialization 
+             FROM appointments a 
+             JOIN clinics c ON a.clinic_id = c.id 
+             WHERE a.patient_id = ? 
+             AND (a.appointment_date < CURDATE() OR (a.appointment_date = CURDATE() AND a.time_slot < CURTIME()))
+             ORDER BY a.appointment_date DESC, a.time_slot DESC LIMIT 5",
+            [$patient_id]
+        );
+        
+        // Recent chat messages for patient
+        $patient_chat_messages = $db->fetchAll(
+            "SELECT cm.*, u_sender.full_name AS sender_name, u_sender.id AS sender_id,
+                    cl.clinic_name
+             FROM chat_messages cm
+             JOIN chat_conversations cc ON cm.conversation_id = cc.id
+             JOIN clinics cl ON cc.clinic_id = cl.id
+             JOIN users u_sender ON cm.sender_id = u_sender.id
+             WHERE cc.patient_id = ?
+             ORDER BY cm.created_at DESC
+             LIMIT 5",
+            [$patient_id]
+        );
+        
+        // Recent direct messages for patient
+        $patient_direct_messages = $db->fetchAll(
+            "SELECT dm.*, sender.full_name AS sender_name, receiver.full_name AS receiver_name
+             FROM direct_messages dm
+             JOIN users sender ON dm.sender_id = sender.id
+             JOIN users receiver ON dm.receiver_id = receiver.id
+             WHERE dm.sender_id = ? OR dm.receiver_id = ?
+             ORDER BY dm.created_at DESC
+             LIMIT 5",
+            [$user_id, $user_id]
+        );
+        
+        $recent_messages = [];
+        
+        foreach ($patient_chat_messages as $msg) {
+            $preview = trim((string)($msg['message'] ?? '')) !== '' ? $msg['message'] : '[Attachment]';
+            $partner = $msg['clinic_name'] ?? 'Clinic';
+            $recent_messages[] = [
+                'created_at' => $msg['created_at'],
+                'direction' => $msg['sender_id'] == $user_id
+                    ? 'You → ' . $partner
+                    : ($msg['sender_name'] ?? 'Clinic') . ' → You',
+                'channel' => 'Clinic Chat',
+                'preview' => $preview
+            ];
+        }
+        
+        foreach ($patient_direct_messages as $msg) {
+            $preview = trim((string)($msg['message'] ?? '')) !== '' ? $msg['message'] : '[Attachment]';
+            $isSender = $msg['sender_id'] == $user_id;
+            $partner = $isSender ? ($msg['receiver_name'] ?? 'Partner') : ($msg['sender_name'] ?? 'Partner');
+            $recent_messages[] = [
+                'created_at' => $msg['created_at'],
+                'direction' => $isSender ? 'You → ' . $partner : $msg['sender_name'] . ' → You',
+                'channel' => 'Direct Message',
+                'preview' => $preview
+            ];
+        }
+        
+        usort($recent_messages, function ($a, $b) {
+            return strtotime($b['created_at']) <=> strtotime($a['created_at']);
+        });
+        $recent_messages = array_slice($recent_messages, 0, 5);
+        
         $monthly_stats = [];
         $pending_requests_count = ['total' => 0];
         $expiry_stats = ['expiring_this_week' => count($expiring_soon), 'expiring_this_month' => 0, 'already_expired' => intval($expired_count['total'] ?? 0)];
@@ -134,10 +402,16 @@ try {
     $monthly_stats = [];
     $recent_activity = [];
     $appt_count = ['total' => 0];
-    $upcoming_appts = ['total' => 0];
+    $upcoming_appt_count = ['total' => 0];
     $clinic_count = ['total' => 0];
     $patient_count = ['total' => 0];
     $recent_appointments = [];
+    $upcoming_appts = [];
+    $system_upcoming_appts = [];
+    $clinic_certificate_requests = [];
+    $patient_certificate_requests = [];
+    $system_certificate_requests = [];
+    $recent_messages = [];
 }
 ?>
 <!DOCTYPE html>
@@ -469,7 +743,7 @@ body {
                         <div class="card shadow-sm" style="border-left: 4px solid #00ff88;">
                             <div class="card-body">
                                 <h6 class="card-title text-muted">Upcoming Appointments</h6>
-                                <h2 class="text-success mb-0"><?php echo $upcoming_appts['total'] ?? 0; ?></h2>
+                                <h2 class="text-success mb-0"><?php echo $upcoming_appt_count['total'] ?? 0; ?></h2>
                             </div>
                         </div>
                     </div>
@@ -658,11 +932,25 @@ body {
                     </div>
                 </div>
                 
-                <?php if ($role === 'web_admin' && !empty($recent_appointments)): ?>
-                <!-- Recent Appointments (For Web Admin) -->
+                <!-- Upcoming Appointments -->
+                <?php
+                $upcoming_list = [];
+                $upcoming_view_all = '#';
+                if ($role === 'clinic_admin') {
+                    $upcoming_list = $upcoming_appts;
+                    $upcoming_view_all = 'clinic_appointments.php';
+                } elseif ($role === 'patient') {
+                    $upcoming_list = $upcoming_appts;
+                    $upcoming_view_all = 'my_appointments.php';
+                } elseif ($role === 'web_admin') {
+                    $upcoming_list = $system_upcoming_appts;
+                    $upcoming_view_all = 'all_appointments.php';
+                }
+                ?>
+                <?php if (!empty($upcoming_list)): ?>
                 <div class="card shadow-sm mb-4">
                     <div class="card-header">
-                        <h5><i class="bi bi-calendar-event"></i> Recent Appointments</h5>
+                        <h5><i class="bi bi-calendar-check"></i> Upcoming Appointments</h5>
                     </div>
                     <div class="card-body">
                         <div class="table-responsive">
@@ -671,23 +959,39 @@ body {
                                     <tr>
                                         <th>Date</th>
                                         <th>Time</th>
+                                        <?php if ($role === 'clinic_admin'): ?>
                                         <th>Patient</th>
+                                        <th>Patient Code</th>
+                                        <?php elseif ($role === 'patient'): ?>
+                                        <th>Clinic / Specialization</th>
+                                        <?php else: ?>
                                         <th>Clinic</th>
+                                        <th>Patient</th>
+                                        <th>Patient Code</th>
+                                        <?php endif; ?>
                                         <th>Purpose</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <?php foreach ($recent_appointments as $appt): ?>
+                                    <?php foreach ($upcoming_list as $appt): ?>
                                     <tr>
                                         <td><?php echo htmlspecialchars($appt['appointment_date']); ?></td>
                                         <td><?php echo htmlspecialchars(substr($appt['time_slot'], 0, 5)); ?></td>
+                                        <?php if ($role === 'clinic_admin'): ?>
                                         <td><?php echo htmlspecialchars($appt['patient_name'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($appt['patient_code'] ?? 'N/A'); ?></td>
+                                        <?php elseif ($role === 'patient'): ?>
+                                        <td><?php echo htmlspecialchars($appt['clinic_name'] . ' — ' . $appt['specialization']); ?></td>
+                                        <?php else: ?>
                                         <td><?php echo htmlspecialchars($appt['clinic_name'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($appt['patient_name'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($appt['patient_code'] ?? 'N/A'); ?></td>
+                                        <?php endif; ?>
                                         <td><?php echo htmlspecialchars($appt['purpose'] ?? 'N/A'); ?></td>
                                         <td>
-                                            <span class="badge bg-<?php echo $appt['status'] === 'approved' ? 'success' : ($appt['status'] === 'pending' ? 'warning' : 'secondary'); ?>">
-                                                <?php echo strtoupper($appt['status']); ?>
+                                            <span class="badge bg-<?php echo $appt['status'] === 'approved' ? 'success' : ($appt['status'] === 'rescheduled' ? 'info' : 'warning'); ?>">
+                                                <?php echo ucfirst($appt['status']); ?>
                                             </span>
                                         </td>
                                     </tr>
@@ -695,6 +999,186 @@ body {
                                 </tbody>
                             </table>
                         </div>
+                        <div class="mt-3">
+                            <a href="<?php echo $upcoming_view_all; ?>" class="btn btn-sm btn-outline-primary">View All Appointments</a>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+                
+                <!-- Recent Appointments -->
+                <?php
+                $recent_appt_list = [];
+                $recent_view_all = '#';
+                if ($role === 'clinic_admin') {
+                    $recent_appt_list = $recent_appointments;
+                    $recent_view_all = 'clinic_appointments.php';
+                } elseif ($role === 'patient') {
+                    $recent_appt_list = $recent_appointments;
+                    $recent_view_all = 'my_appointments.php';
+                } elseif ($role === 'web_admin') {
+                    $recent_appt_list = $recent_appointments;
+                    $recent_view_all = 'all_appointments.php';
+                }
+                ?>
+                <?php if (!empty($recent_appt_list)): ?>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5><i class="bi bi-clock-history"></i> Recent Appointments</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Time</th>
+                                        <?php if ($role === 'clinic_admin'): ?>
+                                        <th>Patient</th>
+                                        <th>Patient Code</th>
+                                        <?php elseif ($role === 'patient'): ?>
+                                        <th>Clinic / Specialization</th>
+                                        <?php else: ?>
+                                        <th>Clinic</th>
+                                        <th>Patient</th>
+                                        <th>Patient Code</th>
+                                        <?php endif; ?>
+                                        <th>Purpose</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($recent_appt_list as $appt): ?>
+                                    <tr>
+                                        <td><?php echo htmlspecialchars($appt['appointment_date']); ?></td>
+                                        <td><?php echo htmlspecialchars(substr($appt['time_slot'], 0, 5)); ?></td>
+                                        <?php if ($role === 'clinic_admin'): ?>
+                                        <td><?php echo htmlspecialchars($appt['patient_name'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($appt['patient_code'] ?? 'N/A'); ?></td>
+                                        <?php elseif ($role === 'patient'): ?>
+                                        <td><?php echo htmlspecialchars($appt['clinic_name'] . ' — ' . $appt['specialization']); ?></td>
+                                        <?php else: ?>
+                                        <td><?php echo htmlspecialchars($appt['clinic_name'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($appt['patient_name'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($appt['patient_code'] ?? 'N/A'); ?></td>
+                                        <?php endif; ?>
+                                        <td><?php echo htmlspecialchars($appt['purpose'] ?? 'N/A'); ?></td>
+                                        <td>
+                                            <span class="badge bg-<?php echo $appt['status'] === 'completed' ? 'info' : ($appt['status'] === 'approved' ? 'success' : 'secondary'); ?>">
+                                                <?php echo ucfirst($appt['status']); ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-3">
+                            <a href="<?php echo $recent_view_all; ?>" class="btn btn-sm btn-outline-primary">View All Appointments</a>
+                        </div>
+                    </div>
+                </div>
+                <?php endif; ?>
+                
+                <!-- Certificate Requests Overview -->
+                <?php
+                $certificate_requests_list = [];
+                $certificate_requests_title = '';
+                $certificate_requests_link = '#';
+                if ($role === 'clinic_admin') {
+                    $certificate_requests_list = $clinic_certificate_requests;
+                    $certificate_requests_title = 'Recent Certificate Requests';
+                    $certificate_requests_link = 'certificate_requests.php';
+                } elseif ($role === 'patient') {
+                    $certificate_requests_list = $patient_certificate_requests;
+                    $certificate_requests_title = 'My Certificate Requests';
+                    $certificate_requests_link = 'my_certificates.php';
+                } elseif ($role === 'web_admin') {
+                    $certificate_requests_list = $system_certificate_requests;
+                    $certificate_requests_title = 'Latest Certificate Requests';
+                    $certificate_requests_link = 'all_certificates.php';
+                }
+                ?>
+                <?php if (!empty($certificate_requests_list)): ?>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h5><i class="bi bi-file-earmark-text"></i> <?php echo htmlspecialchars($certificate_requests_title); ?></h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Requested</th>
+                                        <?php if ($role === 'clinic_admin'): ?>
+                                        <th>Patient</th>
+                                        <th>Patient Code</th>
+                                        <?php elseif ($role === 'web_admin'): ?>
+                                        <th>Clinic</th>
+                                        <th>Patient</th>
+                                        <th>Patient Code</th>
+                                        <?php else: ?>
+                                        <th>Clinic</th>
+                                        <?php endif; ?>
+                                        <th>Purpose</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($certificate_requests_list as $req): ?>
+                                    <tr>
+                                        <td><?php echo date('M d, Y', strtotime($req['created_at'] ?? 'now')); ?></td>
+                                        <?php if ($role === 'clinic_admin'): ?>
+                                        <td><?php echo htmlspecialchars($req['patient_name'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($req['patient_code'] ?? 'N/A'); ?></td>
+                                        <?php elseif ($role === 'web_admin'): ?>
+                                        <td><?php echo htmlspecialchars($req['clinic_name'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($req['patient_name'] ?? 'N/A'); ?></td>
+                                        <td><?php echo htmlspecialchars($req['patient_code'] ?? 'N/A'); ?></td>
+                                        <?php else: ?>
+                                        <td><?php echo htmlspecialchars($req['clinic_name'] ?? 'N/A'); ?></td>
+                                        <?php endif; ?>
+                                        <td><?php echo htmlspecialchars($req['purpose'] ?? 'N/A'); ?></td>
+                                        <td>
+                                            <span class="badge bg-<?php 
+                                                $status = $req['status'] ?? 'pending';
+                                                echo $status === 'approved' ? 'success' : ($status === 'completed' ? 'primary' : ($status === 'rejected' ? 'danger' : 'warning'));
+                                            ?>">
+                                                <?php echo ucfirst($req['status'] ?? 'pending'); ?>
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                        <?php if ($certificate_requests_link !== '#'): ?>
+                        <div class="mt-3">
+                            <a href="<?php echo $certificate_requests_link; ?>" class="btn btn-sm btn-outline-primary">View All Requests</a>
+                        </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <?php endif; ?>
+                
+                <!-- Recent Messages -->
+                <?php if (!empty($recent_messages)): ?>
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-chat-dots"></i> Latest Messages</h5>
+                        <span class="badge bg-light text-dark"><?php echo count($recent_messages); ?></span>
+                    </div>
+                    <div class="list-group list-group-flush">
+                        <?php foreach ($recent_messages as $msg): ?>
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <strong><?php echo htmlspecialchars($msg['direction']); ?></strong>
+                                <span class="badge bg-secondary-subtle text-secondary"><?php echo htmlspecialchars($msg['channel']); ?></span>
+                            </div>
+                            <div class="text-muted small mt-1"><?php echo htmlspecialchars(substr($msg['preview'], 0, 80)); ?></div>
+                            <div class="text-end text-muted small mt-1"><?php echo date('M d, g:i A', strtotime($msg['created_at'])); ?></div>
+                        </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
                 <?php endif; ?>
