@@ -72,15 +72,17 @@ try {
                                             </span>
                                         </td>
                                         <td>
-                                            <a href="view_certificate.php?id=<?php echo $cert['id']; ?>" class="btn btn-sm btn-primary">
-                                                <i class="bi bi-eye"></i> View
-                                            </a>
-                                            <a href="../api/download.php?id=<?php echo $cert['id']; ?>" class="btn btn-sm btn-success">
-                                                <i class="bi bi-download"></i> Download
-                                            </a>
-                                            <button class="btn btn-sm btn-danger delete-cert-btn" data-cert-id="<?php echo $cert['id']; ?>" data-cert-name="<?php echo htmlspecialchars($cert['cert_id']); ?>">
-                                                <i class="bi bi-trash"></i> Delete
-                                            </button>
+                                            <div class="btn-group" role="group">
+                                                <a href="view_certificate.php?id=<?php echo $cert['id']; ?>" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                                <a href="../api/download.php?id=<?php echo $cert['id']; ?>" class="btn btn-sm btn-success">
+                                                    <i class="bi bi-download"></i> Download
+                                                </a>
+                                                <button class="btn btn-sm btn-danger delete-cert-btn" data-cert-id="<?php echo $cert['id']; ?>" data-cert-name="<?php echo htmlspecialchars($cert['cert_id']); ?>">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
