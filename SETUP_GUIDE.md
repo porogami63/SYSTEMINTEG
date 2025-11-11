@@ -1,6 +1,8 @@
 # MediArchive - Complete Setup Guide
+**Version 5.0 - Enhanced Production Release**  
+**Last Updated**: November 12, 2025
 
-## 🚀 Quick Start (For Presentation/Demo)
+## 🚀 Quick Start (For Presentation/Demo - Saturday Setup)
 
 ### Prerequisites Checklist
 - [ ] XAMPP installed
@@ -31,17 +33,42 @@
 1. Open browser: `http://localhost/SYSTEMINTEG/`
 2. Login with credentials below
 
+#### Step 4: (Optional) Setup Security Testing
+**Python Security Audit Tools:**
+1. Install Python 3.8+ from https://www.python.org/
+2. Open Command Prompt in project folder
+3. Install dependencies:
+   ```
+   pip install -r security_audit/requirements.txt
+   ```
+4. Run security tests:
+   ```
+   python security_audit/test_security_manual.py --target http://localhost/SYSTEMINTEG
+   ```
+
+**OWASP ZAP Security Scanner:**
+1. Download OWASP ZAP from https://www.zaproxy.org/download/
+2. Install and start ZAP (it will run on localhost:8080)
+3. Run ZAP scan:
+   ```
+   python security_audit/zap.py --target http://localhost/SYSTEMINTEG
+   ```
+4. View reports:
+   - HTML: `security_audit/zap_report.html`
+   - JSON: `security_audit/zap_report.json`
+   - Web: `http://localhost/SYSTEMINTEG/views/zap.html`
+
 ### Default Login Credentials
 
 **Clinic Administrator**
 ```
-Username: admin
+Username: dr.smith
 Password: password
 ```
 
 **Patient**
 ```
-Username: patient1
+Username: alice.j
 Password: password
 ```
 
@@ -50,6 +77,20 @@ Password: password
 Username: webadmin
 Password: password
 ```
+
+### ✨ New in Version 5.0
+- **Modal Login**: Click Login/Register on home page for elegant modal overlays
+- **Payment System**: Process payments for certificates and appointments with transaction history
+- **Payment Gates**: Appointments require payment before approval (when payment is required)
+- **Transaction Pages**: My Transactions for patients and clinic transactions for doctors
+- **Public Find Doctors**: Standalone public page accessible without login
+- **Public Doctor Profiles**: View doctor profiles without logging in
+- **Enhanced Analytics**: Web admin dashboard with comprehensive system analytics
+- **Medical History**: Combined view of certificates and appointments
+- **Modern UI**: Beautiful gradient designs matching home page aesthetic
+- **Improved Sidebar**: Better organization and reduced crowding
+- **Certificate Attestation**: Medical professional attestation with payment and signature verification
+- **10MB File Uploads**: Larger file support in chat system
 
 ---
 

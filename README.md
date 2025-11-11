@@ -4,8 +4,8 @@
 
 **MediArchive** is a comprehensive web-based medical certificate management system that digitizes the process of issuing, managing, and verifying medical certificates. The system connects clinics, patients, and verification entities through a secure platform with QR code validation, real-time chat, appointment scheduling, and multiple API integrations.
 
-**Version:** 4.1 (Production Ready)  
-**Last Updated:** November 10, 2025  
+**Version:** 5.0 (Production Ready - Enhanced)  
+**Last Updated:** November 12, 2025  
 **Developed For:** System Integration Course
 
 ---
@@ -62,11 +62,19 @@
 
 ### 💬 Real-Time Chat System
 - **Patient-Clinic Messaging**: Direct communication channel
-- **File Attachments**: Share documents and images
+- **File Attachments**: Share documents and images (up to 10MB)
 - **Read Receipts**: Track message read status
 - **Availability Indicators**: See when clinics/patients are available
 - **Web Admin Moderation**: Monitor all conversations
 - **Unread Message Counts**: Never miss important messages
+
+### 💳 Payment System
+- **Integrated Payments**: Process payments for certificates and appointments
+- **Multiple Payment Methods**: Cash, Credit/Debit Card, GCash, PayMaya, Bank Transfer
+- **Transaction Tracking**: Unique transaction IDs for all payments
+- **Payment History**: View all payment records and receipts
+- **Secure Processing**: PCI-compliant payment handling
+- **Automated Notifications**: Payment confirmations and receipts
 
 ### 📅 Appointment System
 - **Online Booking**: Schedule appointments with preferred clinics
@@ -75,6 +83,8 @@
 - **Status Tracking**: Pending, Approved, Rescheduled, Completed, Cancelled
 - **Appointment History**: View past and upcoming appointments
 - **Notifications**: Get notified about appointment updates
+- **Payment Integration**: Appointments can require payment before approval
+- **Payment Processing**: Patients can pay for appointments directly from My Appointments page
 
 ### 🔔 Notification System
 - **Real-Time Alerts**: Instant notifications for important events
@@ -182,6 +192,7 @@ SYSTEMINTEG/
 │   ├── json.php                  # JSON API endpoint
 │   ├── notifications.php         # Notification management
 │   ├── patient_availability.php  # Patient availability toggle
+│   ├── process_payment.php       # Payment processing API
 │   ├── soap_server.php           # SOAP web service
 │   ├── validate.php              # QR validation page
 │   └── xml.php                   # XML export endpoint
@@ -236,18 +247,25 @@ SYSTEMINTEG/
 │   ├── audit_logs.php            # Audit log viewer
 │   ├── certificates.php          # Certificate list
 │   ├── chat.php                  # Chat interface
+│   ├── clinic_appointments.php   # Clinic appointment management
+│   ├── clinic_transactions.php   # Clinic payment transactions
 │   ├── create_certificate.php    # Create new certificate
 │   ├── dashboard.php             # Main dashboard
+│   ├── doctor_profile.php        # Doctor profile (public)
 │   ├── edit_profile.php          # Edit user profile
-│   ├── find_doctors.php          # Find doctors/clinics
+│   ├── find_doctors.php          # Find doctors/clinics (logged in)
+│   ├── find_doctors_public.php   # Find doctors (public)
 │   ├── login.php                 # Login page
 │   ├── logout.php                # Logout handler
+│   ├── my_appointments.php       # Patient appointments
 │   ├── my_certificates.php       # Patient certificates
+│   ├── my_transactions.php       # Patient payment transactions
 │   ├── notification_settings.php # Notification preferences
 │   ├── patient_history.php       # Medical history
 │   ├── patients.php              # Patient list (admin)
 │   ├── profile.php               # User profile
 │   ├── register.php              # Registration page
+│   ├── request_appointment.php   # Request appointment
 │   ├── request_certificate.php   # Request certificate
 │   └── view_certificate.php      # View certificate details
 │
@@ -380,10 +398,13 @@ See **[SETUP_GUIDE.md](SETUP_GUIDE.md)** for detailed installation instructions.
 
 ### ✅ UI Design
 - **Framework**: Bootstrap 5 responsive framework
-- **Design**: Modern, clean, professional interface
+- **Design**: Modern, clean, professional interface with gradient effects
+- **Modal Authentication**: Floating login/register overlays on home page
 - **Responsiveness**: Mobile-first, tablet, desktop
 - **Accessibility**: Semantic HTML, ARIA labels
-- **UX**: Intuitive navigation, clear feedback
+- **UX**: Intuitive navigation, clear feedback, smooth animations
+- **Role-Based Themes**: Distinct color schemes for patients, clinics, and admins
+- **Modern Aesthetics**: Matching home page design with cards, shadows, and transitions
 
 ---
 
@@ -406,6 +427,37 @@ See **[SETUP_GUIDE.md](SETUP_GUIDE.md)** for detailed installation instructions.
 - **IP Tracking**: Record IP addresses for security
 - **User Agent Logging**: Track browser/device information
 - **Verification Logs**: QR scan tracking
+
+### Security Testing & Auditing
+- **OWASP ZAP Integration**: Automated security scanning with Python scripts
+- **Python Security Audit**: Custom XSS and SQL injection testing tools
+- **Manual Testing**: Comprehensive security probe suite
+- **Audit Reports**: Downloadable security certificates (HTML/JSON)
+- **ZAP Reports**: Accessible via web interface at `/views/zap.html`
+- **Compliance**: Meets academic and OWASP security standards
+
+#### Python Security Tools
+The system includes Python-based security testing tools in the `security_audit/` directory:
+- **test_security_manual.py**: XSS and SQL injection probes
+- **zap.py**: OWASP ZAP automated scanning integration
+- **requirements.txt**: Python dependencies (requests>=2.31.0, python-owasp-zap-v2.4>=0.0.24)
+
+#### Running Security Tests
+```bash
+# Install Python dependencies
+pip install -r security_audit/requirements.txt
+
+# Run manual security tests
+python security_audit/test_security_manual.py --target http://localhost/SYSTEMINTEG
+
+# Run OWASP ZAP scan (requires ZAP running on localhost:8080)
+python security_audit/zap.py --target http://localhost/SYSTEMINTEG --apikey YOUR_API_KEY
+
+# View ZAP reports
+# - HTML: security_audit/zap_report.html
+# - JSON: security_audit/zap_report.json
+# - Web: http://localhost/SYSTEMINTEG/views/zap.html
+```
 
 ---
 
@@ -431,19 +483,19 @@ See **[SETUP_GUIDE.md](SETUP_GUIDE.md)** for detailed installation instructions.
 1. **Email Notifications**: Not fully implemented (EmailNotifier class exists)
 2. **SMS Notifications**: Not implemented
 3. **Multi-Language**: English only
-4. **Payment Integration**: Not included
+4. **Payment Gateway Integration**: Demo mode (ready for Stripe/PayMaya/GCash integration)
 5. **Mobile App**: Web-based only (responsive design)
 6. **Offline Mode**: Requires internet connection
 7. **Bulk Upload**: Single file upload only
 8. **Advanced Search**: Basic search functionality
-9. **Report Generation**: Limited to basic analytics
-10. **Two-Factor Authentication**: Not implemented
+9. **Two-Factor Authentication**: Not implemented
+10. **Real-time Notifications**: Polling-based (not WebSocket)
 
 ### Known Issues
 - PDF generation requires DomPDF library (included)
 - QR code generation requires internet (Google Charts API)
-- Large file uploads may timeout (adjust php.ini)
-- Chat attachments limited to 10MB
+- Large file uploads may timeout (adjust php.ini if needed)
+- Payment system in demo mode (integrate real gateway for production)
 
 ### Browser Limitations
 - IE11 not supported
@@ -537,6 +589,22 @@ This project is developed for educational purposes as part of the System Integra
 ---
 
 ## 📝 Version History
+
+### Version 5.0 (November 12, 2025) - Enhanced Production Release
+- ✅ **Modal-based authentication** - Login/Register overlays on home page
+- ✅ **Payment system** - Integrated payment processing for certificates and appointments
+- ✅ **Payment gates** - Appointments require payment before approval
+- ✅ **Transaction history** - My Transactions pages for patients and doctors
+- ✅ **Public find doctors** - Standalone public page for finding doctors without login
+- ✅ **Doctor profile viewing** - Public access to doctor profiles
+- ✅ **Enhanced medical history** - Combined view of certificates and appointments
+- ✅ **Web Admin analytics** - Comprehensive system-wide analytics dashboard
+- ✅ **Modern UI overhaul** - Matching home page aesthetic across all pages
+- ✅ **Improved sidebar** - Better organization and reduced crowding
+- ✅ **Increased file upload** - Chat attachments up to 10MB
+- ✅ **Enhanced security** - Account lockout, rate limiting, security events tracking
+- ✅ **Improved analytics** - Charts, trends, and detailed reporting
+- ✅ **Certificate attestation** - Medical professional attestation with payment and signature verification
 
 ### Version 4.0 (November 9, 2025) - Production Ready
 - ✅ Complete chat system with file attachments

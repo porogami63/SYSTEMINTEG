@@ -1,0 +1,188 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                    MEDIARCHIVE PAYMENT SYSTEM GUIDE                          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+OVERVIEW
+========
+The payment system is implemented but NOT enforced by default. It's designed to be
+optional and can be enabled per certificate or appointment.
+
+HOW IT WORKS
+============
+
+1. DATABASE STRUCTURE
+   - Table: `payments` (stores all payment transactions)
+   - Certificates have: `payment_required` (BOOLEAN) and `payment_amount` (DECIMAL)
+   - Appointments have: `payment_required` (BOOLEAN) and `payment_amount` (DECIMAL)
+
+2. PAYMENT FLOW
+   a) Admin creates certificate/appointment
+   b) Admin sets `payment_required = TRUE` and `payment_amount = X.XX`
+   c) Patient sees payment button/notice
+   d) Patient clicks "Pay Now"
+   e) Payment modal opens
+   f) Patient selects payment method and confirms
+   g) Payment record created with status 'paid'
+   h) Certificate/appointment is released
+
+3. PAYMENT METHODS SUPPORTED
+   - Cash
+   - Credit Card
+   - Debit Card
+   - GCash
+   - PayMaya
+   - Bank Transfer
+
+TESTING THE PAYMENT SYSTEM
+===========================
+
+METHOD 1: Manual Database Update
+---------------------------------
+1. Login as clinic admin (dr.smith / password)
+2. Create a certificate for a patient
+3. Note the certificate ID
+4. Open phpMyAdmin: http://localhost/phpmyadmin
+5. Select `mediarchive` database
+6. Run this SQL:
+   
+   UPDATE certificates 
+   SET payment_required = 1, payment_amount = 500.00 
+   WHERE id = [CERTIFICATE_ID];
+
+7. Logout and login as patient (alice.j / password)
+8. View the certificate - you should see payment required
+
+METHOD 2: Add Payment UI to Certificate Creation
+-------------------------------------------------
+To make payments mandatory during creation, you need to:
+
+1. Edit: views/create_certificate.php
+2. Add these form fields:
+   
+   <div class="form-check">
+       <input type="checkbox" name="payment_required" id="payment_required" class="form-check-input">
+       <label for="payment_required" class="form-check-label">Require Payment</label>
+   </div>
+   
+   <div class="mb-3" id="payment_amount_field" style="display:none;">
+       <label class="form-label">Payment Amount (₱)</label>
+       <input type="number" name="payment_amount" class="form-control" step="0.01" min="0">
+   </div>
+   
+   <script>
+   document.getElementById('payment_required').addEventListener('change', function() {
+       document.getElementById('payment_amount_field').style.display = 
+           this.checked ? 'block' : 'none';
+   });
+   </script>
+
+3. Update the certificate creation API to save these fields
+
+METHOD 3: Create Payment Button in Certificate View
+----------------------------------------------------
+1. Edit: views/view_certificate.php
+2. Add after certificate details:
+
+   <?php if ($certificate['payment_required'] && !$payment_made): ?>
+   <div class="alert alert-warning">
+       <h5>Payment Required</h5>
+       <p>Amount: ₱<?php echo number_format($certificate['payment_amount'], 2); ?></p>
+       <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#paymentModal">
+           Pay Now
+       </button>
+   </div>
+   <?php endif; ?>
+
+3. Add payment modal at bottom of page
+
+PAYMENT API ENDPOINT
+====================
+File: api/process_payment.php
+
+POST Parameters:
+- payment_type: 'certificate' or 'appointment'
+- reference_id: ID of certificate or appointment
+- amount: Payment amount
+- payment_method: 'cash', 'credit_card', 'debit_card', 'gcash', 'paymaya', 'bank_transfer'
+- csrf_token: CSRF protection token
+
+Response:
+{
+    "success": true,
+    "transaction_id": "TXN-20251112-ABC12345",
+    "payment_id": 123,
+    "message": "Payment processed successfully"
+}
+
+CHECKING PAYMENT STATUS
+=======================
+Query to check if certificate is paid:
+
+SELECT * FROM payments 
+WHERE payment_type = 'certificate' 
+AND reference_id = [CERTIFICATE_ID] 
+AND payment_status = 'paid';
+
+PAYMENT REPORTS
+===============
+View all payments:
+- Login as webadmin
+- Go to Analytics Dashboard
+- See "Payment Methods" section
+
+WHY PAYMENTS ARE OPTIONAL
+==========================
+The system is designed for flexibility:
+- Some certificates may be free (government programs)
+- Some clinics may bill separately
+- Some appointments may not require upfront payment
+- Allows gradual implementation
+
+TO MAKE PAYMENTS MANDATORY
+===========================
+1. Add payment fields to certificate/appointment creation forms
+2. Add validation to require payment before viewing/downloading
+3. Add payment status checks in view pages
+4. Display payment buttons/modals
+5. Update UI to show "Paid" or "Unpaid" badges
+
+DEMO MODE
+=========
+Currently in DEMO mode - payments are marked as 'paid' immediately.
+For production, integrate with real payment gateway:
+- Stripe: https://stripe.com/docs/api
+- PayMaya: https://developers.paymaya.com/
+- GCash: Contact GCash for API access
+
+SECURITY
+========
+- CSRF protection on all payment forms
+- Rate limiting (10 payments per minute per user)
+- Audit logging of all transactions
+- Unique transaction IDs
+- IP address tracking
+- User agent logging
+
+TROUBLESHOOTING
+===============
+Q: Patient can request certificate without paying
+A: By default, payment is optional. Set payment_required=1 in database.
+
+Q: How to test payment flow?
+A: Use Method 1 above to manually set payment_required on a certificate.
+
+Q: Where are payment records stored?
+A: In the `payments` table in the database.
+
+Q: Can I refund a payment?
+A: Yes, update payment_status to 'refunded' in the payments table.
+
+Q: How to integrate real payment gateway?
+A: Edit api/process_payment.php and replace demo logic with gateway API calls.
+
+═══════════════════════════════════════════════════════════════════════════════
+For more information, see:
+- api/process_payment.php (payment processing logic)
+- migrations/010_payments.sql (database schema)
+- README.md (payment system documentation)
+═══════════════════════════════════════════════════════════════════════════════

@@ -21,16 +21,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['app
     $aid = intval($_POST['appointment_id']);
     try {
         if ($_POST['action'] === 'approve') {
-            $db->execute("UPDATE appointments SET status='approved' WHERE id=? AND clinic_id=?", [$aid, $clinic['id']]);
+            // Check if payment is required and if payment has been made
+            $app = $db->fetch("SELECT a.*, p.user_id AS patient_user_id FROM appointments a JOIN patients p ON a.patient_id=p.id WHERE a.id=? AND a.clinic_id=?", [$aid, $clinic['id']]);
+            
+            if ($app && $app['payment_required'] && $app['payment_amount'] > 0) {
+                // Check if payment has been made
+                $payment = $db->fetch("SELECT * FROM payments WHERE payment_type='appointment' AND reference_id=? AND payment_status='paid'", [$aid]);
+                if (!$payment) {
+                    $_SESSION['flash_error'] = 'Payment required before approval. Patient must pay ₱' . number_format($app['payment_amount'], 2) . ' first.';
+                    header('Location: clinic_appointments.php');
+                    exit;
+                }
+            }
+            
+            // Handle payment requirement setting
+            $payment_required = isset($_POST['payment_required']) ? 1 : 0;
+            $payment_amount = $payment_required ? floatval($_POST['payment_amount'] ?? 0) : 0;
+            
+            if ($payment_required && $payment_amount > 0) {
+                $db->execute("UPDATE appointments SET status='approved', payment_required=?, payment_amount=? WHERE id=? AND clinic_id=?", [$payment_required, $payment_amount, $aid, $clinic['id']]);
+            } else {
+                $db->execute("UPDATE appointments SET status='approved' WHERE id=? AND clinic_id=?", [$aid, $clinic['id']]);
+            }
+            
             $_SESSION['flash_success'] = 'Appointment approved';
             // Audit log
             AuditLogger::log('APPOINTMENT_APPROVED', 'appointment', $aid, ['clinic_id' => $clinic['id']]);
             // Notify patient
-            $app = $db->fetch("SELECT a.appointment_date, a.time_slot, a.purpose, p.user_id AS patient_user_id, c.clinic_name FROM appointments a JOIN patients p ON a.patient_id=p.id JOIN clinics c ON a.clinic_id=c.id WHERE a.id=? AND a.clinic_id=?", [$aid, $clinic['id']]);
+            $app = $db->fetch("SELECT a.appointment_date, a.time_slot, a.purpose, a.payment_required, a.payment_amount, p.user_id AS patient_user_id, c.clinic_name FROM appointments a JOIN patients p ON a.patient_id=p.id JOIN clinics c ON a.clinic_id=c.id WHERE a.id=? AND a.clinic_id=?", [$aid, $clinic['id']]);
             if ($app && isset($app['patient_user_id'])) {
                 $conn = getDBConnection();
                 $title = 'Appointment Approved';
                 $message = 'Your appointment with ' . $app['clinic_name'] . ' on ' . $app['appointment_date'] . ' at ' . substr($app['time_slot'],0,5) . ' has been approved.';
+                if ($app['payment_required'] && $app['payment_amount'] > 0) {
+                    $message .= ' Payment of ₱' . number_format($app['payment_amount'], 2) . ' is required.';
+                }
                 notifyUser($conn, intval($app['patient_user_id']), $title, $message, 'my_appointments.php');
                 $conn->close();
             }
@@ -92,6 +117,13 @@ if (empty($loadError)) {
              WHERE a.clinic_id = ? $filterWhere ORDER BY a.appointment_date ASC, a.time_slot ASC",
             [$clinic['id']]
         );
+        
+        // Fetch payment status for each appointment
+        $payment_status = [];
+        foreach ($appointments as $appt) {
+            $payment = $db->fetch("SELECT * FROM payments WHERE payment_type='appointment' AND reference_id=? AND payment_status='paid'", [$appt['id']]);
+            $payment_status[$appt['id']] = $payment ? true : false;
+        }
         
         // Fetch results for all appointments
         if (!empty($appointments)) {
@@ -173,14 +205,24 @@ if (empty($loadError)) {
                                             <td><?php echo htmlspecialchars($a['patient_name']); ?></td>
                                             <td><?php echo htmlspecialchars($a['patient_code']); ?></td>
                                             <td><?php echo htmlspecialchars($a['purpose']); ?></td>
-                                            <td><span class="badge bg-<?php echo $a['status']==='approved'?'success':($a['status']==='pending'?'warning':($a['status']==='rescheduled'?'info':'secondary')); ?>"><?php echo htmlspecialchars(ucfirst($a['status'])); ?></span></td>
+                                            <td>
+                                                <span class="badge bg-<?php echo $a['status']==='approved'?'success':($a['status']==='pending'?'warning':($a['status']==='rescheduled'?'info':'secondary')); ?>"><?php echo htmlspecialchars(ucfirst($a['status'])); ?></span>
+                                                <?php if ($a['payment_required'] && $a['payment_amount'] > 0): ?>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        <?php if (isset($payment_status[$a['id']]) && $payment_status[$a['id']]): ?>
+                                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Paid: ₱<?php echo number_format($a['payment_amount'], 2); ?></span>
+                                                        <?php else: ?>
+                                                            <span class="badge bg-warning"><i class="bi bi-exclamation-triangle"></i> Payment Required: ₱<?php echo number_format($a['payment_amount'], 2); ?></span>
+                                                        <?php endif; ?>
+                                                    </small>
+                                                <?php endif; ?>
+                                            </td>
                                             <td class="d-flex gap-2 flex-wrap">
                                                 <?php if ($a['status'] === 'pending'): ?>
-                                                <form method="post" class="d-inline">
-                                                    <input type="hidden" name="appointment_id" value="<?php echo intval($a['id']); ?>">
-                                                    <input type="hidden" name="action" value="approve">
-                                                    <button type="submit" class="btn btn-sm btn-success"><i class="bi bi-check"></i> Accept</button>
-                                                </form>
+                                                <button type="button" class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#approveModal_<?php echo intval($a['id']); ?>">
+                                                    <i class="bi bi-check"></i> Accept
+                                                </button>
                                                 <form method="post" class="d-inline" onsubmit="return confirm('Reject this appointment?');">
                                                     <input type="hidden" name="appointment_id" value="<?php echo intval($a['id']); ?>">
                                                     <input type="hidden" name="action" value="reject">
@@ -362,6 +404,75 @@ document.getElementById('resultForm_<?php echo intval($a['id']); ?>')?.addEventL
     });
 });
 </script>
+<?php endforeach; ?>
+
+<!-- Approval Modals with Payment Option -->
+<?php foreach ($appointments as $a): ?>
+<?php if ($a['status'] === 'pending'): ?>
+<div class="modal fade" id="approveModal_<?php echo intval($a['id']); ?>" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-check-circle"></i> Approve Appointment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST">
+                <div class="modal-body">
+                    <input type="hidden" name="appointment_id" value="<?php echo intval($a['id']); ?>">
+                    <input type="hidden" name="action" value="approve">
+                    
+                    <p>Approve appointment for <strong><?php echo htmlspecialchars($a['patient_name']); ?></strong> on <strong><?php echo htmlspecialchars($a['appointment_date']); ?></strong> at <strong><?php echo htmlspecialchars(substr($a['time_slot'], 0, 5)); ?></strong>?</p>
+                    
+                    <?php if ($a['payment_required'] && $a['payment_amount'] > 0 && (!isset($payment_status[$a['id']]) || !$payment_status[$a['id']])): ?>
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle"></i> <strong>Payment Required:</strong> Patient must pay ₱<?php echo number_format($a['payment_amount'], 2); ?> before approval.
+                    </div>
+                    <?php endif; ?>
+                    
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="bi bi-cash-coin"></i> Payment Settings (Optional)</h6>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="payment_required" id="payment_required_<?php echo intval($a['id']); ?>" <?php echo $a['payment_required'] ? 'checked' : ''; ?>>
+                                <label class="form-check-label" for="payment_required_<?php echo intval($a['id']); ?>">
+                                    <strong>Require Payment</strong> - Patient must pay before appointment is confirmed
+                                </label>
+                            </div>
+                            <div id="payment_amount_field_<?php echo intval($a['id']); ?>" style="display:<?php echo $a['payment_required'] ? 'block' : 'none'; ?>;">
+                                <label class="form-label">Payment Amount (₱) <span class="text-danger">*</span></label>
+                                <input type="number" name="payment_amount" class="form-control" step="0.01" min="0" value="<?php echo $a['payment_amount'] ?? 0; ?>" placeholder="0.00">
+                                <small class="text-muted">Enter the amount patient needs to pay</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-check"></i> Approve Appointment
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+document.getElementById('payment_required_<?php echo intval($a['id']); ?>')?.addEventListener('change', function() {
+    const amountField = document.getElementById('payment_amount_field_<?php echo intval($a['id']); ?>');
+    const amountInput = amountField?.querySelector('input[name="payment_amount"]');
+    if (this.checked) {
+        if (amountField) amountField.style.display = 'block';
+        if (amountInput) amountInput.required = true;
+    } else {
+        if (amountField) amountField.style.display = 'none';
+        if (amountInput) {
+            amountInput.required = false;
+            amountInput.value = '';
+        }
+    }
+});
+</script>
+<?php endif; ?>
 <?php endforeach; ?>
 </body>
 </html>

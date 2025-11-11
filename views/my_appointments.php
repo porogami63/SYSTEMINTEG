@@ -20,6 +20,13 @@ try {
         [$patient['id']]
     );
     
+    // Fetch payment status for each appointment
+    $payment_status = [];
+    foreach ($appointments as $appt) {
+        $payment = $db->fetch("SELECT * FROM payments WHERE payment_type='appointment' AND reference_id=? AND payment_status='paid'", [$appt['id']]);
+        $payment_status[$appt['id']] = $payment ? true : false;
+    }
+    
     // Fetch results for appointments
     $appointment_results = [];
     if (!empty($appointments)) {
@@ -97,8 +104,23 @@ try {
                                             <td><?php echo htmlspecialchars($a['purpose']); ?></td>
                                             <td>
                                                 <span class="badge bg-<?php echo $a['status']==='approved'?'success':($a['status']==='pending'?'warning':($a['status']==='completed'?'info':'secondary')); ?>"><?php echo htmlspecialchars(ucfirst($a['status'])); ?></span>
+                                                <?php if ($a['payment_required'] && $a['payment_amount'] > 0): ?>
+                                                    <br>
+                                                    <small class="text-muted">
+                                                        <?php if (isset($payment_status[$a['id']]) && $payment_status[$a['id']]): ?>
+                                                            <span class="badge bg-success"><i class="bi bi-check-circle"></i> Paid</span>
+                                                        <?php else: ?>
+                                                            <span class="badge bg-warning"><i class="bi bi-exclamation-triangle"></i> Payment Required: ₱<?php echo number_format($a['payment_amount'], 2); ?></span>
+                                                        <?php endif; ?>
+                                                    </small>
+                                                <?php endif; ?>
                                             </td>
                                             <td>
+                                                <?php if ($a['payment_required'] && $a['payment_amount'] > 0 && (!isset($payment_status[$a['id']]) || !$payment_status[$a['id']])): ?>
+                                                <button class="btn btn-sm btn-warning me-2" type="button" data-bs-toggle="modal" data-bs-target="#paymentModal_<?php echo intval($a['id']); ?>">
+                                                    <i class="bi bi-credit-card"></i> Pay Now
+                                                </button>
+                                                <?php endif; ?>
                                                 <?php if (isset($appointment_results[$a['id']])): ?>
                                                 <button class="btn btn-sm btn-info" type="button" data-bs-toggle="modal" data-bs-target="#resultModal_<?php echo intval($a['id']); ?>">
                                                     <i class="bi bi-file-medical"></i> View Results
@@ -229,6 +251,81 @@ document.addEventListener('DOMContentLoaded', function() {
     </div>
 </div>
 <?php endif; endforeach; ?>
+
+<!-- Payment Modals for Appointments -->
+<?php foreach ($appointments as $a): ?>
+<?php if ($a['payment_required'] && $a['payment_amount'] > 0 && (!isset($payment_status[$a['id']]) || !$payment_status[$a['id']])): ?>
+<div class="modal fade" id="paymentModal_<?php echo intval($a['id']); ?>" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentModalLabel"><i class="bi bi-credit-card"></i> Process Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <strong>Appointment:</strong> <?php echo htmlspecialchars($a['clinic_name']); ?><br>
+                    <strong>Date:</strong> <?php echo htmlspecialchars($a['appointment_date']); ?> at <?php echo htmlspecialchars(substr($a['time_slot'], 0, 5)); ?><br>
+                    <strong>Amount:</strong> ₱<?php echo number_format($a['payment_amount'], 2); ?>
+                </div>
+                <form id="paymentForm_<?php echo intval($a['id']); ?>">
+                    <?php echo SecurityManager::getCSRFField(); ?>
+                    <input type="hidden" name="payment_type" value="appointment">
+                    <input type="hidden" name="reference_id" value="<?php echo intval($a['id']); ?>">
+                    <input type="hidden" name="amount" value="<?php echo $a['payment_amount']; ?>">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <select class="form-select" name="payment_method" required>
+                            <option value="cash">Cash</option>
+                            <option value="credit_card">Credit Card</option>
+                            <option value="debit_card">Debit Card</option>
+                            <option value="gcash">GCash</option>
+                            <option value="paymaya">PayMaya</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                        </select>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle"></i> <strong>Demo Mode:</strong> Payment will be marked as paid immediately.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="processPaymentBtn_<?php echo intval($a['id']); ?>">
+                    <i class="bi bi-check-circle"></i> Process Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+document.getElementById('processPaymentBtn_<?php echo intval($a['id']); ?>')?.addEventListener('click', function() {
+    const form = document.getElementById('paymentForm_<?php echo intval($a['id']); ?>');
+    const formData = new FormData(form);
+    
+    fetch('../api/process_payment.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Payment processed successfully! Transaction ID: ' + data.transaction_id);
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to process payment'));
+        }
+    })
+    .catch(error => {
+        alert('Error processing payment');
+        console.error(error);
+    });
+});
+</script>
+<?php endif; ?>
+<?php endforeach; ?>
 </body>
 </html>
 

@@ -1,6 +1,7 @@
 <?php
 require_once '../config.php';
 
+// Require login
 if (!isLoggedIn()) {
     redirect('login.php');
 }

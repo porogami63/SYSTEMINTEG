@@ -59,23 +59,23 @@ $role = $_SESSION['role'] ?? '';
         <?php endif; ?>
         <hr class="text-white">
         <ul class="nav flex-column">
-            <!-- Availability Toggle -->
+            <!-- Availability Toggle - Compact -->
             <?php if (isClinicAdmin()): ?>
-            <li class="nav-item px-3 mb-3">
-                <div class="form-check form-switch text-white">
+            <li class="nav-item px-3 mb-2">
+                <div class="form-check form-switch text-white small">
                     <?php 
                     if (!isset($isAvail)) {
                         try { $row = DB()->fetch("SELECT is_available FROM clinics WHERE user_id = ?", [$_SESSION['user_id']]); $isAvail = $row ? intval($row['is_available']) : 0; } catch (Exception $e) { $isAvail = 0; }
                     }
                     ?>
                     <input class="form-check-input" type="checkbox" role="switch" id="availabilitySwitch" <?php echo $isAvail ? 'checked' : ''; ?> onclick="setAvailability(this.checked)">
-                    <label class="form-check-label ms-2 small" for="availabilitySwitch">Available</label>
+                    <label class="form-check-label ms-2" for="availabilitySwitch">Available</label>
                 </div>
             </li>
             <?php endif; ?>
             <?php if (isPatient()): ?>
-            <li class="nav-item px-3 mb-3">
-                <div class="form-check form-switch text-white">
+            <li class="nav-item px-3 mb-2">
+                <div class="form-check form-switch text-white small">
                     <?php 
                     try {
                         $row = DB()->fetch("SELECT is_available FROM patients WHERE user_id = ?", [$_SESSION['user_id']]);
@@ -83,7 +83,7 @@ $role = $_SESSION['role'] ?? '';
                     } catch (Exception $e) { $isAvail = 1; }
                     ?>
                     <input class="form-check-input" type="checkbox" role="switch" id="patientAvailabilitySwitch" <?php echo $isAvail ? 'checked' : ''; ?> onclick="setPatientAvailability(this.checked)">
-                    <label class="form-check-label ms-2 small" for="patientAvailabilitySwitch">Available for Chat</label>
+                    <label class="form-check-label ms-2" for="patientAvailabilitySwitch">Available for Chat</label>
                 </div>
             </li>
             <?php endif; ?>
@@ -117,6 +117,11 @@ $role = $_SESSION['role'] ?? '';
                     <i class="bi bi-graph-up"></i> Analytics
                 </a>
             </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'clinic_transactions.php' ? 'active' : ''; ?>" href="clinic_transactions.php">
+                    <i class="bi bi-receipt-cutoff"></i> Transactions
+                </a>
+            </li>
             <?php elseif (isPatient()): ?>
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'my_certificates.php' ? 'active' : ''; ?>" href="my_certificates.php">
@@ -126,6 +131,11 @@ $role = $_SESSION['role'] ?? '';
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'my_appointments.php' ? 'active' : ''; ?>" href="my_appointments.php">
                     <i class="bi bi-calendar"></i> My Appointments
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'my_transactions.php' ? 'active' : ''; ?>" href="my_transactions.php">
+                    <i class="bi bi-receipt-cutoff"></i> Transactions
                 </a>
             </li>
             <li class="nav-item">
@@ -164,6 +174,16 @@ $role = $_SESSION['role'] ?? '';
             <li class="nav-item">
                 <a class="nav-link <?php echo $current_page === 'all_appointments.php' ? 'active' : ''; ?>" href="all_appointments.php">
                     <i class="bi bi-calendar-event"></i> All Appointments
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'all_transactions.php' ? 'active' : ''; ?>" href="all_transactions.php">
+                    <i class="bi bi-receipt-cutoff"></i> All Transactions
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link <?php echo $current_page === 'user_management.php' ? 'active' : ''; ?>" href="user_management.php">
+                    <i class="bi bi-people-fill"></i> User Management
                 </a>
             </li>
             <li class="nav-item">

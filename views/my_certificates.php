@@ -78,11 +78,9 @@ try {
                                             <a href="../api/download.php?id=<?php echo $cert['id']; ?>" class="btn btn-sm btn-success">
                                                 <i class="bi bi-download"></i> Download
                                             </a>
-                                            <?php if (isClinicAdmin() || isWebAdmin()): ?>
                                             <button class="btn btn-sm btn-danger delete-cert-btn" data-cert-id="<?php echo $cert['id']; ?>" data-cert-name="<?php echo htmlspecialchars($cert['cert_id']); ?>">
                                                 <i class="bi bi-trash"></i> Delete
                                             </button>
-                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>

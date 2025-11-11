@@ -1,8 +1,8 @@
 {
 	"@programName": "ZAP",
 	"@version": "2.16.1",
-	"@generated": "Wed, 12 Nov 2025 00:39:36",
-	"created": "2025-11-11T16:39:36.694843900Z",
+	"@generated": "Wed, 12 Nov 2025 02:07:51",
+	"created": "2025-11-11T18:07:51.321434200Z",
 	"site":[ 
 		{
 			"@name": "http://localhost",
@@ -721,6 +721,16 @@
 					"desc": "<p>The page includes one or more script files from a third-party domain.</p>",
 					"instances":[ 
 						{
+							"id": "1335",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "https://accounts.google.com/gsi/client",
+							"attack": "",
+							"evidence": "<script src=\"https://accounts.google.com/gsi/client\" async defer></script>",
+							"otherinfo": ""
+						},
+						{
 							"id": "7",
 							"uri": "http://localhost/SYSTEMINTEG/",
 							"nodeName": null,
@@ -728,6 +738,16 @@
 							"param": "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js",
 							"attack": "",
 							"evidence": "<script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js\"></script>",
+							"otherinfo": ""
+						},
+						{
+							"id": "1370",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "https://accounts.google.com/gsi/client",
+							"attack": "",
+							"evidence": "<script src=\"https://accounts.google.com/gsi/client\" async defer></script>",
 							"otherinfo": ""
 						},
 						{
@@ -801,14 +821,14 @@
 							"otherinfo": ""
 						}
 					],
-					"count": "8",
+					"count": "10",
 					"systemic": false,
 					"solution": "<p>Ensure JavaScript source files are loaded from only trusted sources, and the sources can't be controlled by end users of the application.</p>",
 					"otherinfo": "",
 					"reference": "",
 					"cweid": "829",
 					"wascid": "15",
-					"sourceid": "3"
+					"sourceid": "65753"
 				},
 				{
 					"pluginid": "10037",
@@ -1011,6 +1031,16 @@
 					"desc": "<p>The given request has been identified as an authentication request. The 'Other Info' field contains a set of key=value lines which identify any relevant fields. If the request is in a context which has an Authentication Method set to \"Auto-Detect\" then this rule will change the authentication to match the request identified.</p>",
 					"instances":[ 
 						{
+							"id": "1348",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "username",
+							"attack": "",
+							"evidence": "password",
+							"otherinfo": "userParam=username\nuserValue=ZAP\npasswordParam=password\nreferer=http://localhost/SYSTEMINTEG/\ncsrfToken=csrf_token"
+						},
+						{
 							"id": "47",
 							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
 							"nodeName": null,
@@ -1021,14 +1051,14 @@
 							"otherinfo": "userParam=username\nuserValue=ZAP\npasswordParam=password\nreferer=http://localhost/SYSTEMINTEG/views/login.php\ncsrfToken=csrf_token"
 						}
 					],
-					"count": "1",
+					"count": "2",
 					"systemic": false,
 					"solution": "<p>This is an informational alert rather than a vulnerability and so there is nothing to fix.</p>",
-					"otherinfo": "<p>userParam=username</p><p>userValue=ZAP</p><p>passwordParam=password</p><p>referer=http://localhost/SYSTEMINTEG/views/login.php</p><p>csrfToken=csrf_token</p>",
+					"otherinfo": "<p>userParam=username</p><p>userValue=ZAP</p><p>passwordParam=password</p><p>referer=http://localhost/SYSTEMINTEG/</p><p>csrfToken=csrf_token</p>",
 					"reference": "<p>https://www.zaproxy.org/docs/desktop/addons/authentication-helper/auth-req-id/</p>",
 					"cweid": "-1",
 					"wascid": "-1",
-					"sourceid": "23"
+					"sourceid": "65766"
 				},
 				{
 					"pluginid": "10058",
@@ -1201,6 +1231,26 @@
 					"desc": "<p>The response appears to contain suspicious comments which may help an attacker.</p>",
 					"instances":[ 
 						{
+							"id": "1337",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "Admin",
+							"otherinfo": "The following pattern was used: \\bADMIN\\b and was detected in likely comment: \"<!-- Clinic Admin Fields -->\", see evidence field for the suspicious comment/snippet."
+						},
+						{
+							"id": "1376",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "Admin",
+							"otherinfo": "The following pattern was used: \\bADMIN\\b and was detected in likely comment: \"<!-- Clinic Admin Fields -->\", see evidence field for the suspicious comment/snippet."
+						},
+						{
 							"id": "68",
 							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
 							"nodeName": null,
@@ -1221,14 +1271,54 @@
 							"otherinfo": "The following pattern was used: \\bADMIN\\b and was detected in likely comment: \"<!-- Clinic Admin Specific Fields -->\", see evidence field for the suspicious comment/snippet."
 						}
 					],
-					"count": "2",
+					"count": "4",
 					"systemic": false,
 					"solution": "<p>Remove all comments that return information that may help an attacker and fix any underlying problems they refer to.</p>",
-					"otherinfo": "<p>The following pattern was used: \\bADMIN\\b and was detected in likely comment: \"<!-- Clinic Admin Specific Fields -->\", see evidence field for the suspicious comment/snippet.</p>",
+					"otherinfo": "<p>The following pattern was used: \\bADMIN\\b and was detected in likely comment: \"<!-- Clinic Admin Fields -->\", see evidence field for the suspicious comment/snippet.</p>",
 					"reference": "",
 					"cweid": "615",
 					"wascid": "13",
-					"sourceid": "17"
+					"sourceid": "65753"
+				},
+				{
+					"pluginid": "10109",
+					"alertRef": "10109",
+					"alert": "Modern Web Application",
+					"name": "Modern Web Application",
+					"riskcode": "0",
+					"confidence": "2",
+					"riskdesc": "Informational (Medium)",
+					"desc": "<p>The application appears to be a modern web application. If you need to explore it automatically then the Ajax Spider may well be more effective than the standard one.</p>",
+					"instances":[ 
+						{
+							"id": "1338",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "<a class=\"nav-link\" href=\"#\" data-bs-toggle=\"modal\" data-bs-target=\"#loginModal\">Login</a>",
+							"otherinfo": "Links have been found that do not have traditional href attributes, which is an indication that this is a modern web application."
+						},
+						{
+							"id": "1380",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "<a class=\"nav-link\" href=\"#\" data-bs-toggle=\"modal\" data-bs-target=\"#loginModal\">Login</a>",
+							"otherinfo": "Links have been found that do not have traditional href attributes, which is an indication that this is a modern web application."
+						}
+					],
+					"count": "2",
+					"systemic": false,
+					"solution": "<p>This is an informational alert and so no changes are required.</p>",
+					"otherinfo": "<p>Links have been found that do not have traditional href attributes, which is an indication that this is a modern web application.</p>",
+					"reference": "",
+					"cweid": "-1",
+					"wascid": "-1",
+					"sourceid": "65753"
 				},
 				{
 					"pluginid": "10112",
@@ -1781,6 +1871,16 @@
 					"desc": "<p>This check looks at user-supplied input in query string parameters and POST data to identify where certain HTML attribute values might be controlled. This provides hot-spot detection for XSS (cross-site scripting) that will require further review by a security analyst to determine exploitability.</p>",
 					"instances":[ 
 						{
+							"id": "1377",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/login.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=071300cb3e5d557b0fa70f6196f0aeb4e8bba062f6f9e084622167398dc95f82\n\nThe user-controlled value was:\n071300cb3e5d557b0fa70f6196f0aeb4e8bba062f6f9e084622167398dc95f82"
+						},
+						{
 							"id": "1183",
 							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
 							"nodeName": null,
@@ -1989,6 +2089,16 @@
 							"attack": "",
 							"evidence": "",
 							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nconfirm_password=ZAP\n\nThe user-controlled value was:\nzaproxy@example.com"
+						},
+						{
+							"id": "1374",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=071300cb3e5d557b0fa70f6196f0aeb4e8bba062f6f9e084622167398dc95f82\n\nThe user-controlled value was:\n071300cb3e5d557b0fa70f6196f0aeb4e8bba062f6f9e084622167398dc95f82"
 						},
 						{
 							"id": "1192",
@@ -2311,14 +2421,14 @@
 							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nusername=ZAP\n\nThe user-controlled value was:\nzaproxy@example.com"
 						}
 					],
-					"count": "53",
+					"count": "55",
 					"systemic": false,
 					"solution": "<p>Validate all input and sanitize output it before writing to any HTML attributes.</p>",
-					"otherinfo": "<p>User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:</p><p></p><p>http://localhost/SYSTEMINTEG/views/login.php</p><p></p><p>appears to include user input in:</p><p>a(n) [input] tag [value] attribute</p><p></p><p>The user input found was:</p><p>csrf_token=1214d22b76ef6acee2cb02ef50b45b2740cec095829b289f7db71495429f2028</p><p></p><p>The user-controlled value was:</p><p>1214d22b76ef6acee2cb02ef50b45b2740cec095829b289f7db71495429f2028</p>",
+					"otherinfo": "<p>User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:</p><p></p><p>http://localhost/SYSTEMINTEG/views/login.php</p><p></p><p>appears to include user input in:</p><p>a(n) [input] tag [value] attribute</p><p></p><p>The user input found was:</p><p>csrf_token=071300cb3e5d557b0fa70f6196f0aeb4e8bba062f6f9e084622167398dc95f82</p><p></p><p>The user-controlled value was:</p><p>071300cb3e5d557b0fa70f6196f0aeb4e8bba062f6f9e084622167398dc95f82</p>",
 					"reference": "<p>https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html</p>",
 					"cweid": "20",
 					"wascid": "20",
-					"sourceid": "63108"
+					"sourceid": "65766"
 				}
 			]
 		}

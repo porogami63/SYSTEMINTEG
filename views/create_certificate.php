@@ -34,6 +34,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $diagnosis = sanitizeInput($_POST['diagnosis']);
     $recommendations = sanitizeInput($_POST['recommendations']);
     
+    // Payment fields
+    $payment_required = isset($_POST['payment_required']) ? 1 : 0;
+    $payment_amount = $payment_required ? floatval($_POST['payment_amount'] ?? 0) : 0;
+    
     // Verify patient exists in patients table
     $patient_exists = false;
     $res = $db->fetch("SELECT id FROM patients WHERE id = ?", [$patient_id]);
@@ -52,7 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // attach saved signature if present
     $doctor_signature_path = !empty($clinic['signature_path']) ? $clinic['signature_path'] : null;
 
-    $db->execute("INSERT INTO certificates (cert_id, clinic_id, patient_id, issued_by, doctor_license, issue_date, expiry_date, purpose, diagnosis, recommendations, doctor_signature_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [$cert_id, $clinic_id, $patient_id, $issued_by, $doctor_license, $issue_date, $expiry_date, $purpose, $diagnosis, $recommendations, $doctor_signature_path]);
+    $db->execute("INSERT INTO certificates (cert_id, clinic_id, patient_id, issued_by, doctor_license, issue_date, expiry_date, purpose, diagnosis, recommendations, doctor_signature_path, payment_required, payment_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", [$cert_id, $clinic_id, $patient_id, $issued_by, $doctor_license, $issue_date, $expiry_date, $purpose, $diagnosis, $recommendations, $doctor_signature_path, $payment_required, $payment_amount]);
     }
     
     if (empty($error)) {
@@ -136,11 +140,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Issued By (Doctor Name) <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="issued_by" value="<?php echo $_SESSION['full_name']; ?>" required>
+                                    <input type="text" class="form-control" name="issued_by" value="<?php echo htmlspecialchars($_SESSION['full_name'] ?? ''); ?>" required readonly style="background-color: #f8f9fa;">
+                                    <small class="text-muted">Auto-filled from your profile</small>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label class="form-label">Doctor License Number</label>
-                                    <input type="text" class="form-control" name="doctor_license">
+                                    <input type="text" class="form-control" name="doctor_license" value="<?php echo htmlspecialchars($clinic['license_number'] ?? ''); ?>" readonly style="background-color: #f8f9fa;">
+                                    <small class="text-muted">Auto-filled from clinic profile</small>
                                 </div>
                             </div>
                             
@@ -165,6 +171,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <textarea class="form-control" name="recommendations" rows="3"></textarea>
                             </div>
                             
+                            <div class="card bg-light mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title"><i class="bi bi-cash-coin"></i> Payment Settings</h6>
+                                    <div class="form-check mb-3">
+                                        <input class="form-check-input" type="checkbox" name="payment_required" id="payment_required">
+                                        <label class="form-check-label" for="payment_required">
+                                            <strong>Require Payment</strong> - Patient must pay before accessing this certificate
+                                        </label>
+                                    </div>
+                                    <div id="payment_amount_field" style="display:none;">
+                                        <label class="form-label">Payment Amount (₱) <span class="text-danger">*</span></label>
+                                        <input type="number" name="payment_amount" class="form-control" step="0.01" min="0" placeholder="0.00">
+                                        <small class="text-muted">Enter the amount patient needs to pay</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
                             <div class="d-flex gap-2">
                                 <button type="button" class="btn btn-primary" id="publishBtn">
                                     <i class="bi bi-save"></i> Publish Certificate
@@ -187,21 +210,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <p class="mb-3">By publishing this medical certificate, I attest that all statements herein are true and accurate to the best of my medical knowledge and belief, and are issued without fraud or perjury.</p>
+        <div class="alert alert-info">
+            <h6 class="alert-heading"><i class="bi bi-info-circle"></i> Medical Professional's Attestation</h6>
+            <p class="mb-0 small">This attestation is a legal declaration of the accuracy of the medical information provided.</p>
+        </div>
+        
+        <div class="border rounded p-3 mb-3" style="background-color: #f8f9fa;">
+            <p class="mb-2"><strong>I, <?php echo htmlspecialchars($_SESSION['full_name'] ?? 'the undersigned medical professional'); ?>, hereby solemnly declare and attest that:</strong></p>
+            <ul class="small mb-2">
+                <li>All medical findings, diagnoses, and recommendations contained in this certificate are based on my personal examination and professional medical judgment.</li>
+                <li>The information provided herein is true, accurate, and complete to the best of my medical knowledge and professional belief.</li>
+                <li>This certificate is issued in good faith, without fraud, misrepresentation, or perjury.</li>
+                <li>I understand that any false statement or misrepresentation may subject me to professional disciplinary action and legal consequences.</li>
+                <li>I accept full professional responsibility for the contents of this medical certificate.</li>
+            </ul>
+            <p class="mb-0 small text-muted fst-italic">This attestation is made in accordance with medical ethics and professional standards of practice.</p>
+        </div>
+        
         <?php if (!empty($clinic['signature_path'])): ?>
-        <div class="text-center mb-2">
-            <img src="../<?php echo htmlspecialchars($clinic['signature_path']); ?>" alt="Doctor Signature" style="height:80px;">
-            <div class="text-muted small">Your saved signature will be applied</div>
+        <div class="text-center mb-3 p-3 border rounded">
+            <p class="small text-muted mb-2">Digital Signature on File:</p>
+            <img src="../<?php echo htmlspecialchars($clinic['signature_path']); ?>" alt="Doctor Signature" style="height:80px; border: 1px solid #dee2e6; padding: 10px; background: white;">
+            <div class="text-success small mt-2"><i class="bi bi-check-circle-fill"></i> Signature will be automatically applied to certificate</div>
         </div>
         <?php else: ?>
-        <div class="alert alert-warning d-flex align-items-start gap-2">
-            <i class="bi bi-exclamation-triangle"></i>
-            <div>No signature on file. Please upload your signature in Profile → Edit Profile before publishing.</div>
+        <div class="alert alert-danger d-flex align-items-start gap-2">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div>
+                <strong>Signature Required!</strong><br>
+                <small>You must upload your digital signature before publishing certificates. Go to Profile → Edit Profile to upload your signature.</small>
+            </div>
         </div>
         <?php endif; ?>
-        <div class="form-check">
-            <input class="form-check-input" type="checkbox" id="attestCheck">
-            <label class="form-check-label" for="attestCheck">I understand and agree to the attestation above.</label>
+        
+        <div class="form-check p-3 border rounded" style="background-color: #fff3cd;">
+            <input class="form-check-input" type="checkbox" id="attestCheck" style="width: 20px; height: 20px;">
+            <label class="form-check-label ms-2" for="attestCheck">
+                <strong>I have read and agree to the above attestation.</strong><br>
+                <small class="text-muted">By checking this box, I affirm that I understand the legal and professional implications of this attestation.</small>
+            </label>
         </div>
       </div>
       <div class="modal-footer">
@@ -235,6 +282,20 @@ confirmPublishBtn.addEventListener('click', function(){
     return;
     <?php endif; ?>
     document.getElementById('createCertForm').submit();
+});
+
+// Payment field toggle
+document.getElementById('payment_required').addEventListener('change', function() {
+    const amountField = document.getElementById('payment_amount_field');
+    const amountInput = document.querySelector('input[name="payment_amount"]');
+    if (this.checked) {
+        amountField.style.display = 'block';
+        amountInput.required = true;
+    } else {
+        amountField.style.display = 'none';
+        amountInput.required = false;
+        amountInput.value = '';
+    }
 });
 </script>
 </body>

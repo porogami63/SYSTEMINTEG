@@ -31,16 +31,50 @@ $certificates = $db->fetchAll(
     [$viewingPatientId]
 );
 
+// Fetch appointments for history
+$appointments = $db->fetchAll(
+    "SELECT a.*, cl.clinic_name FROM appointments a JOIN clinics cl ON a.clinic_id = cl.id WHERE a.patient_id = ? ORDER BY a.appointment_date DESC, a.time_slot DESC",
+    [$viewingPatientId]
+);
+
 // Basic aggregates
 $stats = [
-    'total' => count($certificates),
+    'total_certificates' => count($certificates),
     'active' => 0,
     'expired' => 0,
     'revoked' => 0,
+    'total_appointments' => count($appointments),
+    'completed_appointments' => 0,
+    'pending_appointments' => 0,
 ];
 foreach ($certificates as $c) {
     $stats[$c['status']] = ($stats[$c['status']] ?? 0) + 1;
 }
+foreach ($appointments as $a) {
+    if ($a['status'] === 'completed') $stats['completed_appointments']++;
+    if ($a['status'] === 'pending' || $a['status'] === 'approved') $stats['pending_appointments']++;
+}
+
+// Combine certificates and appointments into unified timeline
+$timeline = [];
+foreach ($certificates as $c) {
+    $timeline[] = [
+        'type' => 'certificate',
+        'date' => $c['issue_date'],
+        'data' => $c
+    ];
+}
+foreach ($appointments as $a) {
+    $timeline[] = [
+        'type' => 'appointment',
+        'date' => $a['appointment_date'],
+        'data' => $a
+    ];
+}
+// Sort by date descending
+usort($timeline, function($a, $b) {
+    return strtotime($b['date']) - strtotime($a['date']);
+});
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -67,18 +101,25 @@ foreach ($certificates as $c) {
             <div class="main-content">
                 <div class="d-flex align-items-center justify-content-between mb-4">
                     <h2 class="mb-0"><i class="bi bi-clock-history"></i> Medical History</h2>
-                    <div class="text-muted">Total: <?php echo $stats['total']; ?> | Active: <?php echo $stats['active'] ?? 0; ?> | Expired: <?php echo $stats['expired'] ?? 0; ?></div>
+                    <div class="text-muted">
+                        <span class="badge bg-primary me-2"><?php echo $stats['total_certificates']; ?> Certificates</span>
+                        <span class="badge bg-info me-2"><?php echo $stats['total_appointments']; ?> Appointments</span>
+                        <span class="badge bg-success"><?php echo $stats['completed_appointments']; ?> Completed</span>
+                    </div>
                 </div>
 
                 <div class="card shadow-sm mb-4">
                     <div class="card-body">
                         <div class="timeline">
-                            <?php if (!empty($certificates)): ?>
-                                <?php foreach ($certificates as $c): ?>
+                            <?php if (!empty($timeline)): ?>
+                                <?php foreach ($timeline as $item): ?>
                                 <div class="timeline-item">
                                     <div class="ms-4">
+                                        <?php if ($item['type'] === 'certificate'): 
+                                            $c = $item['data']; ?>
                                         <div class="d-flex align-items-center justify-content-between">
                                             <div>
+                                                <i class="bi bi-file-medical text-primary me-2"></i>
                                                 <strong><?php echo htmlspecialchars($c['purpose']); ?></strong>
                                                 <span class="text-muted ms-2"><?php echo htmlspecialchars($c['clinic_name']); ?></span>
                                             </div>
@@ -89,12 +130,52 @@ foreach ($certificates as $c) {
                                             </div>
                                         </div>
                                         <div class="text-muted small">Issued: <?php echo htmlspecialchars($c['issue_date']); ?><?php if (!empty($c['expiry_date'])): ?> • Valid until: <?php echo htmlspecialchars($c['expiry_date']); ?><?php endif; ?></div>
+                                        <?php if (!empty($c['diagnosis'])): ?>
+                                        <div class="text-muted small mt-1"><strong>Diagnosis:</strong> <?php echo htmlspecialchars($c['diagnosis']); ?></div>
+                                        <?php endif; ?>
                                         <div class="mt-2">
                                             <a href="view_certificate.php?id=<?php echo intval($c['id']); ?>" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> View</a>
                                             <?php if (isClinicAdmin()): ?>
                                             <a href="create_certificate.php?patient_id=<?php echo intval($viewingPatientId); ?>" class="btn btn-sm btn-outline-success"><i class="bi bi-plus"></i> New Certificate</a>
                                             <?php endif; ?>
                                         </div>
+                                        
+                                        <?php else: 
+                                            $a = $item['data']; ?>
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <i class="bi bi-calendar-check text-info me-2"></i>
+                                                <strong>Appointment: <?php echo htmlspecialchars($a['purpose']); ?></strong>
+                                                <span class="text-muted ms-2"><?php echo htmlspecialchars($a['clinic_name']); ?></span>
+                                            </div>
+                                            <div>
+                                                <span class="badge bg-<?php 
+                                                    echo $a['status'] === 'completed' ? 'success' : 
+                                                        ($a['status'] === 'approved' ? 'primary' : 
+                                                        ($a['status'] === 'pending' ? 'warning' : 
+                                                        ($a['status'] === 'cancelled' ? 'danger' : 'secondary'))); 
+                                                ?>">
+                                                    <?php echo htmlspecialchars(ucfirst($a['status'])); ?>
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div class="text-muted small">
+                                            Date: <?php echo htmlspecialchars($a['appointment_date']); ?> at <?php echo htmlspecialchars(date('g:i A', strtotime($a['time_slot']))); ?>
+                                            <?php if (!empty($a['requested_specialization'])): ?>
+                                            • Specialization: <?php echo htmlspecialchars($a['requested_specialization']); ?>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php if (!empty($a['details'])): ?>
+                                        <div class="text-muted small mt-1"><strong>Details:</strong> <?php echo htmlspecialchars($a['details']); ?></div>
+                                        <?php endif; ?>
+                                        <div class="mt-2">
+                                            <?php if (isPatient()): ?>
+                                            <a href="my_appointments.php" class="btn btn-sm btn-outline-info"><i class="bi bi-calendar"></i> View Appointments</a>
+                                            <?php else: ?>
+                                            <a href="clinic_appointments.php" class="btn btn-sm btn-outline-info"><i class="bi bi-calendar"></i> Manage Appointments</a>
+                                            <?php endif; ?>
+                                        </div>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                                 <?php endforeach; ?>

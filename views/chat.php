@@ -488,15 +488,17 @@ body {
     display: flex;
     gap: 12px;
     align-items: flex-end;
+    width: 100%;
 }
-.message-input-wrapper input {
+.message-input-wrapper input[type="text"] {
     flex: 1;
+    min-width: 0;
     border: 1px solid #e0e0e0;
     border-radius: 24px;
     padding: 12px 20px;
     font-size: 14px;
 }
-.message-input-wrapper input:focus {
+.message-input-wrapper input[type="text"]:focus {
     outline: none;
     border-color: #1976d2;
     box-shadow: 0 0 0 3px rgba(25,118,210,0.1);
@@ -694,7 +696,16 @@ body {
                                 <div class="message-sender"><?php echo htmlspecialchars($msg['sender_name']); ?></div>
                                 <?php endif; ?>
                                 <div class="message-bubble">
+                                    <?php if (!empty($msg['message'])): ?>
                                     <div><?php echo nl2br(htmlspecialchars($msg['message'])); ?></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($msg['attachment'])): ?>
+                                    <div class="mt-2">
+                                        <a href="../<?php echo htmlspecialchars($msg['attachment']); ?>" target="_blank" class="btn btn-sm" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4);">
+                                            <i class="bi bi-paperclip"></i> <?php echo basename($msg['attachment']); ?>
+                                        </a>
+                                    </div>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="message-time"><?php echo date('M d, g:i A', strtotime($msg['created_at'])); ?></div>
                             </div>
@@ -708,14 +719,26 @@ body {
                 </div>
                 <?php else: ?>
                 <div class="message-input-area">
-                    <form method="post" action="../api/dm_send.php" class="message-input-wrapper">
+                    <form method="post" action="../api/dm_send.php" enctype="multipart/form-data" class="message-input-wrapper" id="chatMessageForm">
                         <?php echo SecurityManager::getCSRFField(); ?>
                         <input type="hidden" name="to" value="<?php echo $dmPartner['id']; ?>">
-                        <input type="text" name="message" placeholder="Type a message" required>
-                        <button class="btn-send" type="submit"><i class="bi bi-send"></i></button>
+                        <input type="file" name="attachment" id="attachmentInput" style="display: none;" accept=".jpg,.jpeg,.png,.gif,.pdf,.doc,.docx,.txt,.zip">
+                        <div id="attachmentPreview" style="display: none; padding: 8px; background: #f0f0f0; border-radius: 8px; margin-bottom: 8px;">
+                            <span id="attachmentName"></span>
+                            <button type="button" id="removeAttachment" style="background: none; border: none; color: #dc3545; cursor: pointer; float: right;">
+                                <i class="bi bi-x-circle"></i>
+                            </button>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                            <button type="button" id="attachFileBtn" class="btn btn-sm btn-outline-secondary" style="border-radius: 50%; width: 36px; height: 36px; padding: 0; flex-shrink: 0;">
+                                <i class="bi bi-paperclip"></i>
+                            </button>
+                            <input type="text" name="message" id="messageInput" placeholder="Type a message or attach a file" style="flex: 1; min-width: 0; padding: 10px 15px; border: 1px solid #ddd; border-radius: 20px;">
+                            <button class="btn-send" type="submit" style="flex-shrink: 0;"><i class="bi bi-send"></i></button>
+                        </div>
                     </form>
                     <?php if (isPatient() && $dmPartner && $dmPartner['role'] === 'clinic_admin'): ?>
-                    <p class="text-muted small mt-2 mb-0">Please be mindful of the doctor's working hours (9:00&nbsp;AM – 5:00&nbsp;PM) when sending messages.</p>
+                    <p class="text-muted small mt-2 mb-0">Please be mindful of the doctor's working hours (9:00&nbsp;AM – 5:00&nbsp;PM) when sending messages. Files up to 10MB supported.</p>
                     <?php endif; ?>
                 </div>
                 <?php endif; ?>
