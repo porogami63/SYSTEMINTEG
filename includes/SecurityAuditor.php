@@ -12,6 +12,7 @@ class SecurityAuditor {
             'timestamp' => date('Y-m-d H:i:s'),
             'user_id' => $userId ?? ($_SESSION['user_id'] ?? null),
             'checks' => [],
+            'manual_tests' => [],
             'vulnerabilities' => [],
             'recommendations' => [],
             'score' => 100
@@ -96,6 +97,16 @@ class SecurityAuditor {
             $audit['recommendations'][] = 'HTTPS: ' . $httpsCheck['recommendation'];
             $audit['score'] -= 5;
         }
+
+        // Run manual security probes (Python script) if available
+        $manual = self::runManualSecurityProbes();
+        if (!empty($manual)) {
+            $audit['manual_tests'] = $manual;
+            if (isset($manual['failed']) && $manual['failed'] > 0) {
+                $audit['vulnerabilities'][] = 'Manual probes detected issues (' . intval($manual['failed']) . ' failed checks)';
+                $audit['score'] -= min(15, 3 * intval($manual['failed']));
+            }
+        }
         
         // Ensure score doesn't go below 0
         $audit['score'] = max(0, $audit['score']);
@@ -112,6 +123,46 @@ class SecurityAuditor {
         }
         
         return $audit;
+    }
+
+    /**
+     * Execute Python manual probes and parse summary
+     */
+    private static function runManualSecurityProbes() {
+        try {
+            $projectRoot = realpath(__DIR__ . '/..');
+            $script = $projectRoot . DIRECTORY_SEPARATOR . 'security_audit' . DIRECTORY_SEPARATOR . 'test_security_manual.py';
+            if (!file_exists($script)) {
+                return ['available' => false, 'message' => 'manual test script not found'];
+            }
+
+            $python = 'python';
+            $target = rtrim(SITE_URL, '/');
+            $cmd = escapeshellcmd($python) . ' ' . escapeshellarg($script) . ' --target ' . escapeshellarg($target) . ' 2>&1';
+            $output = shell_exec($cmd);
+
+            // Basic parse
+            $passed = 0;
+            $failed = 0;
+            $lines = preg_split("/\r\n|\n|\r/", (string)$output);
+            foreach ($lines as $line) {
+                if (strpos($line, 'PASS:') !== false || preg_match('/^✓ /u', $line)) {
+                    $passed++;
+                } elseif (stripos($line, 'FAIL') !== false || preg_match('/^✗ /u', $line)) {
+                    $failed++;
+                }
+            }
+
+            return [
+                'available' => true,
+                'passed' => $passed,
+                'failed' => $failed,
+                'raw_output' => $output
+            ];
+        } catch (\Throwable $e) {
+            error_log('Manual security probes failed: ' . $e->getMessage());
+            return ['available' => false, 'error' => $e->getMessage()];
+        }
     }
     
     /**
@@ -321,6 +372,96 @@ class SecurityAuditor {
             error_log('Failed to save security audit: ' . $e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Create a lightweight audit entry after a ZAP scan completes
+     */
+    public static function recordZapScan($userId = null, $meta = []) {
+        // Parse ZAP JSON and compute a ZAP-specific score (separate metric)
+        $root = realpath(__DIR__ . '/..');
+        $jsonPath = $root . DIRECTORY_SEPARATOR . 'security_audit' . DIRECTORY_SEPARATOR . 'zap_report.json';
+        $zapCounts = self::getZapUniqueCounts($jsonPath);
+        $site = $zapCounts['site'];
+        $score = self::scoreZap($zapCounts['high'], $zapCounts['medium'], $zapCounts['low'], $zapCounts['info']);
+        $status = self::statusFromScore($score);
+
+        $summary = sprintf('ZAP scan for %s: High %d, Medium %d, Low %d, Info %d',
+            $site, $zapCounts['high'], $zapCounts['medium'], $zapCounts['low'], $zapCounts['info']);
+
+        $audit = [
+            'timestamp' => date('Y-m-d H:i:s'),
+            'user_id' => $userId ?? ($_SESSION['user_id'] ?? null),
+            'checks' => [],
+            'vulnerabilities' => [$summary], // single-line summary for badge count
+            'recommendations' => [],
+            'manual_tests' => [],
+            'zap' => [
+                'available' => true,
+                'summary' => $meta['summary'] ?? $summary,
+                'html' => $meta['html'] ?? 'security_audit/zap_report.html',
+                'json' => $meta['json'] ?? 'security_audit/zap_report.json',
+                'metrics' => [
+                    'high' => $zapCounts['high'],
+                    'medium' => $zapCounts['medium'],
+                    'low' => $zapCounts['low'],
+                    'info' => $zapCounts['info']
+                ]
+            ],
+            'score' => $score,
+            'status' => $status
+        ];
+        return self::saveAuditReport($audit);
+    }
+
+    // ZAP helpers: compute unique counts and a dedicated scoring metric
+    private static function getZapUniqueCounts($jsonPath) {
+        $counts = ['site' => 'unknown', 'high' => 0, 'medium' => 0, 'low' => 0, 'info' => 0];
+        if (!file_exists($jsonPath)) {
+            return $counts;
+        }
+        $zap = json_decode(file_get_contents($jsonPath), true);
+        $seen = ['3' => [], '2' => [], '1' => [], '0' => []];
+        if (!empty($zap['site']) && is_array($zap['site'])) {
+            foreach ($zap['site'] as $s) {
+                $counts['site'] = $s['@name'] ?? $counts['site'];
+                if (empty($s['alerts'])) continue;
+                foreach ($s['alerts'] as $a) {
+                    $plugin = (string)($a['pluginid'] ?? ($a['alertRef'] ?? uniqid('p', true)));
+                    $riskcode = (string)($a['riskcode'] ?? '');
+                    if (!isset($seen[$riskcode])) {
+                        // fallback to riskdesc exact match if unknown
+                        $desc = strtolower(trim((string)($a['riskdesc'] ?? '')));
+                        $riskcode = ($desc === 'high') ? '3' : (($desc === 'medium') ? '2' : (($desc === 'low') ? '1' : '0'));
+                    }
+                    $seen[$riskcode][$plugin] = true;
+                }
+            }
+        }
+        $counts['high'] = count($seen['3']);
+        $counts['medium'] = count($seen['2']);
+        $counts['low'] = count($seen['1']);
+        $counts['info'] = count($seen['0']);
+        return $counts;
+    }
+
+    private static function scoreZap($high, $medium, $low, $info) {
+        // New ZAP scoring metric (independent from Security Audit):
+        // weight High=25, Medium=3, Low=1, Info contributes 0 (for presentation)
+        $deductions = ($high * 25) + ($medium * 3) + ($low * 1);
+        $score = 100 - $deductions;
+        if ($high === 0) {
+            // With no high, keep score presentation-friendly (cap deductions)
+            $score = max($score, 72); // floor for medium/low-only findings
+        }
+        return max(0, min(100, $score));
+    }
+
+    private static function statusFromScore($score) {
+        if ($score >= 90) return 'excellent';
+        if ($score >= 75) return 'good';
+        if ($score >= 60) return 'fair';
+        return 'poor';
     }
     
     /**

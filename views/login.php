@@ -112,7 +112,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 <style>
 body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0f63d6 0%, #0b3d91 100%);
     min-height: 100vh;
     display: flex;
     align-items: center;
@@ -124,6 +124,54 @@ body {
     box-shadow: 0 10px 40px rgba(0,0,0,0.2);
     max-width: 400px;
     width: 100%;
+}
+/* Extra UI for alternative actions */
+.action-buttons .btn-alt {
+    display: inline-block;
+    width: 100%;
+    background: #f1f5f9;
+    color: #0d6efd;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all .2s ease;
+}
+.action-buttons .btn-alt:hover {
+    background: #e7f1ff;
+    border-color: #b6d4fe;
+    color: #0a58ca;
+}
+.action-buttons .btn-alt-secondary {
+    display: inline-block;
+    width: 100%;
+    background: #f8fafc;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all .2s ease;
+}
+.action-buttons .btn-alt-secondary:hover {
+    background: #eef2f7;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+.separator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #64748b;
+    margin: 14px 0;
+}
+.separator::before, .separator::after {
+    content: "";
+    height: 1px;
+    flex: 1;
+    background: #e2e8f0;
 }
 </style>
 </head>
@@ -150,11 +198,50 @@ body {
             <button type="submit" class="btn btn-primary w-100">Login</button>
         </form>
         
-        <div class="text-center mt-3">
-            <a href="register.php">Don't have an account? Register here</a>
+        <?php if (!empty(GOOGLE_CLIENT_ID)): ?>
+        <div class="separator"><span>or</span></div>
+        <div id="g_id_onload"
+             data-client_id="<?php echo SecurityManager::escapeOutput(GOOGLE_CLIENT_ID); ?>"
+             data-callback="handleCredentialResponse"
+             data-auto_prompt="false">
         </div>
-        <div class="text-center mt-2">
-            <a href="../index.php">Back to Home</a>
+        <div class="d-flex justify-content-center mb-2">
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-size="large"
+                 data-theme="outline"
+                 data-text="signin_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left"
+                 data-width="320">
+            </div>
+        </div>
+        <script src="https://accounts.google.com/gsi/client" async defer></script>
+        <script>
+        window.handleCredentialResponse = function(response) {
+            fetch('../api/google_login.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ credential: response.credential })
+            }).then(function(r){ return r.json(); })
+            .then(function(res){
+                if (res.status === 'success') {
+                    if (res.needs_profile) {
+                        window.location.href = 'complete_profile.php';
+                    } else {
+                        window.location.href = 'dashboard.php';
+                    }
+                } else {
+                    alert(res.message || 'Google sign-in failed');
+                }
+            }).catch(function(){ alert('Network error during Google sign-in'); });
+        };
+        </script>
+        <?php endif; ?>
+        
+        <div class="action-buttons mt-3 d-grid gap-2">
+            <a href="register.php" class="btn-alt">Create an account</a>
+            <a href="../index.php" class="btn-alt-secondary">Back to Home</a>
         </div>
         
         <hr class="my-4">

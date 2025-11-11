@@ -23,6 +23,20 @@ try {
         die("Certificate not found");
     }
 
+    // Check if payment is required and if paid
+    $paymentRequired = $certificate['payment_required'] ?? 0;
+    $paymentAmount = $certificate['payment_amount'] ?? 0;
+    $paymentMade = false;
+    
+    if ($paymentRequired && isPatient()) {
+        // Check if payment exists
+        $payment = $db->fetch(
+            "SELECT * FROM payments WHERE payment_type = 'certificate' AND reference_id = ? AND user_id = ? AND payment_status = 'paid'",
+            [$cert_id, $_SESSION['user_id']]
+        );
+        $paymentMade = !empty($payment);
+    }
+
     // Audit log - certificate viewed
     AuditLogger::log(
         'VIEW_CERTIFICATE',
@@ -211,7 +225,33 @@ try {
 </head>
 <body class="bg-light">
 <div class="container my-5">
-    <div class="certificate-container">
+    
+    <?php if ($paymentRequired && isPatient() && !$paymentMade): ?>
+    <!-- Payment Required Notice -->
+    <div class="alert alert-warning shadow-sm mb-4">
+        <div class="d-flex align-items-center">
+            <i class="bi bi-exclamation-triangle-fill fs-1 me-3"></i>
+            <div class="flex-grow-1">
+                <h5 class="alert-heading mb-2"><i class="bi bi-lock-fill"></i> Payment Required</h5>
+                <p class="mb-2">This certificate requires payment before you can view or download it.</p>
+                <p class="mb-3"><strong>Amount Due: ₱<?php echo number_format($paymentAmount, 2); ?></strong></p>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#paymentModal">
+                    <i class="bi bi-credit-card"></i> Pay Now
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Blurred Certificate Preview -->
+    <div style="filter: blur(8px); pointer-events: none; user-select: none; position: relative;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10; background: rgba(255,255,255,0.95); padding: 30px; border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            <i class="bi bi-lock-fill" style="font-size: 48px; color: #dc3545;"></i>
+            <h4 class="mt-3">Payment Required</h4>
+            <p>Pay ₱<?php echo number_format($paymentAmount, 2); ?> to unlock</p>
+        </div>
+    <?php endif; ?>
+    
+    <div class="certificate-container" <?php if ($paymentRequired && isPatient() && !$paymentMade) echo 'style="opacity: 0.3;"'; ?>>
         <!-- Certificate Header -->
         <div class="certificate-header">
             <div class="hospital-name">GREY SLOAN MEMORIAL HOSPITAL</div>
@@ -385,8 +425,89 @@ try {
     </div>
 </div>
 
+<!-- Payment Modal -->
+<?php if ($paymentRequired && isPatient() && !$paymentMade): ?>
+<div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="paymentModalLabel"><i class="bi bi-credit-card"></i> Process Payment</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <strong>Certificate:</strong> <?php echo htmlspecialchars($certificate['cert_id']); ?><br>
+                    <strong>Amount:</strong> ₱<?php echo number_format($paymentAmount, 2); ?>
+                </div>
+                <form id="paymentForm">
+                    <?php echo SecurityManager::getCSRFField(); ?>
+                    <input type="hidden" name="payment_type" value="certificate">
+                    <input type="hidden" name="reference_id" value="<?php echo $cert_id; ?>">
+                    <input type="hidden" name="amount" value="<?php echo $paymentAmount; ?>">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <select class="form-select" name="payment_method" required>
+                            <option value="cash">Cash</option>
+                            <option value="credit_card">Credit Card</option>
+                            <option value="debit_card">Debit Card</option>
+                            <option value="gcash">GCash</option>
+                            <option value="paymaya">PayMaya</option>
+                            <option value="bank_transfer">Bank Transfer</option>
+                        </select>
+                    </div>
+                    
+                    <div class="alert alert-warning">
+                        <i class="bi bi-info-circle"></i> <strong>Demo Mode:</strong> Payment will be marked as paid immediately.
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="processPaymentBtn">
+                    <i class="bi bi-check-circle"></i> Process Payment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+// Handle payment processing
+<?php if ($paymentRequired && isPatient() && !$paymentMade): ?>
+document.getElementById('processPaymentBtn')?.addEventListener('click', function() {
+    const form = document.getElementById('paymentForm');
+    const formData = new FormData(form);
+    const btn = this;
+    
+    btn.disabled = true;
+    btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
+    
+    fetch('../api/process_payment.php', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Payment successful! Reloading certificate...');
+            window.location.reload();
+        } else {
+            alert('Payment failed: ' + (data.error || 'Unknown error'));
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bi bi-check-circle"></i> Process Payment';
+        }
+    })
+    .catch(error => {
+        alert('Network error: ' + error);
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check-circle"></i> Process Payment';
+    });
+});
+<?php endif; ?>
+
 // Handle certificate deletion
 const deleteCertBtn = document.getElementById('deleteCertBtn');
 if (deleteCertBtn) {

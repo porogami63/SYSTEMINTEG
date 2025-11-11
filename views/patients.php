@@ -1,7 +1,7 @@
 <?php
 require_once '../config.php';
 
-if (!isLoggedIn() || !isClinicAdmin()) {
+if (!isLoggedIn() || (!isClinicAdmin() && !isWebAdmin())) {
     redirect('dashboard.php');
 }
 
@@ -65,9 +65,16 @@ $conn->close();
                                             <a href="patient_history.php?patient_id=<?php echo intval($patient['id']); ?>" class="btn btn-sm btn-outline-secondary">
                                                 <i class="bi bi-clock-history"></i> History
                                             </a>
+                                            <?php if (isClinicAdmin()): ?>
                                             <a href="certificates.php" class="btn btn-sm btn-primary">
                                                 <i class="bi bi-file-earmark-plus"></i> Create Cert
                                             </a>
+                                            <?php endif; ?>
+                                            <?php if (isWebAdmin()): ?>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" onclick="confirmDelete(<?php echo intval($patient['user_id']); ?>, '<?php echo htmlspecialchars($patient['full_name']); ?>')" title="Delete Patient">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                     <?php endwhile; ?>
@@ -83,6 +90,41 @@ $conn->close();
         </main>
     </div>
 </div>
+
+<?php if (isWebAdmin()): ?>
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-exclamation-triangle text-danger"></i> Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete this patient?</p>
+                <p><strong>Name:</strong> <span id="deletePatientName"></span></p>
+                <p class="text-danger"><small><strong>Warning:</strong> This will permanently delete the patient account and all associated data including certificates, appointments, payments, and messages. This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="../api/delete_user.php" id="deleteForm" style="display: inline;">
+                    <input type="hidden" name="user_id" id="deleteUserId">
+                    <button type="submit" class="btn btn-danger">Delete Patient</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+function confirmDelete(userId, patientName) {
+    document.getElementById('deleteUserId').value = userId;
+    document.getElementById('deletePatientName').textContent = patientName;
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+</script>
+<?php endif; ?>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

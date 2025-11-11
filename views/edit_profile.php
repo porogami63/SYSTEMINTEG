@@ -82,6 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $is_available = isset($_POST['is_available']) ? 1 : 0;
             $available_from = sanitizeInput($_POST['available_from']);
             $available_to = sanitizeInput($_POST['available_to']);
+            $about_description = sanitizeInput($_POST['about_description'] ?? '');
 
             // Handle signature and seal uploads
             $signature_path = null;
@@ -103,9 +104,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if ($signature_path || $seal_path) {
-                $db->execute("UPDATE clinics SET clinic_name = ?, license_number = ?, medical_license = ?, specialization = ?, address = ?, contact_phone = ?, is_available = ?, available_from = ?, available_to = ?, signature_path = IFNULL(?, signature_path), seal_path = IFNULL(?, seal_path) WHERE user_id = ?", [$clinic_name, $license_number, $medical_license, $specialization, $address, $contact_phone, $is_available, $available_from, $available_to, $signature_path, $seal_path, $user_id]);
+                $db->execute("UPDATE clinics SET clinic_name = ?, license_number = ?, medical_license = ?, specialization = ?, address = ?, contact_phone = ?, is_available = ?, available_from = ?, available_to = ?, about_description = ?, signature_path = IFNULL(?, signature_path), seal_path = IFNULL(?, seal_path) WHERE user_id = ?", [$clinic_name, $license_number, $medical_license, $specialization, $address, $contact_phone, $is_available, $available_from, $available_to, $about_description, $signature_path, $seal_path, $user_id]);
             } else {
-                $db->execute("UPDATE clinics SET clinic_name = ?, license_number = ?, medical_license = ?, specialization = ?, address = ?, contact_phone = ?, is_available = ?, available_from = ?, available_to = ? WHERE user_id = ?", [$clinic_name, $license_number, $medical_license, $specialization, $address, $contact_phone, $is_available, $available_from, $available_to, $user_id]);
+                $db->execute("UPDATE clinics SET clinic_name = ?, license_number = ?, medical_license = ?, specialization = ?, address = ?, contact_phone = ?, is_available = ?, available_from = ?, available_to = ?, about_description = ? WHERE user_id = ?", [$clinic_name, $license_number, $medical_license, $specialization, $address, $contact_phone, $is_available, $available_from, $available_to, $about_description, $user_id]);
             }
             
             // Notify patients if doctor became available (was unavailable, now available)
@@ -251,6 +252,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <div class="mb-3">
                                 <label class="form-label">Address</label>
                                 <textarea class="form-control" name="address" rows="2"><?php echo htmlspecialchars($profile['address'] ?? ''); ?></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">About Description</label>
+                                <textarea class="form-control" name="about_description" rows="4" placeholder="Tell patients about your practice, experience, and approach to care..."><?php echo htmlspecialchars($profile['about_description'] ?? ''); ?></textarea>
+                                <small class="text-muted">This description will be visible to patients on your profile.</small>
                             </div>
                             <div class="row">
                                 <div class="col-md-6 mb-3">

@@ -1,0 +1,2439 @@
+{
+	"@programName": "ZAP",
+	"@version": "2.16.1",
+	"@generated": "Wed, 12 Nov 2025 02:07:51",
+	"created": "2025-11-11T18:07:51.321434200Z",
+	"site":[ 
+		{
+			"@name": "http://localhost",
+			"@host": "localhost",
+			"@port": "80",
+			"@ssl": "false",
+			"alerts": [ 
+				{
+					"pluginid": "10055",
+					"alertRef": "10055-13",
+					"alert": "CSP: Failure to Define Directive with No Fallback",
+					"name": "CSP: Failure to Define Directive with No Fallback",
+					"riskcode": "2",
+					"confidence": "3",
+					"riskdesc": "Medium (High)",
+					"desc": "<p>The Content Security Policy fails to define one of the directives that has no fallback. Missing/excluding them is the same as allowing anything.</p>",
+					"instances":[ 
+						{
+							"id": "1203",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The directive(s): form-action is/are among the directives that do not fallback to default-src."
+						},
+						{
+							"id": "2",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The directive(s): form-action is/are among the directives that do not fallback to default-src."
+						},
+						{
+							"id": "1227",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The directive(s): form-action is/are among the directives that do not fallback to default-src."
+						},
+						{
+							"id": "30",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The directive(s): form-action is/are among the directives that do not fallback to default-src."
+						},
+						{
+							"id": "1220",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The directive(s): form-action is/are among the directives that do not fallback to default-src."
+						},
+						{
+							"id": "46",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The directive(s): form-action is/are among the directives that do not fallback to default-src."
+						},
+						{
+							"id": "1224",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The directive(s): form-action is/are among the directives that do not fallback to default-src."
+						},
+						{
+							"id": "52",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The directive(s): form-action is/are among the directives that do not fallback to default-src."
+						},
+						{
+							"id": "1240",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The directive(s): form-action is/are among the directives that do not fallback to default-src."
+						},
+						{
+							"id": "50",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The directive(s): form-action is/are among the directives that do not fallback to default-src."
+						},
+						{
+							"id": "1250",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The directive(s): form-action is/are among the directives that do not fallback to default-src."
+						},
+						{
+							"id": "24",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The directive(s): form-action is/are among the directives that do not fallback to default-src."
+						}
+					],
+					"count": "12",
+					"systemic": false,
+					"solution": "<p>Ensure that your web server, application server, load balancer, etc. is properly configured to set the Content-Security-Policy header.</p>",
+					"otherinfo": "<p>The directive(s): form-action is/are among the directives that do not fallback to default-src.</p>",
+					"reference": "<p>https://www.w3.org/TR/CSP/</p><p>https://caniuse.com/#search=content+security+policy</p><p>https://content-security-policy.com/</p><p>https://github.com/HtmlUnit/htmlunit-csp</p><p>https://web.dev/articles/csp#resource-options</p>",
+					"cweid": "693",
+					"wascid": "15",
+					"sourceid": "65416"
+				},
+				{
+					"pluginid": "10055",
+					"alertRef": "10055-4",
+					"alert": "CSP: Wildcard Directive",
+					"name": "CSP: Wildcard Directive",
+					"riskcode": "2",
+					"confidence": "3",
+					"riskdesc": "Medium (High)",
+					"desc": "<p>Content Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks. Including (but not limited to) Cross Site Scripting (XSS), and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page \u2014 covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.</p>",
+					"instances":[ 
+						{
+							"id": "1204",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The following directives either allow wildcard sources (or ancestors), are not defined, or are overly broadly defined:\nimg-src"
+						},
+						{
+							"id": "3",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The following directives either allow wildcard sources (or ancestors), are not defined, or are overly broadly defined:\nimg-src"
+						},
+						{
+							"id": "1231",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The following directives either allow wildcard sources (or ancestors), are not defined, or are overly broadly defined:\nimg-src"
+						},
+						{
+							"id": "33",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The following directives either allow wildcard sources (or ancestors), are not defined, or are overly broadly defined:\nimg-src"
+						},
+						{
+							"id": "1222",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The following directives either allow wildcard sources (or ancestors), are not defined, or are overly broadly defined:\nimg-src"
+						},
+						{
+							"id": "48",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The following directives either allow wildcard sources (or ancestors), are not defined, or are overly broadly defined:\nimg-src"
+						},
+						{
+							"id": "1226",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The following directives either allow wildcard sources (or ancestors), are not defined, or are overly broadly defined:\nimg-src"
+						},
+						{
+							"id": "56",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The following directives either allow wildcard sources (or ancestors), are not defined, or are overly broadly defined:\nimg-src"
+						},
+						{
+							"id": "1244",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The following directives either allow wildcard sources (or ancestors), are not defined, or are overly broadly defined:\nimg-src"
+						},
+						{
+							"id": "53",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The following directives either allow wildcard sources (or ancestors), are not defined, or are overly broadly defined:\nimg-src"
+						},
+						{
+							"id": "1252",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The following directives either allow wildcard sources (or ancestors), are not defined, or are overly broadly defined:\nimg-src"
+						},
+						{
+							"id": "25",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "The following directives either allow wildcard sources (or ancestors), are not defined, or are overly broadly defined:\nimg-src"
+						}
+					],
+					"count": "12",
+					"systemic": false,
+					"solution": "<p>Ensure that your web server, application server, load balancer, etc. is properly configured to set the Content-Security-Policy header.</p>",
+					"otherinfo": "<p>The following directives either allow wildcard sources (or ancestors), are not defined, or are overly broadly defined:</p><p>img-src</p>",
+					"reference": "<p>https://www.w3.org/TR/CSP/</p><p>https://caniuse.com/#search=content+security+policy</p><p>https://content-security-policy.com/</p><p>https://github.com/HtmlUnit/htmlunit-csp</p><p>https://web.dev/articles/csp#resource-options</p>",
+					"cweid": "693",
+					"wascid": "15",
+					"sourceid": "65416"
+				},
+				{
+					"pluginid": "10055",
+					"alertRef": "10055-5",
+					"alert": "CSP: script-src unsafe-inline",
+					"name": "CSP: script-src unsafe-inline",
+					"riskcode": "2",
+					"confidence": "3",
+					"riskdesc": "Medium (High)",
+					"desc": "<p>Content Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks. Including (but not limited to) Cross Site Scripting (XSS), and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page \u2014 covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.</p>",
+					"instances":[ 
+						{
+							"id": "1205",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "script-src includes unsafe-inline."
+						},
+						{
+							"id": "5",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "script-src includes unsafe-inline."
+						},
+						{
+							"id": "1235",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "script-src includes unsafe-inline."
+						},
+						{
+							"id": "35",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "script-src includes unsafe-inline."
+						},
+						{
+							"id": "1225",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "script-src includes unsafe-inline."
+						},
+						{
+							"id": "49",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "script-src includes unsafe-inline."
+						},
+						{
+							"id": "1230",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "script-src includes unsafe-inline."
+						},
+						{
+							"id": "59",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "script-src includes unsafe-inline."
+						},
+						{
+							"id": "1247",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "script-src includes unsafe-inline."
+						},
+						{
+							"id": "55",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "script-src includes unsafe-inline."
+						},
+						{
+							"id": "1255",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "script-src includes unsafe-inline."
+						},
+						{
+							"id": "26",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "script-src includes unsafe-inline."
+						}
+					],
+					"count": "12",
+					"systemic": false,
+					"solution": "<p>Ensure that your web server, application server, load balancer, etc. is properly configured to set the Content-Security-Policy header.</p>",
+					"otherinfo": "<p>script-src includes unsafe-inline.</p>",
+					"reference": "<p>https://www.w3.org/TR/CSP/</p><p>https://caniuse.com/#search=content+security+policy</p><p>https://content-security-policy.com/</p><p>https://github.com/HtmlUnit/htmlunit-csp</p><p>https://web.dev/articles/csp#resource-options</p>",
+					"cweid": "693",
+					"wascid": "15",
+					"sourceid": "65416"
+				},
+				{
+					"pluginid": "10055",
+					"alertRef": "10055-6",
+					"alert": "CSP: style-src unsafe-inline",
+					"name": "CSP: style-src unsafe-inline",
+					"riskcode": "2",
+					"confidence": "3",
+					"riskdesc": "Medium (High)",
+					"desc": "<p>Content Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks. Including (but not limited to) Cross Site Scripting (XSS), and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page \u2014 covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.</p>",
+					"instances":[ 
+						{
+							"id": "1206",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "style-src includes unsafe-inline."
+						},
+						{
+							"id": "6",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "style-src includes unsafe-inline."
+						},
+						{
+							"id": "1239",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "style-src includes unsafe-inline."
+						},
+						{
+							"id": "37",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "style-src includes unsafe-inline."
+						},
+						{
+							"id": "1229",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "style-src includes unsafe-inline."
+						},
+						{
+							"id": "51",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "style-src includes unsafe-inline."
+						},
+						{
+							"id": "1234",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "style-src includes unsafe-inline."
+						},
+						{
+							"id": "62",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "style-src includes unsafe-inline."
+						},
+						{
+							"id": "1248",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "style-src includes unsafe-inline."
+						},
+						{
+							"id": "58",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "style-src includes unsafe-inline."
+						},
+						{
+							"id": "1257",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' data: https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "style-src includes unsafe-inline."
+						},
+						{
+							"id": "27",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Content-Security-Policy",
+							"attack": "",
+							"evidence": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; img-src 'self' data: https: https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; connect-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://oauth2.googleapis.com https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-src 'self' https://accounts.google.com https://apis.google.com https://*.gstatic.com https://*.google.com; frame-ancestors 'self';",
+							"otherinfo": "style-src includes unsafe-inline."
+						}
+					],
+					"count": "12",
+					"systemic": false,
+					"solution": "<p>Ensure that your web server, application server, load balancer, etc. is properly configured to set the Content-Security-Policy header.</p>",
+					"otherinfo": "<p>style-src includes unsafe-inline.</p>",
+					"reference": "<p>https://www.w3.org/TR/CSP/</p><p>https://caniuse.com/#search=content+security+policy</p><p>https://content-security-policy.com/</p><p>https://github.com/HtmlUnit/htmlunit-csp</p><p>https://web.dev/articles/csp#resource-options</p>",
+					"cweid": "693",
+					"wascid": "15",
+					"sourceid": "65416"
+				},
+				{
+					"pluginid": "10038",
+					"alertRef": "10038-1",
+					"alert": "Content Security Policy (CSP) Header Not Set",
+					"name": "Content Security Policy (CSP) Header Not Set",
+					"riskcode": "2",
+					"confidence": "3",
+					"riskdesc": "Medium (High)",
+					"desc": "<p>Content Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks, including Cross Site Scripting (XSS) and data injection attacks. These attacks are used for everything from data theft to site defacement or distribution of malware. CSP provides a set of standard HTTP headers that allow website owners to declare approved sources of content that browsers should be allowed to load on that page \u2014 covered types are JavaScript, CSS, HTML frames, fonts, images and embeddable objects such as Java applets, ActiveX, audio and video files.</p>",
+					"instances":[ 
+						{
+							"id": "14",
+							"uri": "http://localhost/robots.txt",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "10",
+							"uri": "http://localhost/sitemap.xml",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": ""
+						}
+					],
+					"count": "2",
+					"systemic": false,
+					"solution": "<p>Ensure that your web server, application server, load balancer, etc. is configured to set the Content-Security-Policy header.</p>",
+					"otherinfo": "",
+					"reference": "<p>https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CSP</p><p>https://cheatsheetseries.owasp.org/cheatsheets/Content_Security_Policy_Cheat_Sheet.html</p><p>https://www.w3.org/TR/CSP/</p><p>https://w3c.github.io/webappsec-csp/</p><p>https://web.dev/articles/csp</p><p>https://caniuse.com/#feat=contentsecuritypolicy</p><p>https://content-security-policy.com/</p>",
+					"cweid": "693",
+					"wascid": "15",
+					"sourceid": "10"
+				},
+				{
+					"pluginid": "0",
+					"alertRef": "0",
+					"alert": "Directory Browsing",
+					"name": "Directory Browsing",
+					"riskcode": "2",
+					"confidence": "2",
+					"riskdesc": "Medium (Medium)",
+					"desc": "<p>It is possible to view the directory listing. Directory listing may reveal hidden scripts, include files, backup source files, etc. which can be accessed to read sensitive information.</p>",
+					"instances":[ 
+						{
+							"id": "72",
+							"uri": "http://localhost/SYSTEMINTEG/views/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "http://localhost/SYSTEMINTEG/views/",
+							"evidence": "Parent Directory",
+							"otherinfo": ""
+						}
+					],
+					"count": "1",
+					"systemic": false,
+					"solution": "<p>Disable directory browsing. If this is required, make sure the listed files does not induce risks.</p>",
+					"otherinfo": "",
+					"reference": "<p>https://httpd.apache.org/docs/current/mod/core.html#options</p>",
+					"cweid": "548",
+					"wascid": "48",
+					"sourceid": "7837"
+				},
+				{
+					"pluginid": "40035",
+					"alertRef": "40035",
+					"alert": "Hidden File Found",
+					"name": "Hidden File Found",
+					"riskcode": "2",
+					"confidence": "3",
+					"riskdesc": "Medium (High)",
+					"desc": "<p>A sensitive file was identified as accessible or available. This may leak administrative, configuration, or credential information which can be leveraged by a malicious individual to further attack the system or conduct social engineering efforts.</p>",
+					"instances":[ 
+						{
+							"id": "74",
+							"uri": "http://localhost/server-info",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "HTTP/1.1 200 OK",
+							"otherinfo": "apache_server_info"
+						},
+						{
+							"id": "73",
+							"uri": "http://localhost/server-status",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "HTTP/1.1 200 OK",
+							"otherinfo": "apache_server_status"
+						}
+					],
+					"count": "2",
+					"systemic": false,
+					"solution": "<p>Consider whether or not the component is actually required in production, if it isn't then disable it. If it is then ensure access to it requires appropriate authentication and authorization, or limit exposure to internal systems or specific source IPs, etc.</p>",
+					"otherinfo": "<p>apache_server_info</p>",
+					"reference": "<p>https://blog.hboeck.de/archives/892-Introducing-Snallygaster-a-Tool-to-Scan-for-Secrets-on-Web-Servers.html</p><p>https://twitter.com/jae_hak99/status/1286605139042643974</p><p>https://httpd.apache.org/docs/current/mod/mod_info.html</p>",
+					"cweid": "538",
+					"wascid": "13",
+					"sourceid": "8609"
+				},
+				{
+					"pluginid": "10044",
+					"alertRef": "10044-1",
+					"alert": "Big Redirect Detected (Potential Sensitive Information Leak)",
+					"name": "Big Redirect Detected (Potential Sensitive Information Leak)",
+					"riskcode": "1",
+					"confidence": "2",
+					"riskdesc": "Low (Medium)",
+					"desc": "<p>The server has responded with a redirect that seems to provide a large response. This may indicate that although the server sent a redirect it also responded with body content (which may include sensitive details, PII, etc.).</p>",
+					"instances":[ 
+						{
+							"id": "1",
+							"uri": "http://localhost/SYSTEMINTEG",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "Location header URI length: 29 [http://localhost/SYSTEMINTEG/].\nPredicted response size: 329.\nResponse Body Length: 336."
+						}
+					],
+					"count": "1",
+					"systemic": false,
+					"solution": "<p>Ensure that no sensitive information is leaked via redirect responses. Redirect responses should have almost no content.</p>",
+					"otherinfo": "<p>Location header URI length: 29 [http://localhost/SYSTEMINTEG/].</p><p>Predicted response size: 329.</p><p>Response Body Length: 336.</p>",
+					"reference": "",
+					"cweid": "201",
+					"wascid": "13",
+					"sourceid": "1"
+				},
+				{
+					"pluginid": "10017",
+					"alertRef": "10017",
+					"alert": "Cross-Domain JavaScript Source File Inclusion",
+					"name": "Cross-Domain JavaScript Source File Inclusion",
+					"riskcode": "1",
+					"confidence": "2",
+					"riskdesc": "Low (Medium)",
+					"desc": "<p>The page includes one or more script files from a third-party domain.</p>",
+					"instances":[ 
+						{
+							"id": "1335",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "https://accounts.google.com/gsi/client",
+							"attack": "",
+							"evidence": "<script src=\"https://accounts.google.com/gsi/client\" async defer></script>",
+							"otherinfo": ""
+						},
+						{
+							"id": "7",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js",
+							"attack": "",
+							"evidence": "<script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js\"></script>",
+							"otherinfo": ""
+						},
+						{
+							"id": "1370",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "https://accounts.google.com/gsi/client",
+							"attack": "",
+							"evidence": "<script src=\"https://accounts.google.com/gsi/client\" async defer></script>",
+							"otherinfo": ""
+						},
+						{
+							"id": "39",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js",
+							"attack": "",
+							"evidence": "<script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js\"></script>",
+							"otherinfo": ""
+						},
+						{
+							"id": "54",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "https://accounts.google.com/gsi/client",
+							"attack": "",
+							"evidence": "<script src=\"https://accounts.google.com/gsi/client\" async defer></script>",
+							"otherinfo": ""
+						},
+						{
+							"id": "57",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js",
+							"attack": "",
+							"evidence": "<script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js\"></script>",
+							"otherinfo": ""
+						},
+						{
+							"id": "66",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js",
+							"attack": "",
+							"evidence": "<script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js\"></script>",
+							"otherinfo": ""
+						},
+						{
+							"id": "60",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "https://accounts.google.com/gsi/client",
+							"attack": "",
+							"evidence": "<script src=\"https://accounts.google.com/gsi/client\" async defer></script>",
+							"otherinfo": ""
+						},
+						{
+							"id": "63",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js",
+							"attack": "",
+							"evidence": "<script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js\"></script>",
+							"otherinfo": ""
+						},
+						{
+							"id": "28",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js",
+							"attack": "",
+							"evidence": "<script src=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js\"></script>",
+							"otherinfo": ""
+						}
+					],
+					"count": "10",
+					"systemic": false,
+					"solution": "<p>Ensure JavaScript source files are loaded from only trusted sources, and the sources can't be controlled by end users of the application.</p>",
+					"otherinfo": "",
+					"reference": "",
+					"cweid": "829",
+					"wascid": "15",
+					"sourceid": "65753"
+				},
+				{
+					"pluginid": "10037",
+					"alertRef": "10037",
+					"alert": "Server Leaks Information via \"X-Powered-By\" HTTP Response Header Field(s)",
+					"name": "Server Leaks Information via \"X-Powered-By\" HTTP Response Header Field(s)",
+					"riskcode": "1",
+					"confidence": "2",
+					"riskdesc": "Low (Medium)",
+					"desc": "<p>The web/application server is leaking information via one or more \"X-Powered-By\" HTTP response headers. Access to such information may facilitate attackers identifying other frameworks/components your web application is reliant upon and the vulnerabilities such components may be subject to.</p>",
+					"instances":[ 
+						{
+							"id": "9",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "X-Powered-By: PHP/8.2.12",
+							"otherinfo": ""
+						},
+						{
+							"id": "44",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "X-Powered-By: PHP/8.2.12",
+							"otherinfo": ""
+						},
+						{
+							"id": "64",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "X-Powered-By: PHP/8.2.12",
+							"otherinfo": ""
+						},
+						{
+							"id": "71",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "X-Powered-By: PHP/8.2.12",
+							"otherinfo": ""
+						},
+						{
+							"id": "69",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "X-Powered-By: PHP/8.2.12",
+							"otherinfo": ""
+						},
+						{
+							"id": "43",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "X-Powered-By: PHP/8.2.12",
+							"otherinfo": ""
+						}
+					],
+					"count": "6",
+					"systemic": false,
+					"solution": "<p>Ensure that your web server, application server, load balancer, etc. is configured to suppress \"X-Powered-By\" headers.</p>",
+					"otherinfo": "",
+					"reference": "<p>https://owasp.org/www-project-web-security-testing-guide/v42/4-Web_Application_Security_Testing/01-Information_Gathering/08-Fingerprint_Web_Application_Framework</p><p>https://www.troyhunt.com/shhh-dont-let-your-response-headers/</p>",
+					"cweid": "497",
+					"wascid": "13",
+					"sourceid": "3"
+				},
+				{
+					"pluginid": "10036",
+					"alertRef": "10036-2",
+					"alert": "Server Leaks Version Information via \"Server\" HTTP Response Header Field",
+					"name": "Server Leaks Version Information via \"Server\" HTTP Response Header Field",
+					"riskcode": "1",
+					"confidence": "3",
+					"riskdesc": "Low (High)",
+					"desc": "<p>The web/application server is leaking version information via the \"Server\" HTTP response header. Access to such information may facilitate attackers identifying other vulnerabilities your web/application server is subject to.</p>",
+					"instances":[ 
+						{
+							"id": "16",
+							"uri": "http://localhost/robots.txt",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12",
+							"otherinfo": ""
+						},
+						{
+							"id": "12",
+							"uri": "http://localhost/sitemap.xml",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12",
+							"otherinfo": ""
+						},
+						{
+							"id": "4",
+							"uri": "http://localhost/SYSTEMINTEG",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12",
+							"otherinfo": ""
+						},
+						{
+							"id": "8",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12",
+							"otherinfo": ""
+						},
+						{
+							"id": "42",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12",
+							"otherinfo": ""
+						},
+						{
+							"id": "61",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12",
+							"otherinfo": ""
+						},
+						{
+							"id": "70",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12",
+							"otherinfo": ""
+						},
+						{
+							"id": "65",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12",
+							"otherinfo": ""
+						},
+						{
+							"id": "31",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "Apache/2.4.58 (Win64) OpenSSL/3.1.3 PHP/8.2.12",
+							"otherinfo": ""
+						}
+					],
+					"count": "9",
+					"systemic": false,
+					"solution": "<p>Ensure that your web server, application server, load balancer, etc. is configured to suppress the \"Server\" header or provide generic details.</p>",
+					"otherinfo": "",
+					"reference": "<p>https://httpd.apache.org/docs/current/mod/core.html#servertokens</p><p>https://learn.microsoft.com/en-us/previous-versions/msp-n-p/ff648552(v=pandp.10)</p><p>https://www.troyhunt.com/shhh-dont-let-your-response-headers/</p>",
+					"cweid": "497",
+					"wascid": "13",
+					"sourceid": "10"
+				},
+				{
+					"pluginid": "10111",
+					"alertRef": "10111",
+					"alert": "Authentication Request Identified",
+					"name": "Authentication Request Identified",
+					"riskcode": "0",
+					"confidence": "3",
+					"riskdesc": "Informational (High)",
+					"desc": "<p>The given request has been identified as an authentication request. The 'Other Info' field contains a set of key=value lines which identify any relevant fields. If the request is in a context which has an Authentication Method set to \"Auto-Detect\" then this rule will change the authentication to match the request identified.</p>",
+					"instances":[ 
+						{
+							"id": "1348",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "username",
+							"attack": "",
+							"evidence": "password",
+							"otherinfo": "userParam=username\nuserValue=ZAP\npasswordParam=password\nreferer=http://localhost/SYSTEMINTEG/\ncsrfToken=csrf_token"
+						},
+						{
+							"id": "47",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "username",
+							"attack": "",
+							"evidence": "password",
+							"otherinfo": "userParam=username\nuserValue=ZAP\npasswordParam=password\nreferer=http://localhost/SYSTEMINTEG/views/login.php\ncsrfToken=csrf_token"
+						}
+					],
+					"count": "2",
+					"systemic": false,
+					"solution": "<p>This is an informational alert rather than a vulnerability and so there is nothing to fix.</p>",
+					"otherinfo": "<p>userParam=username</p><p>userValue=ZAP</p><p>passwordParam=password</p><p>referer=http://localhost/SYSTEMINTEG/</p><p>csrfToken=csrf_token</p>",
+					"reference": "<p>https://www.zaproxy.org/docs/desktop/addons/authentication-helper/auth-req-id/</p>",
+					"cweid": "-1",
+					"wascid": "-1",
+					"sourceid": "65766"
+				},
+				{
+					"pluginid": "10058",
+					"alertRef": "10058",
+					"alert": "GET for POST",
+					"name": "GET for POST",
+					"riskcode": "0",
+					"confidence": "3",
+					"riskdesc": "Informational (High)",
+					"desc": "<p>A request that was originally observed as a POST was also accepted as a GET. This issue does not represent a security weakness unto itself, however, it may facilitate simplification of other attacks. For example if the original POST is subject to Cross-Site Scripting (XSS), then this finding may indicate that a simplified (GET based) XSS may also be possible.</p>",
+					"instances":[ 
+						{
+							"id": "75",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "GET http://localhost/SYSTEMINTEG/views/login.php?csrf_token=201f1cbdf9c692c7ad8405010f9be067b3f6e04f93e10eb4768aab0525a01b44&password=ZAP&username=ZAP HTTP/1.1",
+							"otherinfo": ""
+						},
+						{
+							"id": "515",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "GET http://localhost/SYSTEMINTEG/views/login.php?csrf_token=5ab608237d958fe2bb1dc554de45b0fd09c8d5b4911e2917a78e32e0c6c243d9&password=ZAP&username=ZAP HTTP/1.1",
+							"otherinfo": ""
+						},
+						{
+							"id": "908",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "GET http://localhost/SYSTEMINTEG/views/login.php?csrf_token=603ceaa3e1ffb7a626388e6e84c1eb691ce101cabffb214311294306eafce48c&password=ZAP&username=ZAP HTTP/1.1",
+							"otherinfo": ""
+						},
+						{
+							"id": "414",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "GET http://localhost/SYSTEMINTEG/views/login.php?csrf_token=677df41807e3c5863a1ab2f38eafa6927e1e331e5a652a2dded0482e792fcccc&password=ZAP&username=ZAP HTTP/1.1",
+							"otherinfo": ""
+						},
+						{
+							"id": "708",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "GET http://localhost/SYSTEMINTEG/views/login.php?csrf_token=7b3e511f11973f3c62069d4978d4867011d3833e8e426decce3c24583a4813e5&password=ZAP&username=ZAP HTTP/1.1",
+							"otherinfo": ""
+						},
+						{
+							"id": "807",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "GET http://localhost/SYSTEMINTEG/views/login.php?csrf_token=b897922b232b230fd36655f70821e4cb7b6aee993915ee1702971821172f1b90&password=ZAP&username=ZAP HTTP/1.1",
+							"otherinfo": ""
+						},
+						{
+							"id": "1010",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "GET http://localhost/SYSTEMINTEG/views/login.php?csrf_token=cbeed7abeff65da202c36f0402c94617d73dcfc994720196c81beec288a486c4&password=ZAP&username=ZAP HTTP/1.1",
+							"otherinfo": ""
+						},
+						{
+							"id": "76",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "GET http://localhost/SYSTEMINTEG/views/register.php?address=688%20Zaproxy%20Ridge&clinic_address=&clinic_name=ZAP&confirm_password=ZAP&csrf_token=201f1cbdf9c692c7ad8405010f9be067b3f6e04f93e10eb4768aab0525a01b44&date_of_birth=2025-11-11&email=zaproxy@example.com&full_name=ZAP&gender=Male&home_address=&medical_license=ZAP&password=ZAP&phone=9999999999&profile_photo=test_file.txt&role=patient&specialization=General%20Medicine&username=ZAP HTTP/1.1",
+							"otherinfo": ""
+						},
+						{
+							"id": "516",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "GET http://localhost/SYSTEMINTEG/views/register.php?address=688%20Zaproxy%20Ridge&clinic_address=&clinic_name=ZAP&confirm_password=ZAP&csrf_token=5ab608237d958fe2bb1dc554de45b0fd09c8d5b4911e2917a78e32e0c6c243d9&date_of_birth=2025-11-11&email=zaproxy@example.com&full_name=ZAP&gender=Male&home_address=&medical_license=ZAP&password=ZAP&phone=9999999999&profile_photo=test_file.txt&role=patient&specialization=General%20Medicine&username=ZAP HTTP/1.1",
+							"otherinfo": ""
+						},
+						{
+							"id": "909",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "GET http://localhost/SYSTEMINTEG/views/register.php?address=688%20Zaproxy%20Ridge&clinic_address=&clinic_name=ZAP&confirm_password=ZAP&csrf_token=603ceaa3e1ffb7a626388e6e84c1eb691ce101cabffb214311294306eafce48c&date_of_birth=2025-11-11&email=zaproxy@example.com&full_name=ZAP&gender=Male&home_address=&medical_license=ZAP&password=ZAP&phone=9999999999&profile_photo=test_file.txt&role=patient&specialization=General%20Medicine&username=ZAP HTTP/1.1",
+							"otherinfo": ""
+						},
+						{
+							"id": "415",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "GET http://localhost/SYSTEMINTEG/views/register.php?address=688%20Zaproxy%20Ridge&clinic_address=&clinic_name=ZAP&confirm_password=ZAP&csrf_token=677df41807e3c5863a1ab2f38eafa6927e1e331e5a652a2dded0482e792fcccc&date_of_birth=2025-11-11&email=zaproxy@example.com&full_name=ZAP&gender=Male&home_address=&medical_license=ZAP&password=ZAP&phone=9999999999&profile_photo=test_file.txt&role=patient&specialization=General%20Medicine&username=ZAP HTTP/1.1",
+							"otherinfo": ""
+						},
+						{
+							"id": "709",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "GET http://localhost/SYSTEMINTEG/views/register.php?address=688%20Zaproxy%20Ridge&clinic_address=&clinic_name=ZAP&confirm_password=ZAP&csrf_token=7b3e511f11973f3c62069d4978d4867011d3833e8e426decce3c24583a4813e5&date_of_birth=2025-11-11&email=zaproxy@example.com&full_name=ZAP&gender=Male&home_address=&medical_license=ZAP&password=ZAP&phone=9999999999&profile_photo=test_file.txt&role=patient&specialization=General%20Medicine&username=ZAP HTTP/1.1",
+							"otherinfo": ""
+						},
+						{
+							"id": "808",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "GET http://localhost/SYSTEMINTEG/views/register.php?address=688%20Zaproxy%20Ridge&clinic_address=&clinic_name=ZAP&confirm_password=ZAP&csrf_token=b897922b232b230fd36655f70821e4cb7b6aee993915ee1702971821172f1b90&date_of_birth=2025-11-11&email=zaproxy@example.com&full_name=ZAP&gender=Male&home_address=&medical_license=ZAP&password=ZAP&phone=9999999999&profile_photo=test_file.txt&role=patient&specialization=General%20Medicine&username=ZAP HTTP/1.1",
+							"otherinfo": ""
+						},
+						{
+							"id": "1009",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "GET http://localhost/SYSTEMINTEG/views/register.php?address=688%20Zaproxy%20Ridge&clinic_address=&clinic_name=ZAP&confirm_password=ZAP&csrf_token=cbeed7abeff65da202c36f0402c94617d73dcfc994720196c81beec288a486c4&date_of_birth=2025-11-11&email=zaproxy@example.com&full_name=ZAP&gender=Male&home_address=&medical_license=ZAP&password=ZAP&phone=9999999999&profile_photo=test_file.txt&role=patient&specialization=General%20Medicine&username=ZAP HTTP/1.1",
+							"otherinfo": ""
+						}
+					],
+					"count": "14",
+					"systemic": false,
+					"solution": "<p>Ensure that only POST is accepted where POST is expected.</p>",
+					"otherinfo": "",
+					"reference": "",
+					"cweid": "16",
+					"wascid": "20",
+					"sourceid": "8641"
+				},
+				{
+					"pluginid": "10027",
+					"alertRef": "10027",
+					"alert": "Information Disclosure - Suspicious Comments",
+					"name": "Information Disclosure - Suspicious Comments",
+					"riskcode": "0",
+					"confidence": "2",
+					"riskdesc": "Informational (Medium)",
+					"desc": "<p>The response appears to contain suspicious comments which may help an attacker.</p>",
+					"instances":[ 
+						{
+							"id": "1337",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "Admin",
+							"otherinfo": "The following pattern was used: \\bADMIN\\b and was detected in likely comment: \"<!-- Clinic Admin Fields -->\", see evidence field for the suspicious comment/snippet."
+						},
+						{
+							"id": "1376",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "Admin",
+							"otherinfo": "The following pattern was used: \\bADMIN\\b and was detected in likely comment: \"<!-- Clinic Admin Fields -->\", see evidence field for the suspicious comment/snippet."
+						},
+						{
+							"id": "68",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "Admin",
+							"otherinfo": "The following pattern was used: \\bADMIN\\b and was detected in likely comment: \"<!-- Clinic Admin Specific Fields -->\", see evidence field for the suspicious comment/snippet."
+						},
+						{
+							"id": "29",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "",
+							"attack": "",
+							"evidence": "Admin",
+							"otherinfo": "The following pattern was used: \\bADMIN\\b and was detected in likely comment: \"<!-- Clinic Admin Specific Fields -->\", see evidence field for the suspicious comment/snippet."
+						}
+					],
+					"count": "4",
+					"systemic": false,
+					"solution": "<p>Remove all comments that return information that may help an attacker and fix any underlying problems they refer to.</p>",
+					"otherinfo": "<p>The following pattern was used: \\bADMIN\\b and was detected in likely comment: \"<!-- Clinic Admin Fields -->\", see evidence field for the suspicious comment/snippet.</p>",
+					"reference": "",
+					"cweid": "615",
+					"wascid": "13",
+					"sourceid": "65753"
+				},
+				{
+					"pluginid": "10109",
+					"alertRef": "10109",
+					"alert": "Modern Web Application",
+					"name": "Modern Web Application",
+					"riskcode": "0",
+					"confidence": "2",
+					"riskdesc": "Informational (Medium)",
+					"desc": "<p>The application appears to be a modern web application. If you need to explore it automatically then the Ajax Spider may well be more effective than the standard one.</p>",
+					"instances":[ 
+						{
+							"id": "1338",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "<a class=\"nav-link\" href=\"#\" data-bs-toggle=\"modal\" data-bs-target=\"#loginModal\">Login</a>",
+							"otherinfo": "Links have been found that do not have traditional href attributes, which is an indication that this is a modern web application."
+						},
+						{
+							"id": "1380",
+							"uri": "http://localhost/SYSTEMINTEG/index.php",
+							"nodeName": null,
+							"method": "GET",
+							"param": "",
+							"attack": "",
+							"evidence": "<a class=\"nav-link\" href=\"#\" data-bs-toggle=\"modal\" data-bs-target=\"#loginModal\">Login</a>",
+							"otherinfo": "Links have been found that do not have traditional href attributes, which is an indication that this is a modern web application."
+						}
+					],
+					"count": "2",
+					"systemic": false,
+					"solution": "<p>This is an informational alert and so no changes are required.</p>",
+					"otherinfo": "<p>Links have been found that do not have traditional href attributes, which is an indication that this is a modern web application.</p>",
+					"reference": "",
+					"cweid": "-1",
+					"wascid": "-1",
+					"sourceid": "65753"
+				},
+				{
+					"pluginid": "10112",
+					"alertRef": "10112",
+					"alert": "Session Management Response Identified",
+					"name": "Session Management Response Identified",
+					"riskcode": "0",
+					"confidence": "2",
+					"riskdesc": "Informational (Medium)",
+					"desc": "<p>The given response has been identified as containing a session management token. The 'Other Info' field contains a set of header tokens that can be used in the Header Based Session Management Method. If the request is in a context which has a Session Management Method set to \"Auto-Detect\" then this rule will change the session management to use the tokens identified.</p>",
+					"instances":[ 
+						{
+							"id": "0",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "PHPSESSID",
+							"attack": "",
+							"evidence": "PHPSESSID",
+							"otherinfo": "cookie:PHPSESSID"
+						},
+						{
+							"id": "41",
+							"uri": "http://localhost/SYSTEMINTEG/",
+							"nodeName": null,
+							"method": "GET",
+							"param": "PHPSESSID",
+							"attack": "",
+							"evidence": "PHPSESSID",
+							"otherinfo": "cookie:PHPSESSID"
+						}
+					],
+					"count": "2",
+					"systemic": false,
+					"solution": "<p>This is an informational alert rather than a vulnerability and so there is nothing to fix.</p>",
+					"otherinfo": "<p>cookie:PHPSESSID</p>",
+					"reference": "<p>https://www.zaproxy.org/docs/desktop/addons/authentication-helper/session-mgmt-id/</p>",
+					"cweid": "-1",
+					"wascid": "-1",
+					"sourceid": "3"
+				},
+				{
+					"pluginid": "10104",
+					"alertRef": "10104",
+					"alert": "User Agent Fuzzer",
+					"name": "User Agent Fuzzer",
+					"riskcode": "0",
+					"confidence": "2",
+					"riskdesc": "Informational (Medium)",
+					"desc": "<p>Check for differences in response based on fuzzed User Agent (eg. mobile sites, access as a Search Engine Crawler). Compares the response statuscode and the hashcode of the response body with the original response.</p>",
+					"instances":[ 
+						{
+							"id": "80",
+							"uri": "http://localhost/SYSTEMINTEG",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "78",
+							"uri": "http://localhost/SYSTEMINTEG",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "77",
+							"uri": "http://localhost/SYSTEMINTEG",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "82",
+							"uri": "http://localhost/SYSTEMINTEG",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (Windows NT 10.0; Trident/7.0; rv:11.0) like Gecko",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "85",
+							"uri": "http://localhost/SYSTEMINTEG",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3739.0 Safari/537.36 Edg/75.0.109.0",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "108",
+							"uri": "http://localhost/SYSTEMINTEG",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "106",
+							"uri": "http://localhost/SYSTEMINTEG",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:93.0) Gecko/20100101 Firefox/91.0",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "89",
+							"uri": "http://localhost/SYSTEMINTEG",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "95",
+							"uri": "http://localhost/SYSTEMINTEG",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (compatible; Yahoo! Slurp; http://help.yahoo.com/help/us/ysearch/slurp)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "103",
+							"uri": "http://localhost/SYSTEMINTEG",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (iPhone; CPU iPhone OS 8_0_2 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12A366 Safari/600.1.4",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "99",
+							"uri": "http://localhost/SYSTEMINTEG",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (iPhone; U; CPU iPhone OS 3_0 like Mac OS X; en-us) AppleWebKit/528.18 (KHTML, like Gecko) Version/4.0 Mobile/7A341 Safari/528.16",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "91",
+							"uri": "http://localhost/SYSTEMINTEG",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "msnbot/1.1 (+http://search.msn.com/msnbot.htm)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "94",
+							"uri": "http://localhost/SYSTEMINTEG/views",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "90",
+							"uri": "http://localhost/SYSTEMINTEG/views",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "86",
+							"uri": "http://localhost/SYSTEMINTEG/views",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "97",
+							"uri": "http://localhost/SYSTEMINTEG/views",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (Windows NT 10.0; Trident/7.0; rv:11.0) like Gecko",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "102",
+							"uri": "http://localhost/SYSTEMINTEG/views",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3739.0 Safari/537.36 Edg/75.0.109.0",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "122",
+							"uri": "http://localhost/SYSTEMINTEG/views",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "121",
+							"uri": "http://localhost/SYSTEMINTEG/views",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:93.0) Gecko/20100101 Firefox/91.0",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "104",
+							"uri": "http://localhost/SYSTEMINTEG/views",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "113",
+							"uri": "http://localhost/SYSTEMINTEG/views",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (compatible; Yahoo! Slurp; http://help.yahoo.com/help/us/ysearch/slurp)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "118",
+							"uri": "http://localhost/SYSTEMINTEG/views",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (iPhone; CPU iPhone OS 8_0_2 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12A366 Safari/600.1.4",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "115",
+							"uri": "http://localhost/SYSTEMINTEG/views",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (iPhone; U; CPU iPhone OS 3_0 like Mac OS X; en-us) AppleWebKit/528.18 (KHTML, like Gecko) Version/4.0 Mobile/7A341 Safari/528.16",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "111",
+							"uri": "http://localhost/SYSTEMINTEG/views",
+							"nodeName": null,
+							"method": "GET",
+							"param": "Header User-Agent",
+							"attack": "msnbot/1.1 (+http://search.msn.com/msnbot.htm)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "93",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "88",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "83",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "98",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (Windows NT 10.0; Trident/7.0; rv:11.0) like Gecko",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "101",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3739.0 Safari/537.36 Edg/75.0.109.0",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "124",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "123",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:93.0) Gecko/20100101 Firefox/91.0",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "107",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "114",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (compatible; Yahoo! Slurp; http://help.yahoo.com/help/us/ysearch/slurp)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "119",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (iPhone; CPU iPhone OS 8_0_2 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12A366 Safari/600.1.4",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "116",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (iPhone; U; CPU iPhone OS 3_0 like Mac OS X; en-us) AppleWebKit/528.18 (KHTML, like Gecko) Version/4.0 Mobile/7A341 Safari/528.16",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "110",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "msnbot/1.1 (+http://search.msn.com/msnbot.htm)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "84",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "81",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.0)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "79",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/4.0 (compatible; MSIE 8.0; Windows NT 6.1)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "87",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (Windows NT 10.0; Trident/7.0; rv:11.0) like Gecko",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "92",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3739.0 Safari/537.36 Edg/75.0.109.0",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "120",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "117",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:93.0) Gecko/20100101 Firefox/91.0",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "96",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "105",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (compatible; Yahoo! Slurp; http://help.yahoo.com/help/us/ysearch/slurp)",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "112",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (iPhone; CPU iPhone OS 8_0_2 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) Version/8.0 Mobile/12A366 Safari/600.1.4",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "109",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "Mozilla/5.0 (iPhone; U; CPU iPhone OS 3_0 like Mac OS X; en-us) AppleWebKit/528.18 (KHTML, like Gecko) Version/4.0 Mobile/7A341 Safari/528.16",
+							"evidence": "",
+							"otherinfo": ""
+						},
+						{
+							"id": "100",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "Header User-Agent",
+							"attack": "msnbot/1.1 (+http://search.msn.com/msnbot.htm)",
+							"evidence": "",
+							"otherinfo": ""
+						}
+					],
+					"count": "48",
+					"systemic": false,
+					"solution": "",
+					"otherinfo": "",
+					"reference": "<p>https://owasp.org/wstg</p>",
+					"cweid": "0",
+					"wascid": "0",
+					"sourceid": "8662"
+				},
+				{
+					"pluginid": "10031",
+					"alertRef": "10031",
+					"alert": "User Controllable HTML Element Attribute (Potential XSS)",
+					"name": "User Controllable HTML Element Attribute (Potential XSS)",
+					"riskcode": "0",
+					"confidence": "1",
+					"riskdesc": "Informational (Low)",
+					"desc": "<p>This check looks at user-supplied input in query string parameters and POST data to identify where certain HTML attribute values might be controlled. This provides hot-spot detection for XSS (cross-site scripting) that will require further review by a security analyst to determine exploitability.</p>",
+					"instances":[ 
+						{
+							"id": "1377",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/login.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=071300cb3e5d557b0fa70f6196f0aeb4e8bba062f6f9e084622167398dc95f82\n\nThe user-controlled value was:\n071300cb3e5d557b0fa70f6196f0aeb4e8bba062f6f9e084622167398dc95f82"
+						},
+						{
+							"id": "1183",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/login.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=1214d22b76ef6acee2cb02ef50b45b2740cec095829b289f7db71495429f2028\n\nThe user-controlled value was:\n1214d22b76ef6acee2cb02ef50b45b2740cec095829b289f7db71495429f2028"
+						},
+						{
+							"id": "67",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/login.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=201f1cbdf9c692c7ad8405010f9be067b3f6e04f93e10eb4768aab0525a01b44\n\nThe user-controlled value was:\n201f1cbdf9c692c7ad8405010f9be067b3f6e04f93e10eb4768aab0525a01b44"
+						},
+						{
+							"id": "1258",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/login.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=288e255ce2940d0c99ce9909919160c57b9f447006923d68fcf1c95bde2ba1ef\n\nThe user-controlled value was:\n288e255ce2940d0c99ce9909919160c57b9f447006923d68fcf1c95bde2ba1ef"
+						},
+						{
+							"id": "500",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/login.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=5ab608237d958fe2bb1dc554de45b0fd09c8d5b4911e2917a78e32e0c6c243d9\n\nThe user-controlled value was:\n5ab608237d958fe2bb1dc554de45b0fd09c8d5b4911e2917a78e32e0c6c243d9"
+						},
+						{
+							"id": "890",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/login.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=603ceaa3e1ffb7a626388e6e84c1eb691ce101cabffb214311294306eafce48c\n\nThe user-controlled value was:\n603ceaa3e1ffb7a626388e6e84c1eb691ce101cabffb214311294306eafce48c"
+						},
+						{
+							"id": "383",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/login.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=677df41807e3c5863a1ab2f38eafa6927e1e331e5a652a2dded0482e792fcccc\n\nThe user-controlled value was:\n677df41807e3c5863a1ab2f38eafa6927e1e331e5a652a2dded0482e792fcccc"
+						},
+						{
+							"id": "186",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/login.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=71fb7e80f63cbc0e5d24c23d7a9bae75fbd81cf6d4d53e8c05c220a67bed9e3c\n\nThe user-controlled value was:\n71fb7e80f63cbc0e5d24c23d7a9bae75fbd81cf6d4d53e8c05c220a67bed9e3c"
+						},
+						{
+							"id": "690",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/login.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=7b3e511f11973f3c62069d4978d4867011d3833e8e426decce3c24583a4813e5\n\nThe user-controlled value was:\n7b3e511f11973f3c62069d4978d4867011d3833e8e426decce3c24583a4813e5"
+						},
+						{
+							"id": "609",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/login.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=8cd3ff1654f324f1fa2a4731b59fe661028410956425a23c1328ca887d9c17be\n\nThe user-controlled value was:\n8cd3ff1654f324f1fa2a4731b59fe661028410956425a23c1328ca887d9c17be"
+						},
+						{
+							"id": "796",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/login.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=b897922b232b230fd36655f70821e4cb7b6aee993915ee1702971821172f1b90\n\nThe user-controlled value was:\nb897922b232b230fd36655f70821e4cb7b6aee993915ee1702971821172f1b90"
+						},
+						{
+							"id": "261",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/login.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=c328c670e65f33df267ad81936e6f697b7e61dd5599183ddabb196ac5f079715\n\nThe user-controlled value was:\nc328c670e65f33df267ad81936e6f697b7e61dd5599183ddabb196ac5f079715"
+						},
+						{
+							"id": "965",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/login.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=cbeed7abeff65da202c36f0402c94617d73dcfc994720196c81beec288a486c4\n\nThe user-controlled value was:\ncbeed7abeff65da202c36f0402c94617d73dcfc994720196c81beec288a486c4"
+						},
+						{
+							"id": "1118",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/login.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=d76ced829beb569af33689a80f613550cf0bfeeabffb821f65c6aeed22c2c998\n\nThe user-controlled value was:\nd76ced829beb569af33689a80f613550cf0bfeeabffb821f65c6aeed22c2c998"
+						},
+						{
+							"id": "332",
+							"uri": "http://localhost/SYSTEMINTEG/views/login.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/login.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=fcd30b9089e821b3017b8efdb691eed4786cfb9acd283328cfd1e78ceae02cb4\n\nThe user-controlled value was:\nfcd30b9089e821b3017b8efdb691eed4786cfb9acd283328cfd1e78ceae02cb4"
+						},
+						{
+							"id": "1301",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "address",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\naddress=688 Zaproxy Ridge\n\nThe user-controlled value was:\n688 zaproxy ridge"
+						},
+						{
+							"id": "1264",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "clinic_address",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nclinic_address=ZAP\n\nThe user-controlled value was:\nzap"
+						},
+						{
+							"id": "1280",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "clinic_address",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nclinic_address=ZAP\n\nThe user-controlled value was:\nzaproxy@example.com"
+						},
+						{
+							"id": "1265",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "clinic_name",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nclinic_name=ZAP\n\nThe user-controlled value was:\nzap"
+						},
+						{
+							"id": "1281",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "clinic_name",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nclinic_name=ZAP\n\nThe user-controlled value was:\nzaproxy@example.com"
+						},
+						{
+							"id": "1266",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "confirm_password",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nconfirm_password=ZAP\n\nThe user-controlled value was:\nzap"
+						},
+						{
+							"id": "1282",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "confirm_password",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nconfirm_password=ZAP\n\nThe user-controlled value was:\nzaproxy@example.com"
+						},
+						{
+							"id": "1374",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=071300cb3e5d557b0fa70f6196f0aeb4e8bba062f6f9e084622167398dc95f82\n\nThe user-controlled value was:\n071300cb3e5d557b0fa70f6196f0aeb4e8bba062f6f9e084622167398dc95f82"
+						},
+						{
+							"id": "1192",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=1214d22b76ef6acee2cb02ef50b45b2740cec095829b289f7db71495429f2028\n\nThe user-controlled value was:\n1214d22b76ef6acee2cb02ef50b45b2740cec095829b289f7db71495429f2028"
+						},
+						{
+							"id": "32",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=201f1cbdf9c692c7ad8405010f9be067b3f6e04f93e10eb4768aab0525a01b44\n\nThe user-controlled value was:\n201f1cbdf9c692c7ad8405010f9be067b3f6e04f93e10eb4768aab0525a01b44"
+						},
+						{
+							"id": "1262",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=288e255ce2940d0c99ce9909919160c57b9f447006923d68fcf1c95bde2ba1ef\n\nThe user-controlled value was:\n288e255ce2940d0c99ce9909919160c57b9f447006923d68fcf1c95bde2ba1ef"
+						},
+						{
+							"id": "471",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=5ab608237d958fe2bb1dc554de45b0fd09c8d5b4911e2917a78e32e0c6c243d9\n\nThe user-controlled value was:\n5ab608237d958fe2bb1dc554de45b0fd09c8d5b4911e2917a78e32e0c6c243d9"
+						},
+						{
+							"id": "881",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=603ceaa3e1ffb7a626388e6e84c1eb691ce101cabffb214311294306eafce48c\n\nThe user-controlled value was:\n603ceaa3e1ffb7a626388e6e84c1eb691ce101cabffb214311294306eafce48c"
+						},
+						{
+							"id": "405",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=677df41807e3c5863a1ab2f38eafa6927e1e331e5a652a2dded0482e792fcccc\n\nThe user-controlled value was:\n677df41807e3c5863a1ab2f38eafa6927e1e331e5a652a2dded0482e792fcccc"
+						},
+						{
+							"id": "191",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=71fb7e80f63cbc0e5d24c23d7a9bae75fbd81cf6d4d53e8c05c220a67bed9e3c\n\nThe user-controlled value was:\n71fb7e80f63cbc0e5d24c23d7a9bae75fbd81cf6d4d53e8c05c220a67bed9e3c"
+						},
+						{
+							"id": "699",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=7b3e511f11973f3c62069d4978d4867011d3833e8e426decce3c24583a4813e5\n\nThe user-controlled value was:\n7b3e511f11973f3c62069d4978d4867011d3833e8e426decce3c24583a4813e5"
+						},
+						{
+							"id": "629",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=8cd3ff1654f324f1fa2a4731b59fe661028410956425a23c1328ca887d9c17be\n\nThe user-controlled value was:\n8cd3ff1654f324f1fa2a4731b59fe661028410956425a23c1328ca887d9c17be"
+						},
+						{
+							"id": "797",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=b897922b232b230fd36655f70821e4cb7b6aee993915ee1702971821172f1b90\n\nThe user-controlled value was:\nb897922b232b230fd36655f70821e4cb7b6aee993915ee1702971821172f1b90"
+						},
+						{
+							"id": "256",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=c328c670e65f33df267ad81936e6f697b7e61dd5599183ddabb196ac5f079715\n\nThe user-controlled value was:\nc328c670e65f33df267ad81936e6f697b7e61dd5599183ddabb196ac5f079715"
+						},
+						{
+							"id": "991",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=cbeed7abeff65da202c36f0402c94617d73dcfc994720196c81beec288a486c4\n\nThe user-controlled value was:\ncbeed7abeff65da202c36f0402c94617d73dcfc994720196c81beec288a486c4"
+						},
+						{
+							"id": "1123",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=d76ced829beb569af33689a80f613550cf0bfeeabffb821f65c6aeed22c2c998\n\nThe user-controlled value was:\nd76ced829beb569af33689a80f613550cf0bfeeabffb821f65c6aeed22c2c998"
+						},
+						{
+							"id": "331",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "csrf_token",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ncsrf_token=fcd30b9089e821b3017b8efdb691eed4786cfb9acd283328cfd1e78ceae02cb4\n\nThe user-controlled value was:\nfcd30b9089e821b3017b8efdb691eed4786cfb9acd283328cfd1e78ceae02cb4"
+						},
+						{
+							"id": "1299",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "date_of_birth",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\ndate_of_birth=2025-11-12\n\nThe user-controlled value was:\n2025-11-12"
+						},
+						{
+							"id": "1283",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "email",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nemail=zaproxy@example.com\n\nThe user-controlled value was:\nzaproxy@example.com"
+						},
+						{
+							"id": "1267",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "full_name",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nfull_name=ZAP\n\nThe user-controlled value was:\nzap"
+						},
+						{
+							"id": "1284",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "full_name",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nfull_name=ZAP\n\nThe user-controlled value was:\nzaproxy@example.com"
+						},
+						{
+							"id": "40",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "gender",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [option] tag [value] attribute\n\nThe user input found was:\ngender=Male\n\nThe user-controlled value was:\nmale"
+						},
+						{
+							"id": "1268",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "home_address",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nhome_address=ZAP\n\nThe user-controlled value was:\nzap"
+						},
+						{
+							"id": "1285",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "home_address",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nhome_address=ZAP\n\nThe user-controlled value was:\nzaproxy@example.com"
+						},
+						{
+							"id": "1269",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "medical_license",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nmedical_license=ZAP\n\nThe user-controlled value was:\nzap"
+						},
+						{
+							"id": "1286",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "medical_license",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nmedical_license=ZAP\n\nThe user-controlled value was:\nzaproxy@example.com"
+						},
+						{
+							"id": "1270",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "password",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\npassword=ZAP\n\nThe user-controlled value was:\nzap"
+						},
+						{
+							"id": "1287",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "password",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\npassword=ZAP\n\nThe user-controlled value was:\nzaproxy@example.com"
+						},
+						{
+							"id": "1289",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "phone",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nphone=9999999999\n\nThe user-controlled value was:\n9999999999"
+						},
+						{
+							"id": "38",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "role",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [div] tag [id] attribute\n\nThe user input found was:\nrole=patient\n\nThe user-controlled value was:\npatientfields"
+						},
+						{
+							"id": "1263",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "role",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nrole=patient\n\nThe user-controlled value was:\npatient"
+						},
+						{
+							"id": "34",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "role",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [option] tag [value] attribute\n\nThe user input found was:\nrole=patient\n\nThe user-controlled value was:\npatient"
+						},
+						{
+							"id": "36",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "specialization",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [option] tag [value] attribute\n\nThe user input found was:\nspecialization=General Medicine\n\nThe user-controlled value was:\ngeneral medicine"
+						},
+						{
+							"id": "1271",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "username",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nusername=ZAP\n\nThe user-controlled value was:\nzap"
+						},
+						{
+							"id": "1288",
+							"uri": "http://localhost/SYSTEMINTEG/views/register.php",
+							"nodeName": null,
+							"method": "POST",
+							"param": "username",
+							"attack": "",
+							"evidence": "",
+							"otherinfo": "User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:\n\nhttp://localhost/SYSTEMINTEG/views/register.php\n\nappears to include user input in:\na(n) [input] tag [value] attribute\n\nThe user input found was:\nusername=ZAP\n\nThe user-controlled value was:\nzaproxy@example.com"
+						}
+					],
+					"count": "55",
+					"systemic": false,
+					"solution": "<p>Validate all input and sanitize output it before writing to any HTML attributes.</p>",
+					"otherinfo": "<p>User-controlled HTML attribute values were found. Try injecting special characters to see if XSS might be possible. The page at the following URL:</p><p></p><p>http://localhost/SYSTEMINTEG/views/login.php</p><p></p><p>appears to include user input in:</p><p>a(n) [input] tag [value] attribute</p><p></p><p>The user input found was:</p><p>csrf_token=071300cb3e5d557b0fa70f6196f0aeb4e8bba062f6f9e084622167398dc95f82</p><p></p><p>The user-controlled value was:</p><p>071300cb3e5d557b0fa70f6196f0aeb4e8bba062f6f9e084622167398dc95f82</p>",
+					"reference": "<p>https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html</p>",
+					"cweid": "20",
+					"wascid": "20",
+					"sourceid": "65766"
+				}
+			]
+		}
+	],
+	"sequences":[
+	]
+
+}

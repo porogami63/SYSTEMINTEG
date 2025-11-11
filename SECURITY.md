@@ -4,8 +4,8 @@
 
 This document outlines the comprehensive security features implemented in the MediArchive system to protect against common web vulnerabilities and ensure data security.
 
-**Version:** 4.1  
-**Last Updated:** November 10, 2025
+**Version:** 5.0  
+**Last Updated:** November 12, 2025
 
 ## Quick Links
 - [Security Implementation Guide](#security-implementation-guide)
@@ -135,10 +135,11 @@ This document outlines the comprehensive security features implemented in the Me
 
 **Implementation:**
 - File type validation (whitelist)
-- File size limits (2MB for images)
+- File size limits (10MB for chat attachments, 2MB for images)
 - MIME type verification
 - File name sanitization
 - Secure file storage
+- Attachment support in chat messages
 
 **Testing:**
 - Only allowed file types are accepted
@@ -148,7 +149,7 @@ This document outlines the comprehensive security features implemented in the Me
 
 **Mitigation:**
 - File type whitelist
-- File size limits
+- File size limits (10MB for attachments)
 - MIME type validation
 - Secure file storage paths
 - File name sanitization

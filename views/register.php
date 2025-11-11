@@ -143,6 +143,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
+$selectedRole = $_POST['role'] ?? 'patient';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -154,173 +156,226 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 <style>
 body {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #0f63d6 0%, #0b3d91 100%);
     min-height: 100vh;
-    padding: 40px 0;
+    padding: 60px 0;
+    color: #1f2a44;
 }
 .register-card {
     background: white;
-    border-radius: 15px;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-    max-width: 700px;
-    width: 100%;
+    border-radius: 20px;
+    box-shadow: 0 24px 60px rgba(11, 61, 145, 0.35);
+    max-width: 880px;
 }
-.role-specific {
-    display: none;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    margin-top: 10px;
+.role-pill {
+    border: 1px solid #d0d7ff;
+    border-radius: 999px;
+    padding: 10px 18px;
+    cursor: pointer;
+    background: #f8faff;
+    color: #20417c;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all .2s ease;
 }
+.role-pill input { display: none; }
+.role-pill.active {
+    background: linear-gradient(135deg, #2150c9 0%, #1f9cd6 100%);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 8px 24px rgba(33, 80, 201, 0.35);
+}
+.role-section {
+    background: #fdfdff;
+    border: 1px solid #e6ecff;
+    border-radius: 16px;
+    padding: 22px 24px;
+    box-shadow: 0 14px 28px rgba(30, 82, 184, 0.08);
+}
+.role-section.d-none { display: none !important; }
+.btn-primary {
+    background: linear-gradient(135deg, #2150c9 0%, #1f9cd6 100%);
+    border: none;
+    padding: 12px 18px;
+    border-radius: 14px;
+    box-shadow: 0 14px 28px rgba(33, 80, 201, 0.25);
+}
+.btn-primary:hover { background: linear-gradient(135deg, #1f46b0 0%, #1a8ec0 100%); }
+.muted-text { color: #5f6b8b; }
 </style>
 </head>
 <body>
 <div class="container">
-    <div class="register-card p-5 mx-auto">
-        <h2 class="text-center mb-4 text-primary">
-            <i class="bi bi-heart-pulse-fill"></i> MediArchive
-        </h2>
-        <h4 class="text-center mb-4">Create Account</h4>
-        
+    <div class="register-card p-4 p-md-5 mx-auto">
+        <div class="text-center mb-4">
+            <span class="badge rounded-pill text-bg-light px-3 py-2 mb-2">Secure Digital Enrollment</span>
+            <h2 class="text-primary fw-bold mb-1"><i class="bi bi-heart-pulse-fill"></i> MediArchive</h2>
+            <p class="muted-text">Create your MediArchive identity to access certificates, appointments, and real-time messaging.</p>
+        </div>
+
         <?php if ($error): ?>
         <div class="alert alert-danger"><?php echo $error; ?></div>
         <?php endif; ?>
-        
+
         <?php if ($success): ?>
         <div class="alert alert-success"><?php echo $success; ?></div>
         <?php endif; ?>
-        
-        <form method="POST" id="registerForm" enctype="multipart/form-data">
+
+        <form method="POST" id="registerForm" enctype="multipart/form-data" class="mt-4">
             <?php echo SecurityManager::getCSRFField(); ?>
-            <div class="mb-3">
-                <label class="form-label">Full Name <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" name="full_name" required>
+
+            <div class="mb-4">
+                <label class="form-label text-uppercase small fw-semibold text-muted">I am a</label>
+                <div class="d-flex flex-wrap gap-2">
+                    <label class="role-pill <?php echo $selectedRole === 'patient' ? 'active' : ''; ?>">
+                        <input type="radio" name="role" value="patient" <?php echo $selectedRole === 'patient' ? 'checked' : ''; ?>>
+                        <span><i class="bi bi-person-heart"></i> Patient</span>
+                    </label>
+                    <label class="role-pill <?php echo $selectedRole === 'clinic_admin' ? 'active' : ''; ?>">
+                        <input type="radio" name="role" value="clinic_admin" <?php echo $selectedRole === 'clinic_admin' ? 'checked' : ''; ?>>
+                        <span><i class="bi bi-hospital"></i> Doctor / Clinic Admin</span>
+                    </label>
+                </div>
             </div>
-            
-            <div class="row">
-                <div class="col-md-6 mb-3">
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Full Name <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="full_name" value="<?php echo htmlspecialchars($_POST['full_name'] ?? ''); ?>" required>
+                </div>
+                <div class="col-md-3">
                     <label class="form-label">Username <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="username" required>
+                    <input type="text" class="form-control" name="username" value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>" required>
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-3">
                     <label class="form-label">Email <span class="text-danger">*</span></label>
-                    <input type="email" class="form-control" name="email" required>
+                    <input type="email" class="form-control" name="email" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required>
                 </div>
             </div>
-            
-            <div class="mb-3">
-                <label class="form-label">Phone</label>
-                <input type="text" class="form-control" name="phone" placeholder="+1 (555) 123-4567">
+
+            <div class="row g-3 mt-1">
+                <div class="col-md-6">
+                    <label class="form-label">Phone</label>
+                    <input type="text" class="form-control" name="phone" placeholder="+63 900 000 0000" value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Home Address</label>
+                    <input type="text" class="form-control" name="home_address" placeholder="Your residential address" value="<?php echo htmlspecialchars($_POST['home_address'] ?? ''); ?>">
+                </div>
             </div>
-            <div class="mb-3">
-                <label class="form-label">Home Address</label>
-                <textarea class="form-control" name="home_address" rows="2" placeholder="Your home address"></textarea>
-            </div>
-            <div class="mb-3">
+
+            <div class="mt-3">
                 <label class="form-label">Profile Photo</label>
                 <input type="file" class="form-control" name="profile_photo" accept="image/*">
             </div>
-            
-            <div class="mb-3">
-                <label class="form-label">Role <span class="text-danger">*</span></label>
-                <select class="form-select" name="role" id="roleSelect" required onchange="toggleRoleSpecific()">
-                    <option value="">Select Role</option>
-                    <option value="patient">Patient</option>
-                    <option value="clinic_admin">Clinic Admin / Doctor</option>
-                </select>
-            </div>
-            
-            <!-- Clinic Admin Specific Fields -->
-            <div id="clinicAdminFields" class="role-specific">
-                <h6 class="mb-3 text-primary"><i class="bi bi-hospital"></i> Medical Credentials</h6>
-                <div class="mb-3">
-                    <label class="form-label">Medical License Number <span class="text-danger">*</span></label>
-                    <input type="text" class="form-control" name="medical_license" placeholder="MD-LIC-2024001">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Specialization <span class="text-danger">*</span></label>
-                    <select class="form-select" name="specialization">
-                        <option value="">Select Specialization</option>
-                        <?php foreach ($specializations as $spec): ?>
-                        <option value="<?php echo $spec; ?>"><?php echo $spec; ?></option>
-                        <?php endforeach; ?>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Clinic Name</label>
-                    <input type="text" class="form-control" name="clinic_name" placeholder="Leave blank to auto-generate">
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Clinic Address</label>
-                    <textarea class="form-control" name="clinic_address" rows="2" placeholder="Clinic full address"></textarea>
-                </div>
-            </div>
-            
-            <!-- Patient Specific Fields -->
-            <div id="patientFields" class="role-specific">
-                <h6 class="mb-3 text-success"><i class="bi bi-person"></i> Personal Information</h6>
-                <div class="row">
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Date of Birth</label>
-                        <input type="date" class="form-control" name="date_of_birth">
-                    </div>
-                    <div class="col-md-6 mb-3">
-                        <label class="form-label">Gender</label>
-                        <select class="form-select" name="gender">
-                            <option value="">Select Gender</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Address</label>
-                    <textarea class="form-control" name="address" rows="2"></textarea>
-                </div>
-            </div>
-            
-            <div class="row">
-                <div class="col-md-6 mb-3">
+
+            <div class="row g-3 mt-1">
+                <div class="col-md-6">
                     <label class="form-label">Password <span class="text-danger">*</span></label>
                     <input type="password" class="form-control" name="password" required>
                 </div>
-                <div class="col-md-6 mb-3">
+                <div class="col-md-6">
                     <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
                     <input type="password" class="form-control" name="confirm_password" required>
                 </div>
             </div>
-            
-            <button type="submit" class="btn btn-primary w-100">
+
+            <div id="patientFields" class="role-section mt-4<?php echo $selectedRole === 'patient' ? '' : ' d-none'; ?>">
+                <h6 class="fw-semibold text-primary mb-3"><i class="bi bi-person"></i> Patient Essentials</h6>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Date of Birth</label>
+                        <input type="date" class="form-control" name="date_of_birth" value="<?php echo htmlspecialchars($_POST['date_of_birth'] ?? ''); ?>">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Gender</label>
+                        <select class="form-select" name="gender">
+                            <option value="" <?php echo empty($_POST['gender']) ? 'selected' : ''; ?>>Select</option>
+                            <option value="Male" <?php echo (($_POST['gender'] ?? '') === 'Male') ? 'selected' : ''; ?>>Male</option>
+                            <option value="Female" <?php echo (($_POST['gender'] ?? '') === 'Female') ? 'selected' : ''; ?>>Female</option>
+                            <option value="Other" <?php echo (($_POST['gender'] ?? '') === 'Other') ? 'selected' : ''; ?>>Other</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Home Address</label>
+                        <input type="text" class="form-control" name="address" placeholder="Full address" value="<?php echo htmlspecialchars($_POST['address'] ?? ''); ?>">
+                    </div>
+                </div>
+            </div>
+
+            <div id="clinicAdminFields" class="role-section mt-4<?php echo $selectedRole === 'clinic_admin' ? '' : ' d-none'; ?>">
+                <h6 class="fw-semibold text-success mb-3"><i class="bi bi-activity"></i> Clinic Credentials</h6>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Clinic / Practice Name</label>
+                        <input type="text" class="form-control" name="clinic_name" placeholder="MediArchive Family Clinic" value="<?php echo htmlspecialchars($_POST['clinic_name'] ?? ''); ?>">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Medical License Number <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" name="medical_license" value="<?php echo htmlspecialchars($_POST['medical_license'] ?? ''); ?>">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Specialization <span class="text-danger">*</span></label>
+                        <select class="form-select" name="specialization">
+                            <option value="">Select specialization</option>
+                            <?php foreach ($specializations as $spec): ?>
+                            <option value="<?php echo $spec; ?>" <?php echo (($_POST['specialization'] ?? '') === $spec) ? 'selected' : ''; ?>><?php echo $spec; ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Clinic Address</label>
+                        <input type="text" class="form-control" name="clinic_address" placeholder="Clinic full address" value="<?php echo htmlspecialchars($_POST['clinic_address'] ?? ''); ?>">
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 mt-4">
                 <i class="bi bi-person-plus"></i> Create Account
             </button>
         </form>
-        
+
         <div class="text-center mt-3">
             <a href="login.php">Already have an account? Login here</a>
         </div>
-        <div class="text-center mt-2">
+        <div class="text-center mt-1">
             <a href="../index.php">Back to Home</a>
         </div>
     </div>
 </div>
-
 <script>
-function toggleRoleSpecific() {
-    const role = document.getElementById('roleSelect').value;
-    const clinicFields = document.getElementById('clinicAdminFields');
-    const patientFields = document.getElementById('patientFields');
-    
-    if (role === 'clinic_admin') {
-        clinicFields.style.display = 'block';
-        patientFields.style.display = 'none';
-    } else if (role === 'patient') {
-        clinicFields.style.display = 'none';
-        patientFields.style.display = 'block';
-    } else {
-        clinicFields.style.display = 'none';
-        patientFields.style.display = 'none';
-    }
+const rolePills = document.querySelectorAll('.role-pill');
+const patientSection = document.getElementById('patientFields');
+const clinicSection = document.getElementById('clinicAdminFields');
+
+function syncRole(value){
+    rolePills.forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.role-pill input').forEach(input => {
+        if (input.value === value) {
+            input.checked = true;
+            input.parentElement.classList.add('active');
+        }
+    });
+    patientSection.classList.toggle('d-none', value !== 'patient');
+    clinicSection.classList.toggle('d-none', value !== 'clinic_admin');
+}
+
+rolePills.forEach(pill => {
+    pill.addEventListener('click', () => {
+        const val = pill.querySelector('input').value;
+        syncRole(val);
+    });
+});
+
+document.querySelectorAll('.role-pill input').forEach(input => {
+    input.addEventListener('change', () => syncRole(input.value));
+});
+
+const currentRole = document.querySelector('.role-pill input:checked');
+if (currentRole) {
+    syncRole(currentRole.value);
 }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

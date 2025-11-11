@@ -199,6 +199,15 @@ try {
                                 </select>
                             </div>
                             <div class="col-md-2">
+                                <label class="form-label">Action Filter</label>
+                                <select class="form-select" name="action_filter">
+                                    <option value="">All Actions</option>
+                                    <option value="PAYMENT_PROCESSED" <?php echo (isset($_GET['action_filter']) && $_GET['action_filter'] === 'PAYMENT_PROCESSED') ? 'selected' : ''; ?>>Payments</option>
+                                    <option value="DELETE_PAYMENT" <?php echo (isset($_GET['action_filter']) && $_GET['action_filter'] === 'DELETE_PAYMENT') ? 'selected' : ''; ?>>Payment Deletions</option>
+                                    <option value="DELETE_USER" <?php echo (isset($_GET['action_filter']) && $_GET['action_filter'] === 'DELETE_USER') ? 'selected' : ''; ?>>User Deletions</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
                                 <label class="form-label">From Date</label>
                                 <input type="date" class="form-control" name="date_from" value="<?php echo isset($filters['date_from']) ? htmlspecialchars($filters['date_from']) : ''; ?>">
                             </div>
@@ -279,7 +288,18 @@ try {
                                                     echo '<small class="text-muted">';
                                                     foreach ($details as $key => $value) {
                                                         if (is_string($key) && strlen($value) < 50) {
-                                                            echo htmlspecialchars($key) . ': ' . htmlspecialchars($value) . '<br>';
+                                                            // Highlight payment-related details
+                                                            if ($log['action'] === 'PAYMENT_PROCESSED' || $log['action'] === 'DELETE_PAYMENT') {
+                                                                if ($key === 'amount') {
+                                                                    echo '<strong class="text-success">' . htmlspecialchars($key) . ':</strong> ₱' . number_format($value, 2) . '<br>';
+                                                                } elseif ($key === 'transaction_id') {
+                                                                    echo '<strong>' . htmlspecialchars($key) . ':</strong> <code>' . htmlspecialchars($value) . '</code><br>';
+                                                                } else {
+                                                                    echo '<strong>' . htmlspecialchars($key) . ':</strong> ' . htmlspecialchars($value) . '<br>';
+                                                                }
+                                                            } else {
+                                                                echo htmlspecialchars($key) . ': ' . htmlspecialchars($value) . '<br>';
+                                                            }
                                                         }
                                                     }
                                                     echo '</small>';

@@ -7,8 +7,8 @@
 
 require_once '../config.php';
 
-// Only allow clinic admins and web admins
-if (!isLoggedIn() || (!isClinicAdmin() && !isWebAdmin())) {
+// Allow clinic admins, web admins, and patients (for their own certificates)
+if (!isLoggedIn() || (!isClinicAdmin() && !isWebAdmin() && !isPatient())) {
     http_response_code(403);
     echo json_encode(['success' => false, 'error' => 'Unauthorized access']);
     exit;
@@ -47,10 +47,21 @@ try {
     // Check permissions
     // Clinic admins can only delete their own certificates
     // Web admins can delete any certificate
+    // Patients can only delete their own certificates
     if (isClinicAdmin() && $certificate['clinic_user_id'] != $user_id) {
         http_response_code(403);
         echo json_encode(['success' => false, 'error' => 'You can only delete your own certificates']);
         exit;
+    }
+    
+    if (isPatient()) {
+        // Check if the certificate belongs to this patient
+        $patient = $db->fetch("SELECT id FROM patients WHERE user_id = ?", [$user_id]);
+        if (!$patient || $certificate['patient_id'] != $patient['id']) {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'error' => 'You can only delete your own certificates']);
+            exit;
+        }
     }
     
     // Log the deletion before deleting

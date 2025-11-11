@@ -1,8 +1,8 @@
 -- ============================================
 -- MediArchive Database Schema - Complete Setup
 -- Digital Medical Certificate & Verification System
--- Version: 4.1 (Production Ready)
--- Last Updated: November 10, 2025
+-- Version: 5.0 (Enhanced Production Release)
+-- Last Updated: November 12, 2025
 -- ============================================
 -- 
 -- This file contains the complete database schema including:
@@ -284,6 +284,62 @@ CREATE TABLE IF NOT EXISTS security_audits (
     INDEX idx_status (status),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Security events table (for tracking security-related events)
+CREATE TABLE IF NOT EXISTS security_events (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    event_type VARCHAR(100) NOT NULL COMMENT 'Type of security event',
+    user_id INT DEFAULT NULL,
+    ip_address VARCHAR(45),
+    details TEXT COMMENT 'JSON data with event details',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_event_type (event_type),
+    INDEX idx_user_id (user_id),
+    INDEX idx_created_at (created_at),
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- ============================================
+-- PAYMENT SYSTEM
+-- ============================================
+
+-- Payments table
+CREATE TABLE IF NOT EXISTS payments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    payment_type ENUM('certificate', 'appointment') NOT NULL,
+    reference_id INT NOT NULL COMMENT 'ID of certificate or appointment',
+    amount DECIMAL(10,2) NOT NULL,
+    payment_method ENUM('cash', 'credit_card', 'debit_card', 'gcash', 'paymaya', 'bank_transfer') NOT NULL DEFAULT 'cash',
+    payment_status ENUM('pending', 'paid', 'failed', 'refunded') NOT NULL DEFAULT 'pending',
+    transaction_id VARCHAR(100) UNIQUE COMMENT 'External payment gateway transaction ID',
+    payment_date DATETIME DEFAULT NULL,
+    payment_details TEXT COMMENT 'JSON data for payment information',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id),
+    INDEX idx_payment_type (payment_type),
+    INDEX idx_reference_id (reference_id),
+    INDEX idx_payment_status (payment_status),
+    INDEX idx_transaction_id (transaction_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Add payment fields to certificates
+ALTER TABLE certificates 
+ADD COLUMN IF NOT EXISTS payment_required BOOLEAN DEFAULT FALSE COMMENT 'Whether payment is required for this certificate',
+ADD COLUMN IF NOT EXISTS payment_amount DECIMAL(10,2) DEFAULT 0.00 COMMENT 'Amount to be paid for certificate';
+
+-- Add payment fields to appointments
+ALTER TABLE appointments 
+ADD COLUMN IF NOT EXISTS payment_required BOOLEAN DEFAULT FALSE COMMENT 'Whether payment is required for this appointment',
+ADD COLUMN IF NOT EXISTS payment_amount DECIMAL(10,2) DEFAULT 0.00 COMMENT 'Amount to be paid for appointment';
+
+-- Add account security fields to users
+ALTER TABLE users
+ADD COLUMN IF NOT EXISTS failed_login_attempts INT DEFAULT 0 COMMENT 'Number of failed login attempts',
+ADD COLUMN IF NOT EXISTS account_locked_until DATETIME DEFAULT NULL COMMENT 'Account lock expiration time',
+ADD COLUMN IF NOT EXISTS last_login DATETIME DEFAULT NULL COMMENT 'Last successful login timestamp';
 
 -- ============================================
 -- SAMPLE DATA

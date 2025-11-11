@@ -111,6 +111,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $diagnosis = sanitizeInput($_POST['diagnosis'] ?? '');
             $recommendations = sanitizeInput($_POST['recommendations'] ?? '');
             
+            // Payment fields
+            $payment_required = isset($_POST['payment_required']) ? 1 : 0;
+            $payment_amount = $payment_required ? floatval($_POST['payment_amount'] ?? 0) : 0;
+            
             try {
                 $db->beginTransaction();
                 
@@ -118,8 +122,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $cert_id = generateCertID();
                 $doctor_signature_path = !empty($clinic['signature_path']) ? $clinic['signature_path'] : null;
                 
-                $db->execute("INSERT INTO certificates (cert_id, clinic_id, patient_id, issued_by, doctor_license, issue_date, expiry_date, purpose, diagnosis, recommendations, doctor_signature_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                    [$cert_id, $clinic_id, $patient_id, $issued_by, $doctor_license, $issue_date, $expiry_date, $purpose, $diagnosis, $recommendations, $doctor_signature_path]);
+                $db->execute("INSERT INTO certificates (cert_id, clinic_id, patient_id, issued_by, doctor_license, issue_date, expiry_date, purpose, diagnosis, recommendations, doctor_signature_path, payment_required, payment_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                    [$cert_id, $clinic_id, $patient_id, $issued_by, $doctor_license, $issue_date, $expiry_date, $purpose, $diagnosis, $recommendations, $doctor_signature_path, $payment_required, $payment_amount]);
                 
                 $cert_id_db = $db->lastInsertId();
                 
@@ -202,6 +206,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $diagnosis = sanitizeInput($_POST['diagnosis']);
             $recommendations = sanitizeInput($_POST['recommendations']);
             
+            // Payment fields
+            $payment_required = isset($_POST['payment_required']) ? 1 : 0;
+            $payment_amount = $payment_required ? floatval($_POST['payment_amount'] ?? 0) : 0;
+            
             // Verify patient exists
             $patient_exists = $db->fetch("SELECT id FROM patients WHERE id = ?", [$patient_id]);
             
@@ -214,8 +222,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                     $cert_id = generateCertID();
                     $doctor_signature_path = !empty($clinic['signature_path']) ? $clinic['signature_path'] : null;
                     
-                    $db->execute("INSERT INTO certificates (cert_id, clinic_id, patient_id, issued_by, doctor_license, issue_date, expiry_date, purpose, diagnosis, recommendations, doctor_signature_path) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
-                        [$cert_id, $clinic_id, $patient_id, $issued_by, $doctor_license, $issue_date, $expiry_date, $purpose, $diagnosis, $recommendations, $doctor_signature_path]);
+                    $db->execute("INSERT INTO certificates (cert_id, clinic_id, patient_id, issued_by, doctor_license, issue_date, expiry_date, purpose, diagnosis, recommendations, doctor_signature_path, payment_required, payment_amount) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
+                        [$cert_id, $clinic_id, $patient_id, $issued_by, $doctor_license, $issue_date, $expiry_date, $purpose, $diagnosis, $recommendations, $doctor_signature_path, $payment_required, $payment_amount]);
                     
                     $cert_id_db = $db->lastInsertId();
                     
@@ -292,6 +300,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 <?php include 'includes/role_styles.php'; ?>
 <style>
+button[data-enabled="false"] {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+button[data-enabled="true"] {
+    opacity: 1;
+    cursor: pointer;
+    pointer-events: auto;
+}
 .request-card {
     border-left: 4px solid #ffc107;
     margin-bottom: 15px;
@@ -442,9 +460,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                                             </span>
                                         </td>
                                         <td>
-                                            <a href="view_certificate.php?id=<?php echo $cert['id']; ?>" class="btn btn-sm btn-primary">
-                                                <i class="bi bi-eye"></i> View
-                                            </a>
+                                            <div class="btn-group" role="group">
+                                                <a href="view_certificate.php?id=<?php echo $cert['id']; ?>" class="btn btn-sm btn-primary">
+                                                    <i class="bi bi-eye"></i> View
+                                                </a>
+                                                <a href="../api/download.php?id=<?php echo $cert['id']; ?>" class="btn btn-sm btn-success">
+                                                    <i class="bi bi-download"></i> Download
+                                                </a>
+                                                <button class="btn btn-sm btn-danger delete-cert-btn" data-cert-id="<?php echo $cert['id']; ?>" data-cert-name="<?php echo htmlspecialchars($cert['cert_id']); ?>" title="Delete Certificate">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                     <?php endforeach; ?>
@@ -558,7 +584,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Doctor License Number</label>
-                            <input type="text" class="form-control" name="doctor_license">
+                            <input type="text" class="form-control" name="doctor_license" value="<?php echo htmlspecialchars($clinic['license_number'] ?? ''); ?>" readonly style="background-color: #f8f9fa;">
+                            <small class="text-muted">Auto-filled from clinic profile</small>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -573,6 +600,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         <label class="form-label">Recommendations</label>
                         <textarea class="form-control" name="recommendations" rows="3"></textarea>
                     </div>
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="bi bi-cash-coin"></i> Payment Settings</h6>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="payment_required" id="payment_required_request">
+                                <label class="form-check-label" for="payment_required_request">
+                                    <strong>Require Payment</strong> - Patient must pay before accessing this certificate
+                                </label>
+                            </div>
+                            <div id="payment_amount_field_request" style="display:none;">
+                                <label class="form-label">Payment Amount (₱) <span class="text-danger">*</span></label>
+                                <input type="number" name="payment_amount" class="form-control" step="0.01" min="0" placeholder="0.00">
+                                <small class="text-muted">Enter the amount patient needs to pay</small>
+                            </div>
+                        </div>
+                    </div>
                     <?php if (empty($clinic['signature_path'])): ?>
                     <div class="alert alert-warning">
                         <i class="bi bi-exclamation-triangle"></i> No signature on file. Please upload your signature in Profile → Edit Profile.
@@ -581,7 +624,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="publishFromRequestBtn">
+                    <button type="button" class="btn btn-primary" id="publishFromRequestBtn">
                         <i class="bi bi-save"></i> Publish Certificate
                     </button>
                 </div>
@@ -629,7 +672,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Doctor License Number</label>
-                            <input type="text" class="form-control" name="doctor_license">
+                            <input type="text" class="form-control" name="doctor_license" value="<?php echo htmlspecialchars($clinic['license_number'] ?? ''); ?>" readonly style="background-color: #f8f9fa;">
+                            <small class="text-muted">Auto-filled from clinic profile</small>
                         </div>
                     </div>
                     <div class="mb-3">
@@ -644,6 +688,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                         <label class="form-label">Recommendations</label>
                         <textarea class="form-control" name="recommendations" rows="3"></textarea>
                     </div>
+                    <div class="card bg-light mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title"><i class="bi bi-cash-coin"></i> Payment Settings</h6>
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" name="payment_required" id="payment_required_manual">
+                                <label class="form-check-label" for="payment_required_manual">
+                                    <strong>Require Payment</strong> - Patient must pay before accessing this certificate
+                                </label>
+                            </div>
+                            <div id="payment_amount_field_manual" style="display:none;">
+                                <label class="form-label">Payment Amount (₱) <span class="text-danger">*</span></label>
+                                <input type="number" name="payment_amount" class="form-control" step="0.01" min="0" placeholder="0.00">
+                                <small class="text-muted">Enter the amount patient needs to pay</small>
+                            </div>
+                        </div>
+                    </div>
                     <?php if (empty($clinic['signature_path'])): ?>
                     <div class="alert alert-warning">
                         <i class="bi bi-exclamation-triangle"></i> No signature on file. Please upload your signature in Profile → Edit Profile.
@@ -652,7 +712,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
+                    <button type="button" class="btn btn-primary" id="publishManualBtn">
                         <i class="bi bi-save"></i> Publish Certificate
                     </button>
                 </div>
@@ -767,6 +827,303 @@ function loadRequestData(request) {
     document.getElementById('modal_patient_name').value = request.patient_name + ' (' + request.patient_code + ')';
     document.getElementById('modal_purpose').value = request.purpose || '';
 }
+
+// Payment field toggles
+document.getElementById('payment_required_request')?.addEventListener('change', function() {
+    const amountField = document.getElementById('payment_amount_field_request');
+    const amountInput = amountField?.querySelector('input[name="payment_amount"]');
+    if (this.checked) {
+        if (amountField) amountField.style.display = 'block';
+        if (amountInput) amountInput.required = true;
+    } else {
+        if (amountField) amountField.style.display = 'none';
+        if (amountInput) {
+            amountInput.required = false;
+            amountInput.value = '';
+        }
+    }
+});
+
+document.getElementById('payment_required_manual')?.addEventListener('change', function() {
+    const amountField = document.getElementById('payment_amount_field_manual');
+    const amountInput = amountField?.querySelector('input[name="payment_amount"]');
+    if (this.checked) {
+        if (amountField) amountField.style.display = 'block';
+        if (amountInput) amountInput.required = true;
+    } else {
+        if (amountField) amountField.style.display = 'none';
+        if (amountInput) {
+            amountInput.required = false;
+            amountInput.value = '';
+        }
+    }
+});
+
+// Attestation modals - use event delegation for dynamic modals
+document.addEventListener('DOMContentLoaded', function() {
+    const publishFromRequestBtn = document.getElementById('publishFromRequestBtn');
+    const publishManualBtn = document.getElementById('publishManualBtn');
+    
+    if (publishFromRequestBtn) {
+        publishFromRequestBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const modal = new bootstrap.Modal(document.getElementById('publishConfirmModalRequest'));
+            modal.show();
+        });
+    }
+
+    if (publishManualBtn) {
+        publishManualBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const modal = new bootstrap.Modal(document.getElementById('publishConfirmModalManual'));
+            modal.show();
+        });
+    }
+    
+    // Use event delegation for checkbox changes
+    document.addEventListener('change', function(e) {
+        if (e.target.id === 'attestCheckRequest') {
+            const confirmBtn = document.getElementById('confirmPublishRequestBtn');
+            if (confirmBtn) {
+                if (e.target.checked) {
+                    confirmBtn.removeAttribute('disabled');
+                    confirmBtn.setAttribute('data-enabled', 'true');
+                    confirmBtn.classList.remove('disabled');
+                    confirmBtn.style.opacity = '1';
+                    confirmBtn.style.cursor = 'pointer';
+                    confirmBtn.style.pointerEvents = 'auto';
+                } else {
+                    confirmBtn.setAttribute('disabled', 'disabled');
+                    confirmBtn.setAttribute('data-enabled', 'false');
+                    confirmBtn.classList.add('disabled');
+                    confirmBtn.style.opacity = '0.6';
+                    confirmBtn.style.cursor = 'not-allowed';
+                    confirmBtn.style.pointerEvents = 'none';
+                }
+            }
+        }
+        
+        if (e.target.id === 'attestCheckManual') {
+            const confirmBtn = document.getElementById('confirmPublishManualBtn');
+            if (confirmBtn) {
+                if (e.target.checked) {
+                    confirmBtn.removeAttribute('disabled');
+                    confirmBtn.setAttribute('data-enabled', 'true');
+                    confirmBtn.classList.remove('disabled');
+                    confirmBtn.style.opacity = '1';
+                    confirmBtn.style.cursor = 'pointer';
+                    confirmBtn.style.pointerEvents = 'auto';
+                } else {
+                    confirmBtn.setAttribute('disabled', 'disabled');
+                    confirmBtn.setAttribute('data-enabled', 'false');
+                    confirmBtn.classList.add('disabled');
+                    confirmBtn.style.opacity = '0.6';
+                    confirmBtn.style.cursor = 'not-allowed';
+                    confirmBtn.style.pointerEvents = 'none';
+                }
+            }
+        }
+    });
+    
+    // Use event delegation for button clicks
+    document.addEventListener('click', function(e) {
+        if (e.target.id === 'confirmPublishRequestBtn' || e.target.closest('#confirmPublishRequestBtn')) {
+            const btn = document.getElementById('confirmPublishRequestBtn');
+            if (!btn) return;
+            const isEnabled = btn.getAttribute('data-enabled') === 'true';
+            if (!isEnabled || btn.disabled) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            <?php if (empty($clinic['signature_path'])): ?>
+            alert('Signature is required. Please upload your signature in Profile → Edit Profile.');
+            const modalEl = document.getElementById('publishConfirmModalRequest');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            return false;
+            <?php endif; ?>
+            e.preventDefault();
+            document.getElementById('createFromRequestForm').submit();
+        }
+        
+        if (e.target.id === 'confirmPublishManualBtn' || e.target.closest('#confirmPublishManualBtn')) {
+            const btn = document.getElementById('confirmPublishManualBtn');
+            if (!btn) return;
+            const isEnabled = btn.getAttribute('data-enabled') === 'true';
+            if (!isEnabled || btn.disabled) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            <?php if (empty($clinic['signature_path'])): ?>
+            alert('Signature is required. Please upload your signature in Profile → Edit Profile.');
+            const modalEl = document.getElementById('publishConfirmModalManual');
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+            return false;
+            <?php endif; ?>
+            e.preventDefault();
+            document.getElementById('createManualForm').submit();
+        }
+    });
+});
+
+// Handle certificate deletion
+document.querySelectorAll('.delete-cert-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const certId = this.getAttribute('data-cert-id');
+        const certName = this.getAttribute('data-cert-name');
+        
+        if (confirm(`Are you sure you want to delete certificate ${certName}? This action cannot be undone.`)) {
+            // Show loading state
+            this.disabled = true;
+            this.innerHTML = '<i class="bi bi-hourglass-split"></i> Deleting...';
+            
+            // Send delete request
+            fetch('../api/delete_certificate.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: 'cert_id=' + certId
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Certificate deleted successfully');
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.error || 'Failed to delete certificate'));
+                    this.disabled = false;
+                    this.innerHTML = '<i class="bi bi-trash"></i> Delete';
+                }
+            })
+            .catch(error => {
+                alert('Error deleting certificate');
+                console.error(error);
+                this.disabled = false;
+                this.innerHTML = '<i class="bi bi-trash"></i> Delete';
+            });
+        }
+    });
+});
 </script>
+
+<!-- Publish Confirmation Modal for Request -->
+<div class="modal fade" id="publishConfirmModalRequest" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-shield-lock"></i> Confirm Medical Attestation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+            <h6 class="alert-heading"><i class="bi bi-info-circle"></i> Medical Professional's Attestation</h6>
+            <p class="mb-0 small">This attestation is a legal declaration of the accuracy of the medical information provided.</p>
+        </div>
+        
+        <div class="border rounded p-3 mb-3" style="background-color: #f8f9fa;">
+            <p class="mb-2"><strong>I, <?php echo htmlspecialchars($_SESSION['full_name'] ?? 'the undersigned medical professional'); ?>, hereby solemnly declare and attest that:</strong></p>
+            <ul class="small mb-2">
+                <li>All medical findings, diagnoses, and recommendations contained in this certificate are based on my personal examination and professional medical judgment.</li>
+                <li>The information provided herein is true, accurate, and complete to the best of my medical knowledge and professional belief.</li>
+                <li>This certificate is issued in good faith, without fraud, misrepresentation, or perjury.</li>
+                <li>I understand that any false statement or misrepresentation may subject me to professional disciplinary action and legal consequences.</li>
+                <li>I accept full professional responsibility for the contents of this medical certificate.</li>
+            </ul>
+            <p class="mb-0 small text-muted fst-italic">This attestation is made in accordance with medical ethics and professional standards of practice.</p>
+        </div>
+        
+        <?php if (!empty($clinic['signature_path'])): ?>
+        <div class="text-center mb-3 p-3 border rounded">
+            <p class="small text-muted mb-2">Digital Signature on File:</p>
+            <img src="../<?php echo htmlspecialchars($clinic['signature_path']); ?>" alt="Doctor Signature" style="height:80px; border: 1px solid #dee2e6; padding: 10px; background: white;">
+            <div class="text-success small mt-2"><i class="bi bi-check-circle-fill"></i> Signature will be automatically applied to certificate</div>
+        </div>
+        <?php else: ?>
+        <div class="alert alert-danger d-flex align-items-start gap-2">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div>
+                <strong>Signature Required!</strong><br>
+                <small>You must upload your digital signature before publishing certificates. Go to Profile → Edit Profile to upload your signature.</small>
+            </div>
+        </div>
+        <?php endif; ?>
+        
+        <div class="form-check p-3 border rounded" style="background-color: #fff3cd;">
+            <input class="form-check-input" type="checkbox" id="attestCheckRequest" style="width: 20px; height: 20px;">
+            <label class="form-check-label ms-2" for="attestCheckRequest">
+                <strong>I have read and agree to the above attestation.</strong><br>
+                <small class="text-muted">By checking this box, I affirm that I understand the legal and professional implications of this attestation.</small>
+            </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmPublishRequestBtn" data-enabled="false">Confirm & Publish</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Publish Confirmation Modal for Manual -->
+<div class="modal fade" id="publishConfirmModalManual" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title"><i class="bi bi-shield-lock"></i> Confirm Medical Attestation</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div class="alert alert-info">
+            <h6 class="alert-heading"><i class="bi bi-info-circle"></i> Medical Professional's Attestation</h6>
+            <p class="mb-0 small">This attestation is a legal declaration of the accuracy of the medical information provided.</p>
+        </div>
+        
+        <div class="border rounded p-3 mb-3" style="background-color: #f8f9fa;">
+            <p class="mb-2"><strong>I, <?php echo htmlspecialchars($_SESSION['full_name'] ?? 'the undersigned medical professional'); ?>, hereby solemnly declare and attest that:</strong></p>
+            <ul class="small mb-2">
+                <li>All medical findings, diagnoses, and recommendations contained in this certificate are based on my personal examination and professional medical judgment.</li>
+                <li>The information provided herein is true, accurate, and complete to the best of my medical knowledge and professional belief.</li>
+                <li>This certificate is issued in good faith, without fraud, misrepresentation, or perjury.</li>
+                <li>I understand that any false statement or misrepresentation may subject me to professional disciplinary action and legal consequences.</li>
+                <li>I accept full professional responsibility for the contents of this medical certificate.</li>
+            </ul>
+            <p class="mb-0 small text-muted fst-italic">This attestation is made in accordance with medical ethics and professional standards of practice.</p>
+        </div>
+        
+        <?php if (!empty($clinic['signature_path'])): ?>
+        <div class="text-center mb-3 p-3 border rounded">
+            <p class="small text-muted mb-2">Digital Signature on File:</p>
+            <img src="../<?php echo htmlspecialchars($clinic['signature_path']); ?>" alt="Doctor Signature" style="height:80px; border: 1px solid #dee2e6; padding: 10px; background: white;">
+            <div class="text-success small mt-2"><i class="bi bi-check-circle-fill"></i> Signature will be automatically applied to certificate</div>
+        </div>
+        <?php else: ?>
+        <div class="alert alert-danger d-flex align-items-start gap-2">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <div>
+                <strong>Signature Required!</strong><br>
+                <small>You must upload your digital signature before publishing certificates. Go to Profile → Edit Profile to upload your signature.</small>
+            </div>
+        </div>
+        <?php endif; ?>
+        
+        <div class="form-check p-3 border rounded" style="background-color: #fff3cd;">
+            <input class="form-check-input" type="checkbox" id="attestCheckManual" style="width: 20px; height: 20px;">
+            <label class="form-check-label ms-2" for="attestCheckManual">
+                <strong>I have read and agree to the above attestation.</strong><br>
+                <small class="text-muted">By checking this box, I affirm that I understand the legal and professional implications of this attestation.</small>
+            </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" id="confirmPublishManualBtn" data-enabled="false">Confirm & Publish</button>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>

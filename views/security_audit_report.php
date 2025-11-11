@@ -362,6 +362,12 @@ try {
                             <i class="bi bi-arrow-clockwise"></i> Run New Audit
                         </button>
                     </form>
+                    <button type="button" id="btnRunZap" class="btn btn-warning ms-2" title="Run OWASP ZAP scan">
+                        <i class="bi bi-bug"></i> Run ZAP Scan
+                    </button>
+                    <a href="zap.html" target="_blank" class="btn btn-secondary ms-2" title="Open latest ZAP report">
+                        <i class="bi bi-file-earmark-richtext"></i> View ZAP Report
+                    </a>
                     <?php endif; ?>
                 </div>
                 
@@ -419,9 +425,43 @@ try {
                 <!-- Latest Audit Summary -->
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-primary">
-                        <h5 class="mb-0"><i class="bi bi-graph-up"></i> Latest Security Audit</h5>
+                        <h5 class="mb-0"><i class="bi bi-graph-up"></i> <?php echo !empty($latestAudit['zap']['available']) ? 'Latest ZAP Scan' : 'Latest Security Audit'; ?></h5>
                     </div>
                     <div class="card-body">
+                        <?php if (!empty($latestAudit['zap']['available'])): ?>
+                        <div class="row">
+                            <div class="col-md-4 text-center">
+                                <div class="security-score status-<?php echo htmlspecialchars($latestAudit['status']); ?>">
+                                    <?php echo $latestAudit['score']; ?><small>/100</small>
+                                </div>
+                                <p class="text-muted mb-2">ZAP Score</p>
+                                <span class="badge bg-<?php 
+                                    echo $latestAudit['status'] === 'excellent' ? 'success' : 
+                                        ($latestAudit['status'] === 'good' ? 'info' : 
+                                        ($latestAudit['status'] === 'fair' ? 'warning' : 'danger')); 
+                                ?>">
+                                    <?php echo ucfirst($latestAudit['status']); ?>
+                                </span>
+                            </div>
+                            <div class="col-md-8">
+                                <h6 style="color: #e0e0e0; font-weight: 600;">Summary</h6>
+                                <p class="mb-2"><?php echo SecurityManager::escapeOutput($latestAudit['zap']['summary'] ?? 'OWASP ZAP scan results'); ?></p>
+                                <?php $m=$latestAudit['zap']['metrics'] ?? []; ?>
+                                <div class="d-flex gap-2">
+                                    <span class="badge bg-danger">High: <?php echo intval($m['high'] ?? 0); ?></span>
+                                    <span class="badge bg-warning text-dark">Medium: <?php echo intval($m['medium'] ?? 0); ?></span>
+                                    <span class="badge bg-success">Low: <?php echo intval($m['low'] ?? 0); ?></span>
+                                    <span class="badge bg-secondary">Info: <?php echo intval($m['info'] ?? 0); ?></span>
+                                </div>
+                                <div class="mt-3">
+                                    <a href="../api/view_audit.php?zap=1&id=0" target="_blank" class="btn btn-outline-info btn-sm">Open Full ZAP Report</a>
+                                    <a href="../api/view_audit.php?zap=1&id=0&format=pdf" class="btn btn-outline-danger btn-sm">Export PDF</a>
+                                    <a href="../api/view_audit.php?zap=1&id=0&format=json" class="btn btn-outline-primary btn-sm">Export JSON</a>
+                                    <a href="../api/view_audit.php?zap=1&id=0&format=xml" class="btn btn-outline-warning btn-sm">Export XML</a>
+                                </div>
+                            </div>
+                        </div>
+                        <?php else: ?>
                         <div class="row">
                             <div class="col-md-4 text-center">
                                 <div class="security-score status-<?php echo htmlspecialchars($latestAudit['status']); ?>">
@@ -463,36 +503,39 @@ try {
                                 <?php endif; ?>
                             </div>
                         </div>
-                        
+                        <?php endif; ?>
+
                         <hr style="border-color: #333; margin: 2rem 0;">
                         
                         <!-- Security Checks -->
-                        <h6 style="color: #fff; font-weight: 600; margin-bottom: 1rem;">Security Checks</h6>
-                        <div class="row">
-                            <?php foreach ($latestAudit['checks'] ?? [] as $checkName => $check): ?>
-                            <div class="col-md-6 mb-2">
-                                <div class="check-item <?php 
-                                    $isPassed = isset($check['protected']) ? $check['protected'] : 
-                                               (isset($check['secure']) ? $check['secure'] : 
-                                               (isset($check['enabled']) ? $check['enabled'] : 
-                                               (isset($check['complete']) ? $check['complete'] : 
-                                               (isset($check['comprehensive']) ? $check['comprehensive'] : false))));
-                                    echo $isPassed ? 'check-passed' : 'check-failed';
-                                ?>">
-                                    <strong><?php echo $isPassed ? '<i class="bi bi-check-circle-fill" style="color: #00ff88;"></i>' : '<i class="bi bi-x-circle-fill" style="color: #ff4444;"></i>'; ?> <?php echo ucfirst(str_replace('_', ' ', $checkName)); ?></strong>
-                                    <?php if (isset($check['method'])): ?>
-                                    <br><small><?php echo SecurityManager::escapeOutput($check['method']); ?></small>
-                                    <?php endif; ?>
-                                    <?php if (isset($check['description'])): ?>
-                                    <br><small style="color: #aaa; font-style: italic;"><?php echo SecurityManager::escapeOutput($check['description']); ?></small>
-                                    <?php endif; ?>
-                                    <?php if (isset($check['issue']) && $check['issue']): ?>
-                                    <br><small class="text-danger"><?php echo SecurityManager::escapeOutput($check['issue']); ?></small>
-                                    <?php endif; ?>
+                        <?php if (empty($latestAudit['zap']['available'])): ?>
+                            <h6 style="color: #fff; font-weight: 600; margin-bottom: 1rem;">Security Checks</h6>
+                            <div class="row">
+                                <?php foreach ($latestAudit['checks'] ?? [] as $checkName => $check): ?>
+                                <div class="col-md-6 mb-2">
+                                    <div class="check-item <?php 
+                                        $isPassed = isset($check['protected']) ? $check['protected'] : 
+                                                   (isset($check['secure']) ? $check['secure'] : 
+                                                   (isset($check['enabled']) ? $check['enabled'] : 
+                                                   (isset($check['complete']) ? $check['complete'] : 
+                                                   (isset($check['comprehensive']) ? $check['comprehensive'] : false))));
+                                        echo $isPassed ? 'check-passed' : 'check-failed';
+                                    ?>">
+                                        <strong><?php echo $isPassed ? '<i class="bi bi-check-circle-fill" style="color: #00ff88;"></i>' : '<i class="bi bi-x-circle-fill" style="color: #ff4444;"></i>'; ?> <?php echo ucfirst(str_replace('_', ' ', $checkName)); ?></strong>
+                                        <?php if (isset($check['method'])): ?>
+                                        <br><small><?php echo SecurityManager::escapeOutput($check['method']); ?></small>
+                                        <?php endif; ?>
+                                        <?php if (isset($check['description'])): ?>
+                                        <br><small style="color: #aaa; font-style: italic;"><?php echo SecurityManager::escapeOutput($check['description']); ?></small>
+                                        <?php endif; ?>
+                                        <?php if (isset($check['issue']) && $check['issue']): ?>
+                                        <br><small class="text-danger"><?php echo SecurityManager::escapeOutput($check['issue']); ?></small>
+                                        <?php endif; ?>
+                                    </div>
                                 </div>
+                                <?php endforeach; ?>
                             </div>
-                            <?php endforeach; ?>
-                        </div>
+                        <?php endif; ?>
                         
                         <!-- Full Details -->
                         <?php if (!empty($latestAudit['vulnerabilities']) || !empty($latestAudit['recommendations'])): ?>
@@ -545,6 +588,7 @@ try {
                                 <thead class="table-dark">
                                     <tr>
                                         <th style="color: #fff; font-weight: 600;">Date</th>
+                                        <th style="color: #fff; font-weight: 600;">Type</th>
                                         <th style="color: #fff; font-weight: 600;">User</th>
                                         <th style="color: #fff; font-weight: 600;">Score</th>
                                         <th style="color: #fff; font-weight: 600;">Status</th>
@@ -560,6 +604,9 @@ try {
                                     ?>
                                     <tr>
                                         <td><?php echo date('M d, Y H:i', strtotime($audit['created_at'])); ?></td>
+                                        <td>
+                                            <?php echo !empty($auditData['zap']['available']) ? '<span class="badge bg-warning text-dark">ZAP scan</span>' : '<span class="badge bg-info text-dark">Security Audit</span>'; ?>
+                                        </td>
                                         <td><?php echo SecurityManager::escapeOutput($audit['full_name'] ?? $audit['username'] ?? 'System'); ?></td>
                                         <td>
                                             <strong class="status-<?php echo htmlspecialchars($audit['status']); ?>">
@@ -576,26 +623,46 @@ try {
                                             </span>
                                         </td>
                                         <td>
-                                            <?php if ($vulnCount > 0): ?>
-                                            <span class="badge bg-danger"><?php echo $vulnCount; ?></span>
+                                            <?php
+                                                $count = $vulnCount;
+                                                if (!empty($auditData['zap']['available'])) {
+                                                    $m = $auditData['zap']['metrics'] ?? [];
+                                                    $count = intval(($m['high'] ?? 0) + ($m['medium'] ?? 0) + ($m['low'] ?? 0));
+                                                }
+                                            ?>
+                                            <?php if ($count > 0): ?>
+                                            <span class="badge bg-danger"><?php echo $count; ?></span>
                                             <?php else: ?>
                                             <span class="badge bg-success">0</span>
                                             <?php endif; ?>
                                         </td>
                                         <td>
-                                            <a href="../api/view_audit.php?id=<?php echo $audit['id']; ?>" target="_blank" class="btn btn-sm btn-info" title="View Audit Certificate">
+                                            <?php $isZapRow = !empty($auditData['zap']['available']); ?>
+                                            <a href="../api/view_audit.php?id=<?php echo $audit['id']; ?><?php echo $isZapRow ? '&zap=1' : ''; ?>" target="_blank" class="btn btn-sm btn-info" title="<?php echo $isZapRow ? 'View ZAP Report' : 'View Audit Certificate'; ?>">
                                                 <i class="bi bi-eye"></i> View
                                             </a>
                                             <div class="btn-group" role="group">
-                                                <a href="../api/view_audit.php?id=<?php echo $audit['id']; ?>&format=pdf" class="btn btn-sm btn-danger" title="Export as PDF">
-                                                    <i class="bi bi-file-pdf"></i>
-                                                </a>
-                                                <a href="../api/view_audit.php?id=<?php echo $audit['id']; ?>&format=json" class="btn btn-sm btn-primary" title="Export as JSON">
-                                                    <i class="bi bi-filetype-json"></i>
-                                                </a>
-                                                <a href="../api/view_audit.php?id=<?php echo $audit['id']; ?>&format=xml" class="btn btn-sm btn-warning" title="Export as XML">
-                                                    <i class="bi bi-filetype-xml"></i>
-                                                </a>
+                                                <?php if (!$isZapRow): ?>
+                                                    <a href="../api/view_audit.php?id=<?php echo $audit['id']; ?>&format=pdf" class="btn btn-sm btn-danger" title="Export as PDF">
+                                                        <i class="bi bi-file-pdf"></i>
+                                                    </a>
+                                                    <a href="../api/view_audit.php?id=<?php echo $audit['id']; ?>&format=json" class="btn btn-sm btn-primary" title="Export as JSON">
+                                                        <i class="bi bi-filetype-json"></i>
+                                                    </a>
+                                                    <a href="../api/view_audit.php?id=<?php echo $audit['id']; ?>&format=xml" class="btn btn-sm btn-warning" title="Export as XML">
+                                                        <i class="bi bi-filetype-xml"></i>
+                                                    </a>
+                                                <?php else: ?>
+                                                    <a href="../api/view_audit.php?zap=1&id=<?php echo $audit['id']; ?>&format=pdf" class="btn btn-sm btn-danger" title="Export ZAP as PDF">
+                                                        <i class="bi bi-bug"></i>
+                                                    </a>
+                                                    <a href="../api/view_audit.php?zap=1&id=<?php echo $audit['id']; ?>&format=json" class="btn btn-sm btn-primary" title="Export ZAP as JSON">
+                                                        <i class="bi bi-bug"></i>
+                                                    </a>
+                                                    <a href="../api/view_audit.php?zap=1&id=<?php echo $audit['id']; ?>&format=xml" class="btn btn-sm btn-warning" title="Export ZAP as XML">
+                                                        <i class="bi bi-bug"></i>
+                                                    </a>
+                                                <?php endif; ?>
                                             </div>
                                         </td>
                                     </tr>
@@ -646,6 +713,32 @@ try {
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function() {
+    var btn = document.getElementById('btnRunZap');
+    if (!btn) return;
+    btn.addEventListener('click', function() {
+        btn.disabled = true;
+        var original = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Running ZAP...';
+        fetch('../api/run_zap.php', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+            .then(function(r){ return r.json(); })
+            .then(function(res){
+                btn.disabled = false;
+                btn.innerHTML = original;
+                var msg = document.createElement('div');
+                msg.className = 'alert ' + (res.status === 'success' ? 'alert-success' : 'alert-danger');
+                msg.textContent = res.message || (res.status === 'success' ? 'ZAP scan completed' : 'ZAP scan failed');
+                document.querySelector('.main-content').insertBefore(msg, document.querySelector('.main-content').firstChild.nextSibling);
+            })
+            .catch(function(){
+                btn.disabled = false;
+                btn.innerHTML = original;
+                alert('Failed to start ZAP scan.');
+            });
+    });
+})();
+</script>
 </body>
 </html>
 

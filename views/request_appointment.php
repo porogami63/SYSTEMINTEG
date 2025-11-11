@@ -47,6 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($appointment_date < date('Y-m-d')) {
             throw new Exception('Please choose a future date.');
         }
+        if ($time_slot < '09:00' || $time_slot > '17:00') {
+            throw new Exception('Please choose a time between 9:00 AM and 5:00 PM.');
+        }
 
         // Resolve patient id
         $pstmt = $conn->prepare("SELECT id FROM patients WHERE user_id = ?");
@@ -57,6 +60,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (!$patient) {
             throw new Exception('Patient profile not found');
+        }
+
+        // Prevent double booking
+        $slotCheck = $conn->prepare("SELECT COUNT(*) AS total FROM appointments WHERE clinic_id = ? AND appointment_date = ? AND time_slot = ? AND status IN ('pending','approved','rescheduled','completed')");
+        $slotCheck->bind_param("iss", $clinic_id, $appointment_date, $time_slot);
+        $slotCheck->execute();
+        $slotTotal = $slotCheck->get_result()->fetch_assoc();
+        $slotCheck->close();
+        if (!empty($slotTotal['total'])) {
+            throw new Exception('That time slot is no longer available. Please choose another time.');
         }
 
         // Insert appointment
@@ -119,6 +132,13 @@ $conn->close();
 
                 <div class="card shadow-sm">
                     <div class="card-body">
+                        <div class="alert alert-warning d-flex align-items-start gap-2 small">
+                            <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+                            <span>
+                                Appointments are available between <strong>9:00 AM and 5:00 PM</strong>. Please keep your visit within
+                                a <strong>2-hour window</strong> so other patients can be accommodated—longer sessions may incur additional fees.
+                            </span>
+                        </div>
                         <form method="POST">
                             <div class="row">
                                 <div class="col-md-6 mb-3">
@@ -154,7 +174,7 @@ $conn->close();
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Time Slot <span class="text-danger">*</span></label>
-                                    <input type="time" class="form-control" name="time_slot" required>
+                                    <input type="time" class="form-control" name="time_slot" required min="09:00" max="17:00">
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label">Purpose <span class="text-danger">*</span></label>
